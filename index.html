@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Extended Greimas Square</title>
 <style>
-  /* ---------- Theme tokens ---------- */
   :root {
     --gs-bg:        var(--background-primary, #ffffff);
     --gs-panel:     var(--background-secondary, #f4f5f7);
@@ -50,7 +49,6 @@
   header h1 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; }
   header p  { margin: 0; font-size: .8rem; color: var(--gs-muted); }
 
-  /* ---------- Stage ---------- */
   .gs-stage {
     position: relative;
     width: 100%;
@@ -74,17 +72,13 @@
     stroke-linecap: round;
     fill: none;
   }
-  .gs-lines line.gs-diag {
-    stroke-dasharray: 6 6;
-    opacity: .7;
-  }
+  .gs-lines line.gs-diag { stroke-dasharray: 6 6; opacity: .7; }
   .gs-lines polygon.gs-diamond {
     stroke-dasharray: 1 6;
     stroke-linecap: round;
     opacity: .85;
   }
 
-  /* ---------- Nodes ---------- */
   .gs-term,
   .gs-meta,
   .gs-rel {
@@ -138,7 +132,6 @@
     color: var(--gs-muted);
   }
 
-  /* ---------- Positions ---------- */
   .gs-tl { left: 31%; top: 31%; }
   .gs-tr { left: 69%; top: 31%; }
   .gs-bl { left: 31%; top: 69%; }
@@ -160,7 +153,6 @@
   }
   .gs-pulse { animation: gs-pulse .28s ease-out; }
 
-  /* ---------- Form ---------- */
   .gs-section { margin-top: 24px; }
   .gs-section-title {
     margin: 0 0 4px;
@@ -226,7 +218,6 @@
     box-shadow: 0 0 0 3px rgba(124, 108, 231, .18);
   }
 
-  /* Provisional: auto-derived value */
   .gs-field input.is-provisional {
     border-style: dashed;
     color: var(--gs-muted);
@@ -235,6 +226,17 @@
   .gs-field input.is-provisional:focus {
     color: var(--gs-text);
     font-style: normal;
+  }
+
+  /* Multi-candidate state: field is empty but a choice is pending */
+  .gs-field input.is-pending {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-pending::placeholder {
+    color: var(--gs-muted);
+    opacity: .85;
   }
 
   .gs-field input.is-empty { background: transparent; }
@@ -307,7 +309,6 @@
     font-style: italic;
   }
 
-  /* ---------- Buttons ---------- */
   .gs-actions {
     display: flex;
     flex-wrap: wrap;
@@ -369,10 +370,9 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Type in S₁ to see contrary suggestions for S₂. Click a chip to fill S₂, or type your own.</p>
+    <p>Type in S₁ to see contrary suggestions for S₂. If there are several, pick one — or type your own.</p>
   </header>
 
-  <!-- ===== Diagram ===== -->
   <div class="gs-stage">
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
@@ -425,11 +425,10 @@
     </div>
   </div>
 
-  <!-- ===== Terms + Suggestions ===== -->
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
-      Editing S₁ suggests contraries for S₂. Picking one or typing your own sets S₂. ~S₁ and ~S₂ derive automatically.
+      Editing S₁ suggests contraries for S₂. If there's more than one, choose a chip or type your own.
     </p>
 
     <div class="gs-controls">
@@ -460,7 +459,6 @@
     </div>
   </div>
 
-  <!-- ===== Metaterms ===== -->
   <div class="gs-section">
     <h2 class="gs-section-title">Metaterms</h2>
     <p class="gs-section-note">
@@ -500,7 +498,11 @@
   "use strict";
 
   /* ================================================================
-   *  CONTRARY DICTIONARY — paste your full table here.
+   *  CONTRARY DICTIONARY
+   *  Values may be a single string OR an array of strings:
+   *
+   *      "life":   "death",
+   *      "admit":  ["deny", "exclude", "reject"],
    * ================================================================ */
   var CONTRARIES = {
     "being":  "seeming",
@@ -515,8 +517,7 @@
     "hate":   "love",
     "order":  "chaos",
     "chaos":  "order",
-    "order":  "refuse",
-    "refuse":  "order"
+    "admit":  ["deny", "exclude", "reject"]
     /* ... add the rest ... */
   };
 
@@ -524,7 +525,6 @@
   var SEP = " \u00B7 ";
 
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
-  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
 
   var META_PAIRS = [
@@ -554,17 +554,17 @@
 
   /* ================================================================
    *  State
+   *
+   *  Each field:
+   *    value        — the string shown
+   *    source       — "set" | "provisional" | "pending" | "empty"
+   *    lastValue    — last committed value (used to restore on abandon)
+   *
+   *  "pending" is new: it means S₂ is empty because S₁ produced
+   *  multiple candidate contraries and the user hasn't chosen yet.
+   *  The candidate list lives in pendingCandidates[1].
    * ================================================================ */
 
-  /*
-   * Four fields. Each carries:
-   *   value      — what is shown in the field
-   *   source     — "set" (user committed it) | "provisional" (derived) | "empty"
-   *   lastValue  — the last committed value, used to restore on abandon
-   *   pendingClear — true when the user focused an occupied field; text is
-   *                  visually cleared, awaiting either typing (commit) or
-   *                  blur without typing (restore).
-   */
   var fields = [
     { value: "", source: "empty", lastValue: "" },
     { value: "", source: "empty", lastValue: "" },
@@ -572,13 +572,12 @@
     { value: "", source: "empty", lastValue: "" }
   ];
 
-  /* Only S1 and S2 are directly editable in this version.
-     ~S1 and ~S2 remain derived; that keeps the suggestion flow tight. */
-  var EDITABLE   = [0, 1];
-  var DERIVED_2  = 2;   /* ~S1 */
-  var DERIVED_3  = 3;   /* ~S2 */
+  /* For each editable field that is "pending", the list of candidates. */
+  var pendingCandidates = { 0: [], 1: [] };
 
-  var activeField = 1;  /* suggestions are for S2 by default */
+  var EDITABLE  = [0, 1];
+  var DERIVED_2 = 2;   /* ~S₁ */
+  var DERIVED_3 = 3;   /* ~S₂ */
 
   /* ================================================================
    *  Text helpers
@@ -589,12 +588,15 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
+  /* Always returns an array, regardless of whether the dictionary
+     stores a single string or an array. */
   function lookupContraries(term) {
     var key = (term || "").trim().toLowerCase();
     if (!key) return [];
     var entry = CONTRARIES[key];
     if (!entry) return [];
-    return Array.isArray(entry) ? entry : [entry];
+    if (Array.isArray(entry)) return entry.slice();
+    return [entry];
   }
 
   function negate(term) {
@@ -627,16 +629,27 @@
     fields[i].source    = value ? source : "empty";
     fields[i].lastValue = value || fields[i].lastValue;
     termInputs[i].value = fields[i].value;
+    if (source !== "pending") {
+      pendingCandidates[i] = [];
+    }
+  }
+
+  function setPending(i, candidates) {
+    fields[i].value  = "";
+    fields[i].source = "pending";
+    termInputs[i].value = "";
+    pendingCandidates[i] = candidates.slice();
   }
 
   function clearField(i) {
     fields[i].value  = "";
     fields[i].source = "empty";
     termInputs[i].value = "";
+    pendingCandidates[i] = [];
   }
 
   /* ================================================================
-   *  Autopopulate ~S1 and ~S2 from S1 and S2
+   *  Autopopulate ~S₁ and ~S₂ from S₁ and S₂
    * ================================================================ */
 
   function autopopulate() {
@@ -645,6 +658,7 @@
     } else if (fields[DERIVED_2].source === "provisional") {
       clearField(DERIVED_2);
     }
+
     if (fields[1].value) {
       setField(DERIVED_3, negate(fields[1].value), "provisional");
     } else if (fields[DERIVED_3].source === "provisional") {
@@ -653,15 +667,41 @@
   }
 
   /* ================================================================
-   *  Suggestion derivation for S2 (the only suggestion target now)
+   *  S₂ resolution from S₁
+   *
+   *  This is the piece that was broken. Given S₁, we:
+   *    - if S₁ empty: clear S₂ unless user-set
+   *    - if zero candidates: leave S₂ to the user, no provisional fill
+   *    - if one candidate: provisional-fill S₂ with it
+   *    - if multiple: put S₂ into "pending" and store the candidates
+   *
+   *  A user-set S₂ is never touched by any of this.
    * ================================================================ */
 
-  function deriveS2Suggestions() {
-    var source = (fields[0].value || "").trim();
-    if (!source) return [];
-    return lookupContraries(source).map(function (c) {
-      return titleCase(c);
-    });
+  function resolveS2FromS1() {
+    if (fields[1].source === "set") return;   /* user choice wins */
+
+    var s1 = (fields[0].value || "").trim();
+    if (!s1) {
+      if (fields[1].source !== "empty") clearField(1);
+      return;
+    }
+
+    var candidates = lookupContraries(s1).map(titleCase);
+
+    if (candidates.length === 0) {
+      /* Nothing to suggest; leave S₂ empty but not "pending". */
+      if (fields[1].source !== "empty") clearField(1);
+      return;
+    }
+
+    if (candidates.length === 1) {
+      setField(1, candidates[0], "provisional");
+      return;
+    }
+
+    /* Multiple candidates: put S₂ into pending state. */
+    setPending(1, candidates);
   }
 
   /* ================================================================
@@ -670,7 +710,6 @@
 
   function renderSuggestions() {
     sugChips.innerHTML = "";
-
     sugAnchor.textContent = "S\u2082";
 
     var note = "";
@@ -679,8 +718,7 @@
     }
     sugNote.textContent = note;
 
-    var sugg = deriveS2Suggestions();
-
+    /* Case: nothing to suggest yet. */
     if (!fields[0].value) {
       var hint = document.createElement("div");
       hint.className = "gs-suggest-empty";
@@ -689,7 +727,11 @@
       return;
     }
 
-    if (sugg.length === 0) {
+    var candidates = pendingCandidates[1].length
+      ? pendingCandidates[1]
+      : lookupContraries(fields[0].value).map(titleCase);
+
+    if (candidates.length === 0) {
       var none = document.createElement("div");
       none.className = "gs-suggest-empty";
       none.textContent =
@@ -699,7 +741,9 @@
       return;
     }
 
-    sugg.forEach(function (value) {
+    /* If the user typed S₂ manually, the candidates are still shown
+       but marked as not-applied. Clicking a chip overrides. */
+    candidates.forEach(function (value) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "gs-chip";
@@ -711,7 +755,6 @@
       btn.appendChild(val);
 
       btn.addEventListener("click", function () {
-        /* Chip click commits S2 as a user choice */
         setField(1, value, "set");
         autopopulate();
         updateFieldStyles();
@@ -730,9 +773,19 @@
     for (var i = 0; i < 4; i++) {
       var inp = termInputs[i];
       inp.classList.toggle("is-provisional", fields[i].source === "provisional");
+      inp.classList.toggle("is-pending",     fields[i].source === "pending");
       inp.classList.toggle("is-empty",       fields[i].source === "empty");
+
+      /* Placeholder text when the field is pending a choice. */
+      if (fields[i].source === "pending") {
+        var n = pendingCandidates[i].length;
+        inp.placeholder = n + " options \u2014 choose one or type";
+      } else {
+        inp.placeholder = "";
+      }
     }
-    fieldWrappers[1].classList.toggle("is-active", true);  /* panel is for S2 */
+
+    fieldWrappers[1].classList.toggle("is-active", true);
     fieldWrappers[0].classList.toggle("is-active", false);
     fieldWrappers[2].classList.toggle("is-active", false);
     fieldWrappers[3].classList.toggle("is-active", false);
@@ -790,28 +843,24 @@
   }
 
   /* ================================================================
-   *  Input handling for S1 and S2
+   *  Input handling for S₁ and S₂
    *
-   *  Commit on typing is immediate (so suggestions reflect what's
-   *  typed), but a focused field with existing text is visually
-   *  emptied so the user can overwrite. If they blur without typing,
-   *  the previous value is restored.
+   *  Focus-empties the field (per your earlier request). Blur without
+   *  typing restores the prior value. Typing commits the new value.
    * ================================================================ */
 
   EDITABLE.forEach(function (i) {
     var input = termInputs[i];
 
     input.addEventListener("focus", function () {
-      /* Visual clear on focus if there's a value.
-         The underlying state isn't touched until typing or blur. */
       if (input.value) {
-        input.dataset.priorValue = fields[i].value;
+        input.dataset.priorValue  = fields[i].value;
         input.dataset.priorSource = fields[i].source;
         input.value = "";
         input.classList.add("is-empty");
-        input.classList.remove("is-provisional");
+        input.classList.remove("is-provisional", "is-pending");
       } else {
-        input.dataset.priorValue = "";
+        input.dataset.priorValue  = "";
         input.dataset.priorSource = fields[i].source;
       }
     });
@@ -820,28 +869,32 @@
       var v = input.value;
       fields[i].value  = v;
       fields[i].source = v ? "set" : "empty";
-      if (v) input.classList.remove("is-empty");
+      if (v) input.classList.remove("is-empty", "is-pending", "is-provisional");
+      pendingCandidates[i] = [];
 
-      if (i === 0) autopopulate();
+      if (i === 0) resolveS2FromS1();
+      autopopulate();
       updateFieldStyles();
       renderSuggestions();
     });
 
     input.addEventListener("blur", function () {
-      /* If the user emptied the field and left without typing,
-         restore the previous value. */
-      if (!input.value && input.dataset.priorValue) {
-        var prior = input.dataset.priorValue;
-        var priorSource = input.dataset.priorSource || "set";
-        setField(i, prior, priorSource);
+      var priorValue  = input.dataset.priorValue;
+      var priorSource = input.dataset.priorSource;
+
+      if (!input.value && priorValue) {
+        /* Abandoned without typing: restore */
+        setField(i, priorValue, priorSource || "set");
       } else if (!input.value) {
+        /* Was already empty; leave empty */
         fields[i].value  = "";
         fields[i].source = "empty";
       }
-      /* Clear stored prior state */
+
       delete input.dataset.priorValue;
       delete input.dataset.priorSource;
 
+      if (i === 0) resolveS2FromS1();
       autopopulate();
       updateFieldStyles();
       renderSuggestions();
@@ -850,7 +903,6 @@
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        /* Enter commits typed text and moves focus away. */
         input.blur();
       }
     });
@@ -865,7 +917,6 @@
   });
 
   byId("gs-rotate").addEventListener("click", function () {
-    /* Rotate only the four term values, treating all as set. */
     var v = fields.map(function (f) { return f.value; });
     setField(0, v[2], "set");
     setField(1, v[0], "set");
