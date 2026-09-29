@@ -667,3 +667,355 @@
 
   function sameValue(a, b) {
     return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+  }
+
+  /* ================================================================
+   *  State mutators
+   * ================================================================ */
+
+  function setField(i, value, source) {
+    fields[i].value  = value || "";
+    fields[i].source = source;
+    termInputs[i].value = fields[i].value;
+  }
+
+  function clearField(i) {
+    fields[i].value  = "";
+    fields[i].source = "empty";
+    termInputs[i].value = "";
+  }
+
+  /* ================================================================
+   *  Autopopulate — fills provisional fields from their parents
+   * ================================================================ */
+
+  function autopopulate() {
+    /* S₁ ← S₂ (if S₁ not user-set and empty) */
+    if (fields[0].source !== "set" && !fields[0].value) {
+      var c1 = fields[1].value ? lookupContraries(fields[1].value) : [];
+      if (c1.length > 0) setField(0, titleCase(c1[0]), "provisional");
+    }
+
+    /* S₂ ← S₁ (if S₂ not user-set and empty) */
+    if (fields[1].source !== "set" && !fields[1].value) {
+      var c2 = fields[0].value ? lookupContraries(fields[0].value) : [];
+      if (c2.length > 0) setField(1, titleCase(c2[0]), "provisional");
+    }
+
+    /* ~S₁ ← S₁ */
+    if (fields[2].source !== "set") {
+      if (fields[0].value) setField(2, negate(fields[0].value), "provisional");
+      else if (fields[2].source === "provisional") clearField(2);
+    }
+
+    /* ~S₂ ← S₂ */
+    if (fields[3].source !== "set") {
+      if (fields[1].value) setField(3, negate(fields[1].value), "provisional");
+      else if (fields[3].source === "provisional") clearField(3);
+    }
+  }
+
+  /* ================================================================
+   *  Derive suggestions for the active field
+   * ================================================================ */
+
+  function deriveSuggestionsFor(i) {
+    var sugg = [];
+
+    if (i === 0) {
+      if (fields[2].value) {
+        var u = unNegate(fields[2].value);
+        if (u) sugg.push({ value: u });
+      }
+      if (fields[1].value) {
+        lookupContraries(fields[1].value).forEach(function (c) {
+          sugg.push({ value: titleCase(c) });
+        });
+      }
+    }
+
+    if (i === 1) {
+      if (fields[0].value) {
+        lookupContraries(fields[0].value).forEach(function (c) {
+          sugg.push({ value: titleCase(c) });
+        });
+      }
+      if (fields[3].value) {
+        var u2 = unNegate(fields[3].value);
+        if (u2) sugg.push({ value: u2 });
+      }
+    }
+
+    if (i === 2) {
+      if (fields[0].value) {
+        sugg.push({ value: negate(fields[0].value) });
+      }
+    }
+
+    if (i === 3) {
+      if (fields[1].value) {
+        sugg.push({ value: negate(fields[1].value) });
+      }
+    }
+
+    /* Dedupe by lowercase value */
+    var seen = {};
+    return sugg.filter(function (s) {
+      var k = s.value.toLowerCase();
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
+    });
+  }
+
+  /* ================================================================
+   *  Render suggestion panel
+   * ================================================================ */
+
+  function renderSuggestions() {
+    sugChips.innerHTML = "";
+
+    if (activeField === null) {
+      sugAnchor.textContent = "any field";
+      sugNote.textContent = "";
+      var hint = document.createElement("div");
+      hint.className = "gs-suggest-empty";
+      hint.textContent = "Click a term field above to see suggestions.";
+      sugChips.appendChild(hint);
+      return;
+    }
+
+    sugAnchor.textContent = TERM_LABELS[activeField];
+
+    /* Derivation note in the header */
+    var note = "";
+    if (activeField === 0) {
+      if (fields[1].value)      note = "(contrary of " + fields[1].value + ")";
+      else if (fields[2].value) note = "(from " + fields[2].value + ")";
+    } else if (activeField === 1) {
+      if (fields[0].value)      note = "(contrary of " + fields[0].value + ")";
+      else if (fields[3].value) note = "(from " + fields[3].value + ")";
+    } else if (activeField === 2) {
+      if (fields[0].value)      note = "(contradiction of " + fields[0].value + ")";
+    } else if (activeField === 3) {
+      if (fields[1].value)      note = "(contradiction of " + fields[1].value + ")";
+    }
+    sugNote.textContent = note;
+
+    var sugg = deriveSuggestionsFor(activeField);
+    var currentValue = fields[activeField].value;
+
+    if (sugg.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "gs-suggest-empty";
+      if (activeField === 0) {
+        empty.textContent = "Type a term, or fill S₂ to see contraries.";
+      } else if (activeField === 1) {
+        empty.textContent = "Type a term, or fill S₁ to see contraries.";
+      } else if (activeField === 2) {
+        empty.textContent = "Fill S₁ to derive its contradiction.";
+      } else {
+        empty.textContent = "Fill S₂ to derive its contradiction.";
+      }
+      sugChips.appendChild(empty);
+      return;
+    }
+
+    sugg.forEach(function (s) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gs-chip";
+      if (sameValue(currentValue, s.value)) btn.classList.add("is-applied");
+
+      var val = document.createElement("span");
+      val.className = "gs-chip-value";
+      val.textContent = s.value;
+      btn.appendChild(val);
+
+      btn.addEventListener("click", function () {
+        setField(activeField, s.value, "set");
+        autopopulate();
+        computeNext();
+        updateFieldStyles();
+        renderSuggestions();
+      });
+
+      sugChips.appendChild(btn);
+    });
+  }
+
+  /* ================================================================
+   *  Next-field computation
+   * ================================================================ */
+
+  function computeNext() {
+    if (activeField === null) {
+      for (var i = 0; i < 4; i++) {
+        if (fields[i].source !== "set") { nextField = i; return; }
+      }
+      nextField = null;
+      return;
+    }
+    for (var k = 1; k <= 4; k++) {
+      var j = (activeField + k) % 4;
+      if (fields[j].source !== "set") { nextField = j; return; }
+    }
+    nextField = null;
+  }
+
+  /* ================================================================
+   *  Field styles
+   * ================================================================ */
+
+  function updateFieldStyles() {
+    for (var i = 0; i < 4; i++) {
+      fieldWrappers[i].classList.toggle("is-active", activeField === i);
+      fieldWrappers[i].classList.toggle("is-next",   nextField === i);
+
+      var inp = termInputs[i];
+      inp.classList.toggle("is-provisional", fields[i].source === "provisional");
+      inp.classList.toggle("is-empty",       fields[i].source === "empty");
+    }
+  }
+
+  /* ================================================================
+   *  Render diagram
+   * ================================================================ */
+
+  function pulse(el) {
+    el.classList.remove("gs-pulse");
+    void el.offsetWidth;
+    el.classList.add("gs-pulse");
+  }
+
+  function setMain(el, value) {
+    var v = (value || "").trim();
+    if (v) {
+      el.textContent = v;
+      el.classList.remove("is-empty");
+    } else {
+      el.textContent = "\u2014";
+      el.classList.add("is-empty");
+    }
+  }
+
+  function renderTerms(animate) {
+    for (var i = 0; i < 4; i++) {
+      setMain(termMains[i], fields[i].value);
+      if (animate) pulse(termBoxes[i]);
+    }
+  }
+
+  function renderMetaterms(animate) {
+    var derived = META_PAIRS.map(function (pair) {
+      var a = (fields[pair.a].value || "").trim();
+      var b = (fields[pair.b].value || "").trim();
+      return {
+        text:    (a || TERM_PLACEHOLDERS[pair.a]) + SEP +
+                 (b || TERM_PLACEHOLDERS[pair.b]),
+        isEmpty: !a || !b
+      };
+    });
+
+    for (var i = 0; i < 4; i++) {
+      metaMains[i].textContent = derived[i].text;
+      metaMains[i].classList.toggle("is-empty", derived[i].isEmpty);
+      metaInputs[i].value = derived[i].text;
+      if (animate) pulse(metaBoxes[i]);
+    }
+  }
+
+  function renderAll(animate) {
+    renderTerms(animate);
+    renderMetaterms(animate);
+  }
+
+  /* ================================================================
+   *  Event wiring
+   * ================================================================ */
+
+  termInputs.forEach(function (input, i) {
+    input.addEventListener("focus", function () {
+      activeField = i;
+      computeNext();
+      updateFieldStyles();
+      renderSuggestions();
+    });
+
+    input.addEventListener("input", function (e) {
+      var v = e.target.value;
+      fields[i].value  = v;
+      fields[i].source = v ? "set" : "empty";
+      autopopulate();
+      computeNext();
+      updateFieldStyles();
+      renderSuggestions();
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        renderAll(true);
+      }
+    });
+  });
+
+  byId("gs-update").addEventListener("click", function () {
+    renderAll(true);
+  });
+
+  byId("gs-rotate").addEventListener("click", function () {
+    var v = fields.map(function (f) { return f.value; });
+    setField(0, v[2], "set");
+    setField(1, v[0], "set");
+    setField(2, v[3], "set");
+    setField(3, v[1], "set");
+    autopopulate();
+    computeNext();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-reset").addEventListener("click", function () {
+    setField(0, TERM_DEFAULTS[0], "set");
+    clearField(1);
+    clearField(2);
+    clearField(3);
+    autopopulate();
+    activeField = 0;
+    computeNext();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-clear").addEventListener("click", function () {
+    for (var i = 0; i < 4; i++) clearField(i);
+    activeField = null;
+    computeNext();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  /* ================================================================
+   *  Init
+   * ================================================================ */
+
+  function init() {
+    setField(0, TERM_DEFAULTS[0], "set");
+    autopopulate();
+    activeField = null;
+    computeNext();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(false);
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
