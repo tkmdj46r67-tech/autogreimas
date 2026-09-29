@@ -662,13 +662,24 @@
 
   function resolveContradiction(sourceField, targetField) {
     var src = (fields[sourceField].value || "").trim();
+
     if (!src) {
-      if (fields[targetField].source !== "empty"
-          && fields[targetField].source !== "set") {
         clearField(targetField);
-      }
-      return;
+        return;
     }
+
+    var investments = lookupInvestments(src).map(titleCase);
+
+    if (investments.length === 0) {
+        setField(targetField, negate(src), "provisional");
+        return;
+    }
+    if (investments.length === 1) {
+        setField(targetField, investments[0], "provisional");
+        return;
+    }
+    setPending(targetField, investments);
+}
     if (fields[targetField].source === "set") return;
 
     var investments = lookupInvestments(src).map(titleCase);
