@@ -863,4 +863,50 @@
   });
 
   byId("gs-rotate").addEventListener("click", function () {
-    /* Rotate only
+    /* Rotate only the four term values, treating all as set. */
+    var v = fields.map(function (f) { return f.value; });
+    setField(0, v[2], "set");
+    setField(1, v[0], "set");
+    setField(2, v[3], "set");
+    setField(3, v[1], "set");
+    autopopulate();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-reset").addEventListener("click", function () {
+    setField(0, TERM_DEFAULTS[0], "set");
+    setField(1, TERM_DEFAULTS[1], "set");
+    autopopulate();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-clear").addEventListener("click", function () {
+    for (var i = 0; i < 4; i++) clearField(i);
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  /* ================================================================
+   *  Init
+   * ================================================================ */
+
+  function init() {
+    setField(0, TERM_DEFAULTS[0], "set");
+    setField(1, TERM_DEFAULTS[1], "set");
+    autopopulate();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(false);
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
