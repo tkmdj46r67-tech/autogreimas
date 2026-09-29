@@ -47,16 +47,8 @@
   .gs-app { width: 100%; max-width: 900px; }
 
   header { text-align: center; margin: 0 0 18px; }
-  header h1 {
-    margin: 0 0 4px;
-    font-size: 1.05rem;
-    font-weight: 600;
-  }
-  header p {
-    margin: 0;
-    font-size: .8rem;
-    color: var(--gs-muted);
-  }
+  header h1 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; }
+  header p  { margin: 0; font-size: .8rem; color: var(--gs-muted); }
 
   /* ---------- Stage ---------- */
   .gs-stage {
@@ -108,10 +100,7 @@
   }
 
   .gs-term,
-  .gs-meta {
-    padding: 5px 9px;
-    z-index: 2;
-  }
+  .gs-meta { padding: 5px 9px; z-index: 2; }
   .gs-term { max-width: 20%; }
   .gs-meta { max-width: 22%; }
 
@@ -134,15 +123,10 @@
     color: var(--gs-text);
     min-height: 1.18em;
   }
-  .gs-meta-main.is-derived {
-    font-size: .88rem;
-    font-weight: 600;
-  }
+  .gs-meta-main.is-derived { font-size: .88rem; font-weight: 600; }
+
   .gs-term-main.is-empty,
-  .gs-meta-main.is-empty {
-    color: var(--gs-muted);
-    font-weight: 400;
-  }
+  .gs-meta-main.is-empty { color: var(--gs-muted); font-weight: 400; }
 
   .gs-term-label,
   .gs-meta-label {
@@ -221,29 +205,8 @@
     margin-right: 4px;
     transition: color .15s ease;
   }
-
-  /* Active field label takes on accent color (persists after blur) */
   .gs-field.is-active label,
-  .gs-field.is-active label .gs-tag {
-    color: var(--gs-accent);
-  }
-
-  /* "Next" indicator: a small pulsing accent dot after the label */
-  .gs-field.is-next:not(.is-active) label::after {
-    content: "";
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--gs-accent);
-    margin-left: 7px;
-    vertical-align: middle;
-    animation: gs-dot-pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes gs-dot-pulse {
-    0%, 100% { opacity: .35; }
-    50%      { opacity: 1; }
-  }
+  .gs-field.is-active label .gs-tag { color: var(--gs-accent); }
 
   .gs-field input {
     width: 100%;
@@ -263,7 +226,7 @@
     box-shadow: 0 0 0 3px rgba(124, 108, 231, .18);
   }
 
-  /* Provisional: auto-derived value, will update when parents change */
+  /* Provisional: auto-derived value */
   .gs-field input.is-provisional {
     border-style: dashed;
     color: var(--gs-muted);
@@ -274,10 +237,7 @@
     font-style: normal;
   }
 
-  /* Empty: no value at all */
-  .gs-field input.is-empty {
-    background: transparent;
-  }
+  .gs-field input.is-empty { background: transparent; }
 
   /* ---------- Suggestion panel ---------- */
   .gs-suggest {
@@ -296,9 +256,7 @@
     color: var(--gs-muted);
     margin-bottom: 10px;
   }
-  .gs-suggest-title .gs-suggest-anchor {
-    color: var(--gs-text);
-  }
+  .gs-suggest-title .gs-suggest-anchor { color: var(--gs-text); }
   .gs-suggest-title .gs-suggest-note {
     color: var(--gs-muted);
     font-weight: 500;
@@ -411,7 +369,7 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Click a term field to see suggestions. Filling it moves the cursor to the next one. Update the diagram when ready.</p>
+    <p>Type in S₁ to see contrary suggestions for S₂. Click a chip to fill S₂, or type your own.</p>
   </header>
 
   <!-- ===== Diagram ===== -->
@@ -471,7 +429,7 @@
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
-      One field is active at a time (highlighted in accent color). Solid fields are your choices; dashed italic fields are auto-derived and will update when their parents change.
+      Editing S₁ suggests contraries for S₂. Picking one or typing your own sets S₂. ~S₁ and ~S₂ derive automatically.
     </p>
 
     <div class="gs-controls">
@@ -495,7 +453,7 @@
 
     <div class="gs-suggest" id="gs-suggest">
       <div class="gs-suggest-title">
-        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">any field</span>
+        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">S₂</span>
         <span class="gs-suggest-note" id="gs-suggest-note"></span>
       </div>
       <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
@@ -542,8 +500,7 @@
   "use strict";
 
   /* ================================================================
-   *  CONTRARY DICTIONARY
-   *  Paste your full table here.
+   *  CONTRARY DICTIONARY — paste your full table here.
    * ================================================================ */
   var CONTRARIES = {
     "being":  "seeming",
@@ -562,11 +519,6 @@
   };
 
   var NEG_PREFIX = "non-";
-
-  /* ================================================================
-   *  Configuration
-   * ================================================================ */
-
   var SEP = " \u00B7 ";
 
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
@@ -594,7 +546,6 @@
   var metaInputs    = [9,10,11,12].map(function (n) { return byId("in-" + n); });
   var metaBoxes     = [1,2,3,4].map(function (n) { return byId("meta-" + n); });
 
-  var sugPanel  = byId("gs-suggest");
   var sugAnchor = byId("gs-suggest-anchor");
   var sugNote   = byId("gs-suggest-note");
   var sugChips  = byId("gs-suggest-chips");
@@ -604,20 +555,28 @@
    * ================================================================ */
 
   /*
-   * Each field carries a value and a source:
-   *   "set"         — user typed or chose it; autopopulate will not overwrite.
-   *   "provisional" — auto-derived; autopopulate will refresh it.
-   *   "empty"       — no value.
+   * Four fields. Each carries:
+   *   value      — what is shown in the field
+   *   source     — "set" (user committed it) | "provisional" (derived) | "empty"
+   *   lastValue  — the last committed value, used to restore on abandon
+   *   pendingClear — true when the user focused an occupied field; text is
+   *                  visually cleared, awaiting either typing (commit) or
+   *                  blur without typing (restore).
    */
   var fields = [
-    { value: "", source: "empty" },
-    { value: "", source: "empty" },
-    { value: "", source: "empty" },
-    { value: "", source: "empty" }
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" }
   ];
 
-  var activeField = null;   /* 0..3, or null */
-  var nextField   = null;   /* 0..3, or null */
+  /* Only S1 and S2 are directly editable in this version.
+     ~S1 and ~S2 remain derived; that keeps the suggestion flow tight. */
+  var EDITABLE   = [0, 1];
+  var DERIVED_2  = 2;   /* ~S1 */
+  var DERIVED_3  = 3;   /* ~S2 */
+
+  var activeField = 1;  /* suggestions are for S2 by default */
 
   /* ================================================================
    *  Text helpers
@@ -653,18 +612,6 @@
                : NEG_PREFIX + t;
   }
 
-  function unNegate(term) {
-    var t = (term || "").trim();
-    if (!t) return null;
-    var lower = t.toLowerCase();
-    if (lower.indexOf(NEG_PREFIX) !== 0) return null;
-    var base = t.slice(NEG_PREFIX.length);
-    if (!base) return null;
-    var startsUpper = t.charAt(0) === t.charAt(0).toUpperCase() &&
-                      t.charAt(0) !== t.charAt(0).toLowerCase();
-    return startsUpper ? base.charAt(0).toUpperCase() + base.slice(1) : base;
-  }
-
   function sameValue(a, b) {
     return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
   }
@@ -674,8 +621,9 @@
    * ================================================================ */
 
   function setField(i, value, source) {
-    fields[i].value  = value || "";
-    fields[i].source = source;
+    fields[i].value     = value || "";
+    fields[i].source    = value ? source : "empty";
+    fields[i].lastValue = value || fields[i].lastValue;
     termInputs[i].value = fields[i].value;
   }
 
@@ -686,156 +634,84 @@
   }
 
   /* ================================================================
-   *  Autopopulate — fills provisional fields from their parents
+   *  Autopopulate ~S1 and ~S2 from S1 and S2
    * ================================================================ */
 
   function autopopulate() {
-    /* S₁ ← S₂ (if S₁ not user-set and empty) */
-    if (fields[0].source !== "set" && !fields[0].value) {
-      var c1 = fields[1].value ? lookupContraries(fields[1].value) : [];
-      if (c1.length > 0) setField(0, titleCase(c1[0]), "provisional");
+    if (fields[0].value) {
+      setField(DERIVED_2, negate(fields[0].value), "provisional");
+    } else if (fields[DERIVED_2].source === "provisional") {
+      clearField(DERIVED_2);
     }
-
-    /* S₂ ← S₁ (if S₂ not user-set and empty) */
-    if (fields[1].source !== "set" && !fields[1].value) {
-      var c2 = fields[0].value ? lookupContraries(fields[0].value) : [];
-      if (c2.length > 0) setField(1, titleCase(c2[0]), "provisional");
-    }
-
-    /* ~S₁ ← S₁ */
-    if (fields[2].source !== "set") {
-      if (fields[0].value) setField(2, negate(fields[0].value), "provisional");
-      else if (fields[2].source === "provisional") clearField(2);
-    }
-
-    /* ~S₂ ← S₂ */
-    if (fields[3].source !== "set") {
-      if (fields[1].value) setField(3, negate(fields[1].value), "provisional");
-      else if (fields[3].source === "provisional") clearField(3);
+    if (fields[1].value) {
+      setField(DERIVED_3, negate(fields[1].value), "provisional");
+    } else if (fields[DERIVED_3].source === "provisional") {
+      clearField(DERIVED_3);
     }
   }
 
   /* ================================================================
-   *  Derive suggestions for the active field
+   *  Suggestion derivation for S2 (the only suggestion target now)
    * ================================================================ */
 
-  function deriveSuggestionsFor(i) {
-    var sugg = [];
-
-    if (i === 0) {
-      if (fields[2].value) {
-        var u = unNegate(fields[2].value);
-        if (u) sugg.push({ value: u });
-      }
-      if (fields[1].value) {
-        lookupContraries(fields[1].value).forEach(function (c) {
-          sugg.push({ value: titleCase(c) });
-        });
-      }
-    }
-
-    if (i === 1) {
-      if (fields[0].value) {
-        lookupContraries(fields[0].value).forEach(function (c) {
-          sugg.push({ value: titleCase(c) });
-        });
-      }
-      if (fields[3].value) {
-        var u2 = unNegate(fields[3].value);
-        if (u2) sugg.push({ value: u2 });
-      }
-    }
-
-    if (i === 2) {
-      if (fields[0].value) {
-        sugg.push({ value: negate(fields[0].value) });
-      }
-    }
-
-    if (i === 3) {
-      if (fields[1].value) {
-        sugg.push({ value: negate(fields[1].value) });
-      }
-    }
-
-    /* Dedupe by lowercase value */
-    var seen = {};
-    return sugg.filter(function (s) {
-      var k = s.value.toLowerCase();
-      if (seen[k]) return false;
-      seen[k] = true;
-      return true;
+  function deriveS2Suggestions() {
+    var source = (fields[0].value || "").trim();
+    if (!source) return [];
+    return lookupContraries(source).map(function (c) {
+      return titleCase(c);
     });
   }
 
   /* ================================================================
-   *  Render suggestion panel
+   *  Suggestion panel
    * ================================================================ */
 
   function renderSuggestions() {
     sugChips.innerHTML = "";
 
-    if (activeField === null) {
-      sugAnchor.textContent = "any field";
-      sugNote.textContent = "";
+    sugAnchor.textContent = "S\u2082";
+
+    var note = "";
+    if (fields[0].value) {
+      note = "(contrary of " + fields[0].value + ")";
+    }
+    sugNote.textContent = note;
+
+    var sugg = deriveS2Suggestions();
+
+    if (!fields[0].value) {
       var hint = document.createElement("div");
       hint.className = "gs-suggest-empty";
-      hint.textContent = "Click a term field above to see suggestions.";
+      hint.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
       sugChips.appendChild(hint);
       return;
     }
 
-    sugAnchor.textContent = TERM_LABELS[activeField];
-
-    /* Derivation note in the header */
-    var note = "";
-    if (activeField === 0) {
-      if (fields[1].value)      note = "(contrary of " + fields[1].value + ")";
-      else if (fields[2].value) note = "(from " + fields[2].value + ")";
-    } else if (activeField === 1) {
-      if (fields[0].value)      note = "(contrary of " + fields[0].value + ")";
-      else if (fields[3].value) note = "(from " + fields[3].value + ")";
-    } else if (activeField === 2) {
-      if (fields[0].value)      note = "(contradiction of " + fields[0].value + ")";
-    } else if (activeField === 3) {
-      if (fields[1].value)      note = "(contradiction of " + fields[1].value + ")";
-    }
-    sugNote.textContent = note;
-
-    var sugg = deriveSuggestionsFor(activeField);
-    var currentValue = fields[activeField].value;
-
     if (sugg.length === 0) {
-      var empty = document.createElement("div");
-      empty.className = "gs-suggest-empty";
-      if (activeField === 0) {
-        empty.textContent = "Type a term, or fill S₂ to see contraries.";
-      } else if (activeField === 1) {
-        empty.textContent = "Type a term, or fill S₁ to see contraries.";
-      } else if (activeField === 2) {
-        empty.textContent = "Fill S₁ to derive its contradiction.";
-      } else {
-        empty.textContent = "Fill S₂ to derive its contradiction.";
-      }
-      sugChips.appendChild(empty);
+      var none = document.createElement("div");
+      none.className = "gs-suggest-empty";
+      none.textContent =
+        "No entry for \u201C" + fields[0].value +
+        "\u201D. Type S\u2082 yourself.";
+      sugChips.appendChild(none);
       return;
     }
 
-    sugg.forEach(function (s) {
+    sugg.forEach(function (value) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "gs-chip";
-      if (sameValue(currentValue, s.value)) btn.classList.add("is-applied");
+      if (sameValue(fields[1].value, value)) btn.classList.add("is-applied");
 
       var val = document.createElement("span");
       val.className = "gs-chip-value";
-      val.textContent = s.value;
+      val.textContent = value;
       btn.appendChild(val);
 
       btn.addEventListener("click", function () {
-        setField(activeField, s.value, "set");
+        /* Chip click commits S2 as a user choice */
+        setField(1, value, "set");
         autopopulate();
-        computeNext();
         updateFieldStyles();
         renderSuggestions();
       });
@@ -845,37 +721,19 @@
   }
 
   /* ================================================================
-   *  Next-field computation
-   * ================================================================ */
-
-  function computeNext() {
-    if (activeField === null) {
-      for (var i = 0; i < 4; i++) {
-        if (fields[i].source !== "set") { nextField = i; return; }
-      }
-      nextField = null;
-      return;
-    }
-    for (var k = 1; k <= 4; k++) {
-      var j = (activeField + k) % 4;
-      if (fields[j].source !== "set") { nextField = j; return; }
-    }
-    nextField = null;
-  }
-
-  /* ================================================================
-   *  Field styles
+   *  Field styling
    * ================================================================ */
 
   function updateFieldStyles() {
     for (var i = 0; i < 4; i++) {
-      fieldWrappers[i].classList.toggle("is-active", activeField === i);
-      fieldWrappers[i].classList.toggle("is-next",   nextField === i);
-
       var inp = termInputs[i];
       inp.classList.toggle("is-provisional", fields[i].source === "provisional");
       inp.classList.toggle("is-empty",       fields[i].source === "empty");
     }
+    fieldWrappers[1].classList.toggle("is-active", true);  /* panel is for S2 */
+    fieldWrappers[0].classList.toggle("is-active", false);
+    fieldWrappers[2].classList.toggle("is-active", false);
+    fieldWrappers[3].classList.toggle("is-active", false);
   }
 
   /* ================================================================
@@ -916,7 +774,6 @@
         isEmpty: !a || !b
       };
     });
-
     for (var i = 0; i < 4; i++) {
       metaMains[i].textContent = derived[i].text;
       metaMains[i].classList.toggle("is-empty", derived[i].isEmpty);
@@ -931,23 +788,59 @@
   }
 
   /* ================================================================
-   *  Event wiring
+   *  Input handling for S1 and S2
+   *
+   *  Commit on typing is immediate (so suggestions reflect what's
+   *  typed), but a focused field with existing text is visually
+   *  emptied so the user can overwrite. If they blur without typing,
+   *  the previous value is restored.
    * ================================================================ */
 
-  termInputs.forEach(function (input, i) {
+  EDITABLE.forEach(function (i) {
+    var input = termInputs[i];
+
     input.addEventListener("focus", function () {
-      activeField = i;
-      computeNext();
+      /* Visual clear on focus if there's a value.
+         The underlying state isn't touched until typing or blur. */
+      if (input.value) {
+        input.dataset.priorValue = fields[i].value;
+        input.dataset.priorSource = fields[i].source;
+        input.value = "";
+        input.classList.add("is-empty");
+        input.classList.remove("is-provisional");
+      } else {
+        input.dataset.priorValue = "";
+        input.dataset.priorSource = fields[i].source;
+      }
+    });
+
+    input.addEventListener("input", function () {
+      var v = input.value;
+      fields[i].value  = v;
+      fields[i].source = v ? "set" : "empty";
+      if (v) input.classList.remove("is-empty");
+
+      if (i === 0) autopopulate();
       updateFieldStyles();
       renderSuggestions();
     });
 
-    input.addEventListener("input", function (e) {
-      var v = e.target.value;
-      fields[i].value  = v;
-      fields[i].source = v ? "set" : "empty";
+    input.addEventListener("blur", function () {
+      /* If the user emptied the field and left without typing,
+         restore the previous value. */
+      if (!input.value && input.dataset.priorValue) {
+        var prior = input.dataset.priorValue;
+        var priorSource = input.dataset.priorSource || "set";
+        setField(i, prior, priorSource);
+      } else if (!input.value) {
+        fields[i].value  = "";
+        fields[i].source = "empty";
+      }
+      /* Clear stored prior state */
+      delete input.dataset.priorValue;
+      delete input.dataset.priorSource;
+
       autopopulate();
-      computeNext();
       updateFieldStyles();
       renderSuggestions();
     });
@@ -955,67 +848,19 @@
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        renderAll(true);
+        /* Enter commits typed text and moves focus away. */
+        input.blur();
       }
     });
   });
+
+  /* ================================================================
+   *  Buttons
+   * ================================================================ */
 
   byId("gs-update").addEventListener("click", function () {
     renderAll(true);
   });
 
   byId("gs-rotate").addEventListener("click", function () {
-    var v = fields.map(function (f) { return f.value; });
-    setField(0, v[2], "set");
-    setField(1, v[0], "set");
-    setField(2, v[3], "set");
-    setField(3, v[1], "set");
-    autopopulate();
-    computeNext();
-    updateFieldStyles();
-    renderSuggestions();
-    renderAll(true);
-  });
-
-  byId("gs-reset").addEventListener("click", function () {
-    setField(0, TERM_DEFAULTS[0], "set");
-    clearField(1);
-    clearField(2);
-    clearField(3);
-    autopopulate();
-    activeField = 0;
-    computeNext();
-    updateFieldStyles();
-    renderSuggestions();
-    renderAll(true);
-  });
-
-  byId("gs-clear").addEventListener("click", function () {
-    for (var i = 0; i < 4; i++) clearField(i);
-    activeField = null;
-    computeNext();
-    updateFieldStyles();
-    renderSuggestions();
-    renderAll(true);
-  });
-
-  /* ================================================================
-   *  Init
-   * ================================================================ */
-
-  function init() {
-    setField(0, TERM_DEFAULTS[0], "set");
-    autopopulate();
-    activeField = null;
-    computeNext();
-    updateFieldStyles();
-    renderSuggestions();
-    renderAll(false);
-  }
-
-  init();
-})();
-</script>
-
-</body>
-</html>
+    /* Rotate only
