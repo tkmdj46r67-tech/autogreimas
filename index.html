@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Extended Greimas Square</title>
+<style>
+  /* ---------- Theme tokens ---------- */
+  :root {
+    --gs-bg:        var(--background-primary, #ffffff);
+    --gs-panel:     var(--background-secondary, #f4f5f7);
+    --gs-text:      var(--text-normal, #1f2328);
+    --gs-muted:     var(--text-muted, #6b7280);
+    --gs-border:    var(--background-modifier-border, #dcdfe4);
+    --gs-accent:    var(--interactive-accent, #6c5ce7);
+    --gs-accent-fg: var(--text-on-accent, #ffffff);
+    --gs-line:      var(--text-faint, #9aa3b2);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gs-bg:     var(--background-primary, #1e1e22);
+      --gs-panel:  var(--background-secondary, #26262c);
+      --gs-text:   var(--text-normal, #e7e7ea);
+      --gs-muted:  var(--text-muted, #9aa0aa);
+      --gs-border: var(--background-modifier-border, #3b3b44);
+      --gs-accent: var(--interactive-accent, #8b7bff);
+      --gs-line:   var(--text-faint, #79808f);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--gs-bg);
+    color: var(--gs-text);
+    font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, "Helvetica Neue", Arial, sans-serif);
+    font-size: 15px;
+    line-height: 1.45;
+    padding: 22px 20px 34px;
+    display: flex;
+    justify-content: center;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .gs-app { width: 100%; max-width: 900px; }
+
+  header { text-align: center; margin: 0 0 18px; }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  header p {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--gs-muted);
+  }
+
+  /* ---------- Stage ---------- */
+  .gs-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+  }
+
+  .gs-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+  .gs-lines line,
+  .gs-lines polygon {
+    stroke: var(--gs-line);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    fill: none;
+  }
+  .gs-lines line.gs-diag {
+    stroke-dasharray: 6 6;
+    opacity: .7;
+  }
+  .gs-lines polygon.gs-diamond {
+    stroke-dasharray: 1 6;
+    stroke-linecap: round;
+    opacity: .85;
+  }
+
+  /* ---------- Nodes ---------- */
+  .gs-term,
+  .gs-meta,
+  .gs-rel {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border-radius: 8px;
+    background: var(--gs-bg);
+    text-align: center;
+    line-height: 1.18;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .gs-term,
+  .gs-meta {
+    padding: 5px 9px;
+    z-index: 2;
+  }
+  .gs-term { max-width: 20%; }
+  .gs-meta { max-width: 22%; }
+
+  .gs-rel {
+    padding: 2px 7px;
+    max-width: 18%;
+    z-index: 1;
+    pointer-events: none;
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+  }
+
+  .gs-term-main,
+  .gs-meta-main {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gs-text);
+    min-height: 1.18em;
+  }
+  .gs-meta-main.is-derived {
+    font-size: .88rem;
+    font-weight: 600;
+  }
+  .gs-term-main.is-empty,
+  .gs-meta-main.is-empty {
+    color: var(--gs-muted);
+    font-weight: 400;
+  }
+
+  .gs-term-label,
+  .gs-meta-label {
+    margin-top: 3px;
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+  }
+
+  /* ---------- Positions ---------- */
+  .gs-tl { left: 31%; top: 31%; }
+  .gs-tr { left: 69%; top: 31%; }
+  .gs-bl { left: 31%; top: 69%; }
+  .gs-br { left: 69%; top: 69%; }
+
+  .gs-m1 { left: 50%; top: 6%; }
+  .gs-m2 { left: 93%; top: 50%; }
+  .gs-m3 { left: 50%; top: 94%; }
+  .gs-m4 { left: 7%;  top: 50%; }
+
+  .gs-rel-top    { left: 50%; top: 31%; }
+  .gs-rel-bottom { left: 50%; top: 69%; }
+  .gs-rel-left   { left: 31%; top: 50%; }
+  .gs-rel-right  { left: 69%; top: 50%; }
+
+  @keyframes gs-pulse {
+    from { transform: translate(-50%, -50%) scale(.92); opacity: .35; }
+    to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  }
+  .gs-pulse { animation: gs-pulse .28s ease-out; }
+
+  /* ---------- Form ---------- */
+  .gs-section { margin-top: 24px; }
+  .gs-section-title {
+    margin: 0 0 4px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+  }
+  .gs-section-note {
+    margin: 0 0 12px;
+    font-size: .72rem;
+    color: var(--gs-muted);
+    line-height: 1.35;
+  }
+
+  .gs-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+
+  .gs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    position: relative;
+  }
+
+  .gs-field label {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    transition: color .15s ease;
+  }
+  .gs-field label .gs-tag {
+    font-weight: 700;
+    color: var(--gs-text);
+    margin-right: 4px;
+    transition: color .15s ease;
+  }
+
+  /* Active field label takes on accent color (persists after blur) */
+  .gs-field.is-active label,
+  .gs-field.is-active label .gs-tag {
+    color: var(--gs-accent);
+  }
+
+  /* "Next" indicator: a small pulsing accent dot after the label */
+  .gs-field.is-next:not(.is-active) label::after {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gs-accent);
+    margin-left: 7px;
+    vertical-align: middle;
+    animation: gs-dot-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes gs-dot-pulse {
+    0%, 100% { opacity: .35; }
+    50%      { opacity: 1; }
+  }
+
+  .gs-field input {
+    width: 100%;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: .9rem;
+    color: var(--gs-text);
+    background: var(--gs-panel);
+    border: 1px solid var(--gs-border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease,
+                color .15s ease, background-color .15s ease;
+  }
+  .gs-field input:focus {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 3px rgba(124, 108, 231, .18);
+  }
+
+  /* Provisional: auto-derived value, will update when parents change */
+  .gs-field input.is-provisional {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-provisional:focus {
+    color: var(--gs-text);
+    font-style: normal;
+  }
+
+  /* Empty: no value at all */
+  .gs-field input.is-empty {
+    background: transparent;
+  }
+
+  /* ---------- Suggestion panel ---------- */
+  .gs-suggest {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px dashed var(--gs-border);
+    border-radius: 10px;
+    background: var(--gs-panel);
+  }
+
+  .gs-suggest-title {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    margin-bottom: 10px;
+  }
+  .gs-suggest-title .gs-suggest-anchor {
+    color: var(--gs-text);
+  }
+  .gs-suggest-title .gs-suggest-note {
+    color: var(--gs-muted);
+    font-weight: 500;
+    letter-spacing: .02em;
+    text-transform: none;
+    margin-left: 4px;
+    font-size: .95em;
+  }
+
+  .gs-suggest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .gs-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--gs-border);
+    background: var(--gs-bg);
+    color: var(--gs-text);
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .06s ease, opacity .15s ease;
+  }
+  .gs-chip:hover { border-color: var(--gs-accent); }
+  .gs-chip:active { transform: translateY(1px); }
+  .gs-chip:hover .gs-chip-value { color: var(--gs-accent); }
+
+  .gs-chip.is-applied {
+    opacity: .55;
+    border-style: dashed;
+  }
+  .gs-chip.is-applied::after {
+    content: "\2713";
+    font-size: .75rem;
+    color: var(--gs-muted);
+    margin-left: 6px;
+  }
+
+  .gs-suggest-empty {
+    font-size: .78rem;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+
+  /* ---------- Buttons ---------- */
+  .gs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .gs-actions button {
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    cursor: pointer;
+    transition: filter .15s ease, transform .06s ease,
+                background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .gs-actions button:hover { filter: brightness(1.08); }
+  .gs-actions button:active { transform: translateY(1px); }
+  .gs-actions button.gs-secondary {
+    background: transparent;
+    color: var(--gs-muted);
+    border-color: var(--gs-border);
+  }
+  .gs-actions button.gs-secondary:hover {
+    filter: none;
+    color: var(--gs-text);
+    border-color: var(--gs-muted);
+  }
+  .gs-actions button.gs-tertiary {
+    background: transparent;
+    color: var(--gs-accent);
+    border-color: var(--gs-accent);
+  }
+  .gs-actions button.gs-tertiary:hover {
+    filter: none;
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+  }
+
+  @media (max-width: 620px) {
+    .gs-controls { grid-template-columns: 1fr; }
+    .gs-term { max-width: 24%; padding: 4px 6px; }
+    .gs-meta { max-width: 26%; padding: 4px 6px; }
+    .gs-rel  { max-width: 22%; font-size: .58rem; }
+    .gs-term-main { font-size: .84rem; }
+    .gs-meta-main.is-derived { font-size: .74rem; }
+    .gs-term-label, .gs-meta-label { font-size: .56rem; }
+    .gs-actions button { padding: 8px 16px; font-size: .82rem; }
+    .gs-chip { font-size: .78rem; padding: 5px 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gs-app">
+  <header>
+    <h1>Extended Greimas Square</h1>
+    <p>Click a term field to see suggestions. Filling it moves the cursor to the next one. Update the diagram when ready.</p>
+  </header>
+
+  <!-- ===== Diagram ===== -->
+  <div class="gs-stage">
+    <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
+         aria-hidden="true" focusable="false">
+      <polygon class="gs-diamond" points="50,6 93,50 50,94 7,50" />
+      <line x1="31" y1="31" x2="69" y2="31"></line>
+      <line x1="69" y1="31" x2="69" y2="69"></line>
+      <line x1="69" y1="69" x2="31" y2="69"></line>
+      <line x1="31" y1="69" x2="31" y2="31"></line>
+      <line class="gs-diag" x1="31" y1="31" x2="69" y2="69"></line>
+      <line class="gs-diag" x1="69" y1="31" x2="31" y2="69"></line>
+    </svg>
+
+    <div class="gs-term gs-tl" id="term-1">
+      <div class="gs-term-main" id="term-1-main">Being</div>
+      <div class="gs-term-label">S₁</div>
+    </div>
+    <div class="gs-term gs-tr" id="term-2">
+      <div class="gs-term-main" id="term-2-main">Seeming</div>
+      <div class="gs-term-label">S₂</div>
+    </div>
+    <div class="gs-term gs-bl" id="term-3">
+      <div class="gs-term-main" id="term-3-main">Non-being</div>
+      <div class="gs-term-label">~S₁</div>
+    </div>
+    <div class="gs-term gs-br" id="term-4">
+      <div class="gs-term-main" id="term-4-main">Non-seeming</div>
+      <div class="gs-term-label">~S₂</div>
+    </div>
+
+    <div class="gs-rel gs-rel-top"    id="rel-1">Contrary</div>
+    <div class="gs-rel gs-rel-bottom" id="rel-2">Subcontrary</div>
+    <div class="gs-rel gs-rel-left"   id="rel-3">Contradiction</div>
+    <div class="gs-rel gs-rel-right"  id="rel-4">Contradiction</div>
+
+    <div class="gs-meta gs-m1" id="meta-1">
+      <div class="gs-meta-main is-derived" id="meta-1-main">Being · Seeming</div>
+      <div class="gs-meta-label">M₁</div>
+    </div>
+    <div class="gs-meta gs-m2" id="meta-2">
+      <div class="gs-meta-main is-derived" id="meta-2-main">Seeming · Non-seeming</div>
+      <div class="gs-meta-label">M₂</div>
+    </div>
+    <div class="gs-meta gs-m3" id="meta-3">
+      <div class="gs-meta-main is-derived" id="meta-3-main">Non-being · Non-seeming</div>
+      <div class="gs-meta-label">M₃</div>
+    </div>
+    <div class="gs-meta gs-m4" id="meta-4">
+      <div class="gs-meta-main is-derived" id="meta-4-main">Being · Non-being</div>
+      <div class="gs-meta-label">M₄</div>
+    </div>
+  </div>
+
+  <!-- ===== Terms + Suggestions ===== -->
+  <div class="gs-section">
+    <h2 class="gs-section-title">Terms</h2>
+    <p class="gs-section-note">
+      One field is active at a time (highlighted in accent color). Solid fields are your choices; dashed italic fields are auto-derived and will update when their parents change.
+    </p>
+
+    <div class="gs-controls">
+      <div class="gs-field" id="field-1">
+        <label for="in-1"><span class="gs-tag">S₁</span> top left</label>
+        <input id="in-1" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-2">
+        <label for="in-2"><span class="gs-tag">S₂</span> top right</label>
+        <input id="in-2" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-3">
+        <label for="in-3"><span class="gs-tag">~S₁</span> bottom left</label>
+        <input id="in-3" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-4">
+        <label for="in-4"><span class="gs-tag">~S₂</span> bottom right</label>
+        <input id="in-4" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="gs-suggest" id="gs-suggest">
+      <div class="gs-suggest-title">
+        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">any field</span>
+        <span class="gs-suggest-note" id="gs-suggest-note"></span>
+      </div>
+      <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
+    </div>
+  </div>
+
+  <!-- ===== Metaterms ===== -->
+  <div class="gs-section">
+    <h2 class="gs-section-title">Metaterms</h2>
+    <p class="gs-section-note">
+      Composed on update.
+      M₁ = S₁ · S₂ &nbsp;|&nbsp; M₂ = S₂ · ~S₂ &nbsp;|&nbsp; M₃ = ~S₁ · ~S₂ &nbsp;|&nbsp; M₄ = S₁ · ~S₁
+    </p>
+    <div class="gs-controls">
+      <div class="gs-field">
+        <label for="in-9"><span class="gs-tag">M₁</span> top vertex</label>
+        <input id="in-9" type="text" class="is-derived" readonly tabindex="-1" />
+      </div>
+      <div class="gs-field">
+        <label for="in-10"><span class="gs-tag">M₂</span> right vertex</label>
+        <input id="in-10" type="text" class="is-derived" readonly tabindex="-1" />
+      </div>
+      <div class="gs-field">
+        <label for="in-11"><span class="gs-tag">M₃</span> bottom vertex</label>
+        <input id="in-11" type="text" class="is-derived" readonly tabindex="-1" />
+      </div>
+      <div class="gs-field">
+        <label for="in-12"><span class="gs-tag">M₄</span> left vertex</label>
+        <input id="in-12" type="text" class="is-derived" readonly tabindex="-1" />
+      </div>
+    </div>
+  </div>
+
+  <div class="gs-actions">
+    <button type="button" id="gs-update">Update square</button>
+    <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
+    <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
+    <button type="button" id="gs-clear" class="gs-secondary">Clear</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================================================================
+   *  CONTRARY DICTIONARY
+   *  Paste your full table here.
+   * ================================================================ */
+  var CONTRARIES = {
+    "being":  "seeming",
+    "seeming":"being",
+    "life":   "death",
+    "death":  "life",
+    "nature": "culture",
+    "culture":"nature",
+    "good":   "evil",
+    "evil":   "good",
+    "love":   "hate",
+    "hate":   "love",
+    "order":  "chaos",
+    "chaos":  "order"
+    /* ... add the rest ... */
+  };
+
+  var NEG_PREFIX = "non-";
+
+  /* ================================================================
+   *  Configuration
+   * ================================================================ */
+
+  var SEP = " \u00B7 ";
+
+  var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
+  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+
+  var META_PAIRS = [
+    { a: 0, b: 1 },
+    { a: 1, b: 3 },
+    { a: 2, b: 3 },
+    { a: 0, b: 2 }
+  ];
+
+  /* ================================================================
+   *  DOM
+   * ================================================================ */
+
+  function byId(id) { return document.getElementById(id); }
+
+  var termInputs    = [1,2,3,4].map(function (n) { return byId("in-" + n); });
+  var fieldWrappers = [1,2,3,4].map(function (n) { return byId("field-" + n); });
+  var termMains     = [1,2,3,4].map(function (n) { return byId("term-" + n + "-main"); });
+  var termBoxes     = [1,2,3,4].map(function (n) { return byId("term-" + n); });
+  var metaMains     = [1,2,3,4].map(function (n) { return byId("meta-" + n + "-main"); });
+  var metaInputs    = [9,10,11,12].map(function (n) { return byId("in-" + n); });
+  var metaBoxes     = [1,2,3,4].map(function (n) { return byId("meta-" + n); });
+
+  var sugPanel  = byId("gs-suggest");
+  var sugAnchor = byId("gs-suggest-anchor");
+  var sugNote   = byId("gs-suggest-note");
+  var sugChips  = byId("gs-suggest-chips");
+
+  /* ================================================================
+   *  State
+   * ================================================================ */
+
+  /*
+   * Each field carries a value and a source:
+   *   "set"         — user typed or chose it; autopopulate will not overwrite.
+   *   "provisional" — auto-derived; autopopulate will refresh it.
+   *   "empty"       — no value.
+   */
+  var fields = [
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" }
+  ];
+
+  var activeField = null;   /* 0..3, or null */
+  var nextField   = null;   /* 0..3, or null */
+
+  /* ================================================================
+   *  Text helpers
+   * ================================================================ */
+
+  function titleCase(s) {
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function lookupContraries(term) {
+    var key = (term || "").trim().toLowerCase();
+    if (!key) return [];
+    var entry = CONTRARIES[key];
+    if (!entry) return [];
+    return Array.isArray(entry) ? entry : [entry];
+  }
+
+  function negate(term) {
+    var t = (term || "").trim();
+    if (!t) return "";
+    var lower = t.toLowerCase();
+    if (lower.indexOf(NEG_PREFIX) === 0) {
+      var base = t.slice(NEG_PREFIX.length);
+      if (!base) return "";
+      var startsUpper = t.charAt(0) === t.charAt(0).toUpperCase() &&
+                        t.charAt(0) !== t.charAt(0).toLowerCase();
+      return startsUpper ? base.charAt(0).toUpperCase() + base.slice(1) : base;
+    }
+    var cap = t.charAt(0) === t.charAt(0).toUpperCase() &&
+              t.charAt(0) !== t.charAt(0).toLowerCase();
+    return cap ? "Non-" + t.charAt(0).toLowerCase() + t.slice(1)
+               : NEG_PREFIX + t;
+  }
+
+  function unNegate(term) {
+    var t = (term || "").trim();
+    if (!t) return null;
+    var lower = t.toLowerCase();
+    if (lower.indexOf(NEG_PREFIX) !== 0) return null;
+    var base = t.slice(NEG_PREFIX.length);
+    if (!base) return null;
+    var startsUpper = t.charAt(0) === t.charAt(0).toUpperCase() &&
+                      t.charAt(0) !== t.charAt(0).toLowerCase();
+    return startsUpper ? base.charAt(0).toUpperCase() + base.slice(1) : base;
+  }
+
+  function sameValue(a, b) {
+    return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
