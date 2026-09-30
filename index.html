@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Extended Greimas Square</title>
 
-<!-- ============================================================
-     Data files. These must load BEFORE the main script at the
-     bottom of <body>, so the CONTRARIES and INVESTMENTS globals
-     exist when it runs.
-     ============================================================ -->
 <script src="contraries.js"></script>
 <script src="investments.js"></script>
 
@@ -377,7 +372,7 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Type in S₁ to see contrary suggestions for S₂. Contradictions (~S₁, ~S₂) derive from their positives.</p>
+    <p>Click any term field to see suggestions. Chips fill that field. Update the diagram when ready.</p>
   </header>
 
   <div class="gs-stage">
@@ -435,7 +430,7 @@
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
-      Editing S₁ suggests contraries for S₂. If there's more than one, choose a chip or type your own.
+      Click any field to activate it. Solid fields are your choices; dashed italic fields are auto-derived.
     </p>
 
     <div class="gs-controls">
@@ -459,7 +454,7 @@
 
     <div class="gs-suggest" id="gs-suggest">
       <div class="gs-suggest-title">
-        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">S₂</span>
+        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">any field</span>
         <span class="gs-suggest-note" id="gs-suggest-note"></span>
       </div>
       <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
@@ -500,17 +495,12 @@
   </div>
 </div>
 
-<!-- ============================================================
-     Main script. Loads after the two data files, so CONTRARIES
-     and INVESTMENTS are already defined as globals.
-     ============================================================ -->
 <script>
 (function () {
   "use strict";
 
   /* ----------------------------------------------------------------
-   *  Defensive fallbacks in case the external data files fail to
-   *  load. The page will still render, just without suggestions.
+   *  Defensive fallbacks for the external data files
    * ---------------------------------------------------------------- */
 
   if (typeof CONTRARIES === "undefined") {
@@ -523,11 +513,9 @@
   }
 
   /* ================================================================
-   *  Helpers for reading the two tables
+   *  Table lookups (both normalize to arrays)
    * ================================================================ */
 
-  /* Return an array of contraries for a term, normalized from either
-     a single string or an array in the source table. */
   function lookupContraries(term) {
     var key = (term || "").trim().toLowerCase();
     if (!key) return [];
@@ -536,7 +524,6 @@
     return Array.isArray(entry) ? entry.slice() : [entry];
   }
 
-  /* Return an array of investments for a term. Same normalization. */
   function lookupInvestments(term) {
     var key = (term || "").trim().toLowerCase();
     if (!key) return [];
@@ -551,6 +538,17 @@
 
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
+
+  var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
+  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+
+  var META_PAIRS = [
+    { a: 0, b: 1 },
+    { a: 1, b: 3 },
+    { a: 2, b: 3 },
+    { a: 0, b: 2 }
+  ];
 
   function titleCase(s) {
     if (!s) return "";
@@ -579,18 +577,8 @@
   }
 
   /* ================================================================
-   *  Configuration and DOM
+   *  DOM
    * ================================================================ */
-
-  var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
-  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
-
-  var META_PAIRS = [
-    { a: 0, b: 1 },
-    { a: 1, b: 3 },
-    { a: 2, b: 3 },
-    { a: 0, b: 2 }
-  ];
 
   function byId(id) { return document.getElementById(id); }
 
@@ -608,6 +596,12 @@
 
   /* ================================================================
    *  State
+   *
+   *  All four fields are editable now. Sources:
+   *    "set"         — user chose or typed it
+   *    "provisional" — auto-derived, will update when parents change
+   *    "pending"     — empty; multiple candidates exist, awaiting choice
+   *    "empty"       — nothing, and nothing to offer
    * ================================================================ */
 
   var fields = [
@@ -619,9 +613,7 @@
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
-  var EDITABLE  = [0, 1];
-  var DERIVED_2 = 2;
-  var DERIVED_3 = 3;
+  var activeField = null;
 
   /* ================================================================
    *  State mutators
@@ -652,59 +644,17 @@
   }
 
   /* ================================================================
-   *  Autopopulate ~S₁ and ~S₂
+   *  Derivation
    *
-   *  Each of these tries INVESTMENTS first, then falls back to
-   *  mechanical negation. If INVESTMENTS yields several candidates,
-   *  the field goes into "pending" state and the candidate list is
-   *  stored for the panel to render.
+   *  S2 = contrary of S1 (via CONTRARIES).
+   *  ~S1 = investment of S1 (via INVESTMENTS) or mechanical negation.
+   *  ~S2 = investment of S2 (via INVESTMENTS) or mechanical negation.
+   *
+   *  A field that the user has set ("set") is never overwritten.
+   *  A field that is empty or provisional gets recomputed freely.
    * ================================================================ */
 
-  function resolveContradiction(sourceField, targetField) {
-    var src = (fields[sourceField].value || "").trim();
-
-    if (!src) {
-        clearField(targetField);
-        return;
-    }
-
-    var investments = lookupInvestments(src).map(titleCase);
-
-    if (investments.length === 0) {
-        setField(targetField, negate(src), "provisional");
-        return;
-    }
-    if (investments.length === 1) {
-        setField(targetField, investments[0], "provisional");
-        return;
-    }
-    setPending(targetField, investments);
-}
-    if (fields[targetField].source === "set") return;
-
-    var investments = lookupInvestments(src).map(titleCase);
-
-    if (investments.length === 0) {
-      setField(targetField, negate(src), "provisional");
-      return;
-    }
-    if (investments.length === 1) {
-      setField(targetField, investments[0], "provisional");
-      return;
-    }
-    setPending(targetField, investments);
-  }
-
-  function autopopulate() {
-    resolveContradiction(0, DERIVED_2);
-    resolveContradiction(1, DERIVED_3);
-  }
-
-  /* ================================================================
-   *  S₂ resolution from S₁
-   * ================================================================ */
-
-  function resolveS2FromS1() {
+  function deriveS2FromS1() {
     if (fields[1].source === "set") return;
 
     var s1 = (fields[0].value || "").trim();
@@ -726,47 +676,138 @@
     setPending(1, candidates);
   }
 
+  function deriveContradiction(sourceField, targetField) {
+    if (fields[targetField].source === "set") return;
+
+    var src = (fields[sourceField].value || "").trim();
+    if (!src) {
+      if (fields[targetField].source !== "empty") clearField(targetField);
+      return;
+    }
+
+    var investments = lookupInvestments(src).map(titleCase);
+
+    if (investments.length === 0) {
+      setField(targetField, negate(src), "provisional");
+      return;
+    }
+    if (investments.length === 1) {
+      setField(targetField, investments[0], "provisional");
+      return;
+    }
+    setPending(targetField, investments);
+  }
+
+  function deriveAll() {
+    deriveS2FromS1();
+    deriveContradiction(0, 2);   /* ~S1 from S1 */
+    deriveContradiction(1, 3);   /* ~S2 from S2 */
+  }
+
+  /* ================================================================
+   *  Suggestion derivation for any field
+   * ================================================================ */
+
+  function deriveSuggestionsFor(i) {
+    /* If the field is pending, its candidates are already known. */
+    if (fields[i].source === "pending" && pendingCandidates[i].length) {
+      return {
+        candidates: pendingCandidates[i].slice(),
+        note: "(" + pendingCandidates[i].length + " options)"
+      };
+    }
+
+    /* Otherwise, produce fresh candidates based on the field. */
+    if (i === 0) {
+      return {
+        candidates: [],
+        note: "Type in S\u2081 freely; suggestions flow outward."
+      };
+    }
+
+    if (i === 1) {
+      var s1 = (fields[0].value || "").trim();
+      if (!s1) return { candidates: [], note: "Fill S\u2081 first." };
+      return {
+        candidates: lookupContraries(s1).map(titleCase),
+        note: "(contrary of " + s1 + ")"
+      };
+    }
+
+    if (i === 2) {
+      var s1b = (fields[0].value || "").trim();
+      if (!s1b) return { candidates: [], note: "Fill S\u2081 first." };
+      var ivs1 = lookupInvestments(s1b).map(titleCase);
+      if (ivs1.length) {
+        return { candidates: ivs1, note: "(investment of " + s1b + ")" };
+      }
+      return {
+        candidates: [negate(s1b)],
+        note: "(mechanical negation of " + s1b + ")"
+      };
+    }
+
+    if (i === 3) {
+      var s2 = (fields[1].value || "").trim();
+      if (!s2) return { candidates: [], note: "Fill S\u2082 first." };
+      var ivs2 = lookupInvestments(s2).map(titleCase);
+      if (ivs2.length) {
+        return { candidates: ivs2, note: "(investment of " + s2 + ")" };
+      }
+      return {
+        candidates: [negate(s2)],
+        note: "(mechanical negation of " + s2 + ")"
+      };
+    }
+
+    return { candidates: [], note: "" };
+  }
+
   /* ================================================================
    *  Suggestion panel
    * ================================================================ */
 
   function renderSuggestions() {
     sugChips.innerHTML = "";
-    sugAnchor.textContent = "S\u2082";
 
-    var note = "";
-    if (fields[0].value) {
-      note = "(contrary of " + fields[0].value + ")";
-    }
-    sugNote.textContent = note;
-
-    if (!fields[0].value) {
+    if (activeField === null) {
+      sugAnchor.textContent = "any field";
+      sugNote.textContent = "";
       var hint = document.createElement("div");
       hint.className = "gs-suggest-empty";
-      hint.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
+      hint.textContent = "Click a term field above to see suggestions.";
       sugChips.appendChild(hint);
       return;
     }
 
-    var candidates = pendingCandidates[1].length
-      ? pendingCandidates[1]
-      : lookupContraries(fields[0].value).map(titleCase);
+    sugAnchor.textContent = TERM_LABELS[activeField];
 
-    if (candidates.length === 0) {
-      var none = document.createElement("div");
-      none.className = "gs-suggest-empty";
-      none.textContent =
-        "No entry for \u201C" + fields[0].value +
-        "\u201D. Type S\u2082 yourself.";
-      sugChips.appendChild(none);
+    var derived = deriveSuggestionsFor(activeField);
+    sugNote.textContent = derived.note || "";
+
+    if (derived.candidates.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "gs-suggest-empty";
+      if (activeField === 0) {
+        empty.textContent = "No suggestions for S\u2081; type freely.";
+      } else if (activeField === 1) {
+        empty.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
+      } else if (activeField === 2) {
+        empty.textContent = "Fill S\u2081 to derive its contradiction.";
+      } else {
+        empty.textContent = "Fill S\u2082 to derive its contradiction.";
+      }
+      sugChips.appendChild(empty);
       return;
     }
 
-    candidates.forEach(function (value) {
+    var currentValue = fields[activeField].value;
+
+    derived.candidates.forEach(function (value) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "gs-chip";
-      if (sameValue(fields[1].value, value)) btn.classList.add("is-applied");
+      if (sameValue(currentValue, value)) btn.classList.add("is-applied");
 
       var val = document.createElement("span");
       val.className = "gs-chip-value";
@@ -774,8 +815,8 @@
       btn.appendChild(val);
 
       btn.addEventListener("click", function () {
-        setField(1, value, "set");
-        autopopulate();
+        setField(activeField, value, "set");
+        deriveAll();
         updateFieldStyles();
         renderSuggestions();
       });
@@ -797,16 +838,13 @@
 
       if (fields[i].source === "pending") {
         var n = pendingCandidates[i].length;
-        inp.placeholder = n + " options \u2014 choose one or type";
+        inp.placeholder = n + " options \u2014 click to choose";
       } else {
         inp.placeholder = "";
       }
-    }
 
-    fieldWrappers[1].classList.toggle("is-active", true);
-    fieldWrappers[0].classList.toggle("is-active", false);
-    fieldWrappers[2].classList.toggle("is-active", false);
-    fieldWrappers[3].classList.toggle("is-active", false);
+      fieldWrappers[i].classList.toggle("is-active", activeField === i);
+    }
   }
 
   /* ================================================================
@@ -861,13 +899,15 @@
   }
 
   /* ================================================================
-   *  Input handling for S₁ and S₂
+   *  Input handling — all four fields
    * ================================================================ */
 
-  EDITABLE.forEach(function (i) {
+  [0,1,2,3].forEach(function (i) {
     var input = termInputs[i];
 
     input.addEventListener("focus", function () {
+      activeField = i;
+
       if (input.value) {
         input.dataset.priorValue  = fields[i].value;
         input.dataset.priorSource = fields[i].source;
@@ -878,6 +918,9 @@
         input.dataset.priorValue  = "";
         input.dataset.priorSource = fields[i].source;
       }
+
+      updateFieldStyles();
+      renderSuggestions();
     });
 
     input.addEventListener("input", function () {
@@ -887,8 +930,7 @@
       if (v) input.classList.remove("is-empty", "is-pending", "is-provisional");
       pendingCandidates[i] = [];
 
-      if (i === 0) resolveS2FromS1();
-      autopopulate();
+      deriveAll();
       updateFieldStyles();
       renderSuggestions();
     });
@@ -907,8 +949,7 @@
       delete input.dataset.priorValue;
       delete input.dataset.priorSource;
 
-      if (i === 0) resolveS2FromS1();
-      autopopulate();
+      deriveAll();
       updateFieldStyles();
       renderSuggestions();
     });
@@ -935,7 +976,7 @@
     setField(1, v[0], "set");
     setField(2, v[3], "set");
     setField(3, v[1], "set");
-    autopopulate();
+    deriveAll();
     updateFieldStyles();
     renderSuggestions();
     renderAll(true);
@@ -944,7 +985,7 @@
   byId("gs-reset").addEventListener("click", function () {
     setField(0, TERM_DEFAULTS[0], "set");
     setField(1, TERM_DEFAULTS[1], "set");
-    autopopulate();
+    deriveAll();
     updateFieldStyles();
     renderSuggestions();
     renderAll(true);
@@ -964,7 +1005,7 @@
   function init() {
     setField(0, TERM_DEFAULTS[0], "set");
     setField(1, TERM_DEFAULTS[1], "set");
-    autopopulate();
+    deriveAll();
     updateFieldStyles();
     renderSuggestions();
     renderAll(false);
