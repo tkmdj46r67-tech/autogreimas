@@ -124,7 +124,6 @@
   }
   .gs-meta-main.is-derived { font-size: .88rem; font-weight: 600; }
 
-  /* The composed key shown as a small subtitle under a resolved label */
   .gs-meta-compose {
     margin-top: 2px;
     font-size: .6rem;
@@ -548,15 +547,6 @@
     return Array.isArray(entry) ? entry.slice() : [entry];
   }
 
-  /* ----------------------------------------------------------------
-   *  Metaterm label lookup.
-   *
-   *  The META_LABELS table was generated with keys in the form
-   *  "Titlecase · Titlecase", so the lookup lowercases both sides
-   *  first, then rebuilds the key with title case. That way the
-   *  table matches regardless of how the user typed the terms.
-   * ---------------------------------------------------------------- */
-
   function titleCase(s) {
     if (!s) return "";
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -639,6 +629,11 @@
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
   var activeField = null;
+
+  /* Guards against the browser's automatic first-focus on page load,
+     which would otherwise empty the default value in S1. */
+  var initialLoad = true;
+  setTimeout(function () { initialLoad = false; }, 150);
 
   /* ================================================================
    *  State mutators
@@ -723,7 +718,7 @@
   }
 
   /* ================================================================
-   *  Suggestion derivation for any field
+   *  Suggestion derivation
    * ================================================================ */
 
   function deriveSuggestionsFor(i) {
@@ -898,13 +893,11 @@
                      (b || TERM_PLACEHOLDERS[pair.b]);
       var isEmpty = !a || !b;
 
-      /* Try to resolve to a single concept via META_LABELS. */
       var resolved = (!isEmpty) ? metaLabelFor(a, b) : null;
 
       var mainEl = metaMains[i];
       var boxEl  = metaBoxes[i];
 
-      /* Remove any previous subtitle before rerendering. */
       var prevSub = boxEl.querySelector(".gs-meta-compose");
       if (prevSub) prevSub.remove();
 
@@ -912,7 +905,6 @@
         mainEl.textContent = resolved;
         mainEl.classList.remove("is-empty");
 
-        /* Show the composed key as a small subtitle. */
         var sub = document.createElement("div");
         sub.className = "gs-meta-compose";
         sub.textContent = composed;
@@ -941,6 +933,16 @@
 
     input.addEventListener("focus", function () {
       activeField = i;
+
+      /* On the browser's automatic initial focus, do not clear the
+         field; just register it as active and update the panel. */
+      if (initialLoad) {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = fields[i].source;
+        updateFieldStyles();
+        renderSuggestions();
+        return;
+      }
 
       if (input.value) {
         input.dataset.priorValue  = fields[i].value;
@@ -1047,3 +1049,7 @@
 
   init();
 })();
+</script>
+
+</body>
+</html>
