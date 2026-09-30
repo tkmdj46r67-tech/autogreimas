@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Auto-Greimas Square</title>
+<title>Extended Greimas Square</title>
 
 <script src="contraries.js"></script>
 <script src="investments.js"></script>
@@ -252,6 +252,17 @@
     opacity: .85;
   }
 
+  /* Metaterm fields: composed values show as dashed italic */
+  .gs-field input.is-composed {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-composed:focus {
+    color: var(--gs-text);
+    font-style: normal;
+  }
+
   .gs-field input.is-empty { background: transparent; }
 
   .gs-suggest {
@@ -383,7 +394,7 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Click any term field to see suggestions. Chips fill that field. Metaterms resolve to a single concept where one exists.</p>
+    <p>Click any field to see suggestions or write your own. Chips fill the active field. Press Update square to render.</p>
   </header>
 
   <div class="gs-stage">
@@ -475,25 +486,25 @@
   <div class="gs-section">
     <h2 class="gs-section-title">Metaterms</h2>
     <p class="gs-section-note">
-      Composed on update. Where the two terms share a specific concept, it's shown beneath.
+      Auto-composed from the terms. Click any field to write your own value.
       M₁ = S₁ · S₂ &nbsp;|&nbsp; M₂ = S₂ · ~S₂ &nbsp;|&nbsp; M₃ = ~S₁ · ~S₂ &nbsp;|&nbsp; M₄ = S₁ · ~S₁
     </p>
     <div class="gs-controls">
-      <div class="gs-field">
+      <div class="gs-field" id="field-9">
         <label for="in-9"><span class="gs-tag">M₁</span> top vertex</label>
-        <input id="in-9" type="text" class="is-derived" readonly tabindex="-1" />
+        <input id="in-9" type="text" autocomplete="off" spellcheck="false" />
       </div>
-      <div class="gs-field">
+      <div class="gs-field" id="field-10">
         <label for="in-10"><span class="gs-tag">M₂</span> right vertex</label>
-        <input id="in-10" type="text" class="is-derived" readonly tabindex="-1" />
+        <input id="in-10" type="text" autocomplete="off" spellcheck="false" />
       </div>
-      <div class="gs-field">
+      <div class="gs-field" id="field-11">
         <label for="in-11"><span class="gs-tag">M₃</span> bottom vertex</label>
-        <input id="in-11" type="text" class="is-derived" readonly tabindex="-1" />
+        <input id="in-11" type="text" autocomplete="off" spellcheck="false" />
       </div>
-      <div class="gs-field">
+      <div class="gs-field" id="field-12">
         <label for="in-12"><span class="gs-tag">M₄</span> left vertex</label>
-        <input id="in-12" type="text" class="is-derived" readonly tabindex="-1" />
+        <input id="in-12" type="text" autocomplete="off" spellcheck="false" />
       </div>
     </div>
   </div>
@@ -611,6 +622,7 @@
   var metaMains     = [1,2,3,4].map(function (n) { return byId("meta-" + n + "-main"); });
   var metaInputs    = [9,10,11,12].map(function (n) { return byId("in-" + n); });
   var metaBoxes     = [1,2,3,4].map(function (n) { return byId("meta-" + n); });
+  var metaWrappers  = [9,10,11,12].map(function (n) { return byId("field-" + n); });
 
   var sugAnchor = byId("gs-suggest-anchor");
   var sugNote   = byId("gs-suggest-note");
@@ -627,11 +639,21 @@
     { value: "", source: "empty", lastValue: "" }
   ];
 
+  /* Metaterm state. source is one of:
+   *   "composed" — the auto-generated value from the pair
+   *   "set"      — the user typed or chose it
+   *   "empty"    — no value
+   */
+  var metaFields = [
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" }
+  ];
+
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
   var activeField = null;
 
-  /* Guards against the browser's automatic first-focus on page load,
-     which would otherwise empty the default value in S1. */
   var initialLoad = true;
   setTimeout(function () { initialLoad = false; }, 150);
 
@@ -895,13 +917,32 @@
 
       var resolved = (!isEmpty) ? metaLabelFor(a, b) : null;
 
+      /* Decide what the field should hold.
+       * A user-set metaterm always wins. Otherwise, the composed or
+       * resolved value is written, and the state is marked "composed". */
+      var fieldValue;
+      if (metaFields[i].source === "set") {
+        fieldValue = metaFields[i].value;
+      } else {
+        fieldValue = resolved ? resolved : (isEmpty ? "" : composed);
+        metaFields[i].value     = fieldValue;
+        metaFields[i].source    = fieldValue ? "composed" : "empty";
+        metaFields[i].lastValue = fieldValue || metaFields[i].lastValue;
+      }
+
       var mainEl = metaMains[i];
       var boxEl  = metaBoxes[i];
 
+      /* Remove any previous subtitle. */
       var prevSub = boxEl.querySelector(".gs-meta-compose");
       if (prevSub) prevSub.remove();
 
-      if (resolved) {
+      /* The box shows the resolved label if there is one, else the
+       * composed string, unless a custom metaterm overrides it. */
+      if (metaFields[i].source === "set") {
+        mainEl.textContent = metaFields[i].value;
+        mainEl.classList.toggle("is-empty", !metaFields[i].value);
+      } else if (resolved) {
         mainEl.textContent = resolved;
         mainEl.classList.remove("is-empty");
 
@@ -914,7 +955,12 @@
         mainEl.classList.toggle("is-empty", isEmpty);
       }
 
-      metaInputs[i].value = resolved ? resolved : composed;
+      /* Sync the input field. */
+      var inp = metaInputs[i];
+      inp.value = metaFields[i].value;
+      inp.classList.toggle("is-composed", metaFields[i].source === "composed");
+      inp.classList.toggle("is-empty",    metaFields[i].source === "empty");
+
       if (animate) pulse(boxEl);
     }
   }
@@ -925,7 +971,7 @@
   }
 
   /* ================================================================
-   *  Input handling — all four fields
+   *  Input handling — the four term fields
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
@@ -934,8 +980,6 @@
     input.addEventListener("focus", function () {
       activeField = i;
 
-      /* On the browser's automatic initial focus, do not clear the
-         field; just register it as active and update the panel. */
       if (initialLoad) {
         input.dataset.priorValue  = "";
         input.dataset.priorSource = fields[i].source;
@@ -999,6 +1043,71 @@
   });
 
   /* ================================================================
+   *  Input handling — the four metaterm fields
+   * ================================================================ */
+
+  [0,1,2,3].forEach(function (i) {
+    var input   = metaInputs[i];
+    var wrapper = metaWrappers[i];
+
+    input.addEventListener("focus", function () {
+      wrapper.classList.add("is-active");
+
+      if (initialLoad) {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = metaFields[i].source;
+        return;
+      }
+
+      if (input.value) {
+        input.dataset.priorValue  = metaFields[i].value;
+        input.dataset.priorSource = metaFields[i].source;
+        input.value = "";
+        input.classList.remove("is-composed");
+      } else {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = metaFields[i].source;
+      }
+    });
+
+    input.addEventListener("input", function () {
+      var v = input.value;
+      metaFields[i].value  = v;
+      metaFields[i].source = v ? "set" : "empty";
+      if (v) input.classList.remove("is-composed");
+    });
+
+    input.addEventListener("blur", function () {
+      wrapper.classList.remove("is-active");
+
+      var priorValue  = input.dataset.priorValue;
+      var priorSource = input.dataset.priorSource;
+
+      if (!input.value && priorValue) {
+        metaFields[i].value     = priorValue;
+        metaFields[i].source    = priorSource || "composed";
+        metaFields[i].lastValue = priorValue;
+        input.value = priorValue;
+      } else if (!input.value) {
+        metaFields[i].value  = "";
+        metaFields[i].source = "empty";
+      }
+
+      delete input.dataset.priorValue;
+      delete input.dataset.priorSource;
+
+      renderMetaterms(false);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  });
+
+  /* ================================================================
    *  Buttons
    * ================================================================ */
 
@@ -1019,8 +1128,15 @@
   });
 
   byId("gs-reset").addEventListener("click", function () {
+    /* Reset terms and clear any custom metaterms. */
+    for (var k = 0; k < 4; k++) {
+      metaFields[k].value     = "";
+      metaFields[k].source    = "empty";
+      metaFields[k].lastValue = "";
+      metaInputs[k].value     = "";
+    }
     setField(0, TERM_DEFAULTS[0], "set");
-    setField(1, TERM_DEFAULTS[1], "set");
+    setField(1, TERM_DEFAULTS[1], "provisional");
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
@@ -1029,6 +1145,13 @@
 
   byId("gs-clear").addEventListener("click", function () {
     for (var i = 0; i < 4; i++) clearField(i);
+    for (var k = 0; k < 4; k++) {
+      metaFields[k].value     = "";
+      metaFields[k].source    = "empty";
+      metaFields[k].lastValue = "";
+      metaInputs[k].value     = "";
+      metaInputs[k].classList.remove("is-composed");
+    }
     updateFieldStyles();
     renderSuggestions();
     renderAll(true);
