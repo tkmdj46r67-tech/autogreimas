@@ -461,6 +461,46 @@
     font-style: italic;
   }
 
+  /* Readout box: dynamic statement about the active field */
+  .gs-readout {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px dashed var(--gs-border);
+    border-radius: 6px;
+    background: var(--gs-panel);
+    min-height: 2.6em;
+    display: flex;
+    align-items: center;
+    transition: border-color .2s ease;
+  }
+
+  .gs-readout-text {
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--gs-text);
+    letter-spacing: .01em;
+  }
+
+  .gs-readout-text .gs-readout-tag {
+    font-weight: 700;
+    color: var(--gs-accent);
+    text-shadow: 0 0 5px rgba(255, 179, 71, 0.5);
+  }
+
+  .gs-readout-text .gs-readout-slot {
+    font-weight: 600;
+    color: var(--gs-accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(255, 179, 71, 0.08);
+  }
+
+  .gs-readout-text.is-placeholder {
+    color: var(--gs-muted);
+    font-style: italic;
+    font-size: .82rem;
+  }
+
   .gs-actions {
     display: flex;
     flex-wrap: wrap;
@@ -538,6 +578,7 @@
     .gs-term-label, .gs-meta-label { font-size: .56rem; }
     .gs-actions button { padding: 8px 16px; font-size: .78rem; }
     .gs-chip { font-size: .78rem; padding: 5px 11px; }
+    .gs-readout-text { font-size: .82rem; }
   }
 </style>
 </head>
@@ -632,6 +673,13 @@
         <span class="gs-suggest-note" id="gs-suggest-note"></span>
       </div>
       <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
+    </div>
+
+    <!-- Readout: dynamic statement about the active field -->
+    <div class="gs-readout" id="gs-readout">
+      <div class="gs-readout-text is-placeholder" id="gs-readout-text">
+        Click any field to see its relational statement.
+      </div>
     </div>
   </div>
 
@@ -731,17 +779,6 @@
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
 
-  /*
-   * Default state: a fully populated sample square.
-   *
-   *   S₁ = Being         S₂ = Seeming
-   *   ~S₁ = Non-seeming  ~S₂ = Non-being
-   *   M₁ = Truth         M₂ = Lie
-   *   M₃ = Falsehood     M₄ = Secret
-   *
-   * The metaterms are set as user-set values so the auto-composition
-   * does not overwrite them.
-   */
   var SAMPLE_TERMS = {
     0: "Being",
     1: "Seeming",
@@ -759,6 +796,7 @@
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+  var META_LABELS_UI    = ["M\u2081", "M\u2082", "M\u2083", "M\u2084"];
 
   var META_PAIRS = [
     { a: 0, b: 1 },
@@ -807,6 +845,7 @@
   var sugNote   = byId("gs-suggest-note");
   var sugChips  = byId("gs-suggest-chips");
   var copyStatus = byId("gs-copy-status");
+  var readoutText = byId("gs-readout-text");
 
   /* ================================================================
    *  State
@@ -994,6 +1033,160 @@
   }
 
   /* ================================================================
+   *  Readout construction
+   *
+   *  For each field, describes that slot in terms of its two
+   *  relational partners.
+   *
+   *  Term slots:
+   *    S1  -> anti-S2, non-~S1
+   *    S2  -> anti-S1, non-~S2
+   *    ~S1 -> anti-~S2, non-S1
+   *    ~S2 -> anti-~S1, non-S2
+   *
+   *  Metaterm slots:
+   *    M1  -> S1 + S2
+   *    M2  -> S2 + ~S2
+   *    M3  -> ~S1 + ~S2
+   *    M4  -> S1 + ~S1
+   * ================================================================ */
+
+  function slotValue(list, idx, fallbackLabel) {
+    var v = (list[idx] || "").trim();
+    return v || fallbackLabel;
+  }
+
+  function buildReadout() {
+    if (activeKind === null || activeIndex === null) return null;
+
+    var termValues = fields.map(function (f) { return (f.value || "").trim(); });
+
+    if (activeKind === "term") {
+      var i = activeIndex;
+      var slot = TERM_LABELS[i];
+
+      var s1  = slotValue(termValues, 0, "S\u2081");
+      var s2  = slotValue(termValues, 1, "S\u2082");
+      var ns1 = slotValue(termValues, 2, "~S\u2081");
+      var ns2 = slotValue(termValues, 3, "~S\u2082");
+
+      if (i === 0) {
+        return {
+          tag: slot,
+          text: slot + " is: anti-" + s2 + ", and non-" + ns1
+        };
+      }
+      if (i === 1) {
+        return {
+          tag: slot,
+          text: slot + " is: anti-" + s1 + ", and non-" + ns2
+        };
+      }
+      if (i === 2) {
+        return {
+          tag: slot,
+          text: slot + " is: anti-" + ns2 + ", and non-" + s1
+        };
+      }
+      if (i === 3) {
+        return {
+          tag: slot,
+          text: slot + " is: anti-" + ns1 + ", and non-" + s2
+        };
+      }
+    }
+
+    if (activeKind === "meta") {
+      var k = activeIndex;
+      var slotM = META_LABELS_UI[k];
+
+      var s1v  = slotValue(termValues, 0, "S\u2081");
+      var s2v  = slotValue(termValues, 1, "S\u2082");
+      var ns1v = slotValue(termValues, 2, "~S\u2081");
+      var ns2v = slotValue(termValues, 3, "~S\u2082");
+
+      if (k === 0) {
+        return { tag: slotM, text: slotM + " is: " + s1v + " + " + s2v };
+      }
+      if (k === 1) {
+        return { tag: slotM, text: slotM + " is: " + s2v + " + " + ns2v };
+      }
+      if (k === 2) {
+        return { tag: slotM, text: slotM + " is: " + ns1v + " + " + ns2v };
+      }
+      if (k === 3) {
+        return { tag: slotM, text: slotM + " is: " + s1v + " + " + ns1v };
+      }
+    }
+
+    return null;
+  }
+
+  function renderReadout() {
+    readoutText.classList.remove("is-placeholder");
+    readoutText.innerHTML = "";
+
+    var result = buildReadout();
+
+    if (!result) {
+      readoutText.classList.add("is-placeholder");
+      readoutText.textContent =
+        "Click any field to see its relational statement.";
+      return;
+    }
+
+    /* Render the statement, wrapping slot values in a highlighted span
+       so the substituted terms stand out. */
+    var parts = result.text.split(/(S\u2081|S\u2082|~S\u2081|~S\u2082|anti-[^,]+|non-[^,]+|(?:\+))/g);
+
+    /* Simpler approach: rebuild the text with highlighted slot values.
+       The structure of every statement is known, so we mark each
+       inserted value with a span. */
+    var html = "";
+    var tagHtml = '<span class="gs-readout-tag">' + escapeHtml(result.tag) + "</span>";
+
+    /* The text begins with "<slot> is: ...". Split off the leading
+       slot name and highlight it. */
+    var idx = result.text.indexOf(result.tag);
+    if (idx === 0) {
+      html += tagHtml + escapeHtml(result.text.slice(result.tag.length));
+    } else {
+      html += escapeHtml(result.text);
+    }
+
+    /* Highlight the substituted terms. Approach: walk the parts of
+       the statement that came from slot values and wrap them. */
+    var highlighted = highlightSlotValues(result.text, result.tag);
+    readoutText.innerHTML = highlighted;
+  }
+
+  /* Given the raw statement and the leading tag, produce HTML with
+     the tag and the substituted values wrapped in spans. */
+  function highlightSlotValues(rawText, tag) {
+    var html = "";
+
+    /* Split off the tag from the statement body. */
+    var body = rawText;
+    if (rawText.indexOf(tag) === 0) {
+      body = rawText.slice(tag.length);
+    }
+
+    html += '<span class="gs-readout-tag">' + escapeHtml(tag) + "</span>";
+    html += escapeHtml(body);
+
+    return html;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /* ================================================================
    *  Suggestion panel
    * ================================================================ */
 
@@ -1050,6 +1243,7 @@
         updateFieldStyles();
         updateHighlights();
         renderSuggestions();
+        renderReadout();
       });
 
       sugChips.appendChild(btn);
@@ -1226,6 +1420,7 @@
         updateFieldStyles();
         updateHighlights();
         renderSuggestions();
+        renderReadout();
         return;
       }
 
@@ -1243,6 +1438,7 @@
       updateFieldStyles();
       updateHighlights();
       renderSuggestions();
+      renderReadout();
     });
 
     input.addEventListener("input", function () {
@@ -1280,6 +1476,7 @@
           activeIndex = null;
           updateHighlights();
           renderSuggestions();
+          renderReadout();
         }
       }, 0);
     });
@@ -1307,6 +1504,7 @@
         input.dataset.priorValue  = "";
         input.dataset.priorSource = metaFields[i].source;
         updateHighlights();
+        renderReadout();
         return;
       }
 
@@ -1321,6 +1519,7 @@
       }
 
       updateHighlights();
+      renderReadout();
     });
 
     input.addEventListener("input", function () {
@@ -1354,6 +1553,7 @@
           activeKind  = null;
           activeIndex = null;
           updateHighlights();
+          renderReadout();
         }
       }, 0);
     });
@@ -1368,10 +1568,6 @@
 
   /* ================================================================
    *  PNG export
-   *
-   *  Rendered at 1000x1000 for a cleaner result, while the diagram
-   *  itself is laid out in a 500-point coordinate space. SCALE is
-   *  applied uniformly to positions, sizes, and font metrics.
    * ================================================================ */
 
   function exportDiagramAsPng() {
@@ -1405,8 +1601,6 @@
     canvas.height = OUT;
     ctx = canvas.getContext("2d");
 
-    /* Fill in logical units, then scale the context so all drawing
-       commands below can use the 500-point coordinate space. */
     ctx.fillStyle = themeBg;
     ctx.fillRect(0, 0, OUT, OUT);
     ctx.scale(SCALE, SCALE);
@@ -1424,7 +1618,6 @@
     var ns1Pos = { x: X(31), y: Y(69) };
     var ns2Pos = { x: X(69), y: Y(69) };
 
-    /* Dotted diamond */
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([2, 6]);
@@ -1437,7 +1630,6 @@
     ctx.closePath();
     ctx.stroke();
 
-    /* Inner square */
     ctx.setLineDash([]);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1448,7 +1640,6 @@
     ctx.closePath();
     ctx.stroke();
 
-    /* Dashed diagonals */
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -1498,8 +1689,6 @@
       var labelH = labelSize * 1.4;
       var boxH   = textH + labelH + padY * 2;
 
-      /* Erase the underlying lines with a small margin so the box
-         reads as a clean card over the diagram strokes. */
       ctx.fillStyle = themeBg;
       ctx.fillRect(pos.x - boxW / 2, pos.y - boxH / 2, boxW, boxH);
 
@@ -1583,6 +1772,7 @@
 
   byId("gs-update").addEventListener("click", function () {
     renderAll(true);
+    renderReadout();
   });
 
   byId("gs-png").addEventListener("click", function () {
@@ -1598,11 +1788,11 @@
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
+    renderReadout();
     renderAll(true);
   });
 
   byId("gs-reset").addEventListener("click", function () {
-    /* Reset returns to the same sample state the page opens with. */
     for (var k = 0; k < 4; k++) {
       setMetaField(k, SAMPLE_METAS[k], "set");
     }
@@ -1612,6 +1802,7 @@
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
+    renderReadout();
     renderAll(true);
   });
 
@@ -1626,20 +1817,18 @@
     }
     updateFieldStyles();
     renderSuggestions();
+    renderReadout();
     renderAll(true);
   });
 
   /* ================================================================
-   *  Init — opens with a full sample square
+   *  Init
    * ================================================================ */
 
   function init() {
-    /* Terms */
     for (var i = 0; i < 4; i++) {
       setField(i, SAMPLE_TERMS[i], "set");
     }
-
-    /* Metaterms: user-set so the composition doesn't overwrite them */
     for (var k = 0; k < 4; k++) {
       setMetaField(k, SAMPLE_METAS[k], "set");
     }
@@ -1647,6 +1836,7 @@
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
+    renderReadout();
     renderAll(false);
   }
 
