@@ -11,7 +11,6 @@
 
 <style>
   :root {
-    /* Amber CRT palette */
     --gs-bg:        #1a1208;
     --gs-panel:     #241a0a;
     --gs-text:      #ffb347;
@@ -178,7 +177,6 @@
     color: var(--gs-muted);
   }
 
-  /* Diagram boxes: amber glow when their field is active or secondary */
   .gs-term.is-box-active,
   .gs-meta.is-box-active {
     border-color: var(--gs-accent);
@@ -572,11 +570,11 @@
       <div class="gs-term-label">S₂</div>
     </div>
     <div class="gs-term gs-bl" id="term-3">
-      <div class="gs-term-main" id="term-3-main">Non-being</div>
+      <div class="gs-term-main" id="term-3-main">Non-seeming</div>
       <div class="gs-term-label">~S₁</div>
     </div>
     <div class="gs-term gs-br" id="term-4">
-      <div class="gs-term-main" id="term-4-main">Non-seeming</div>
+      <div class="gs-term-main" id="term-4-main">Non-being</div>
       <div class="gs-term-label">~S₂</div>
     </div>
 
@@ -586,19 +584,19 @@
     <div class="gs-rel gs-rel-right"  id="rel-4">Contradiction</div>
 
     <div class="gs-meta gs-m1" id="meta-1">
-      <div class="gs-meta-main is-derived" id="meta-1-main">Being · Seeming</div>
+      <div class="gs-meta-main is-derived" id="meta-1-main">Truth</div>
       <div class="gs-meta-label">M₁</div>
     </div>
     <div class="gs-meta gs-m2" id="meta-2">
-      <div class="gs-meta-main is-derived" id="meta-2-main">Seeming · Non-seeming</div>
+      <div class="gs-meta-main is-derived" id="meta-2-main">Lie</div>
       <div class="gs-meta-label">M₂</div>
     </div>
     <div class="gs-meta gs-m3" id="meta-3">
-      <div class="gs-meta-main is-derived" id="meta-3-main">Non-being · Non-seeming</div>
+      <div class="gs-meta-main is-derived" id="meta-3-main">Falsehood</div>
       <div class="gs-meta-label">M₃</div>
     </div>
     <div class="gs-meta gs-m4" id="meta-4">
-      <div class="gs-meta-main is-derived" id="meta-4-main">Being · Non-being</div>
+      <div class="gs-meta-main is-derived" id="meta-4-main">Secret</div>
       <div class="gs-meta-label">M₄</div>
     </div>
   </div>
@@ -733,6 +731,31 @@
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
 
+  /*
+   * Default state: a fully populated sample square.
+   *
+   *   S₁ = Being         S₂ = Seeming
+   *   ~S₁ = Non-seeming  ~S₂ = Non-being
+   *   M₁ = Truth         M₂ = Lie
+   *   M₃ = Falsehood     M₄ = Secret
+   *
+   * The metaterms are set as user-set values so the auto-composition
+   * does not overwrite them.
+   */
+  var SAMPLE_TERMS = {
+    0: "Being",
+    1: "Seeming",
+    2: "Non-seeming",
+    3: "Non-being"
+  };
+
+  var SAMPLE_METAS = {
+    0: "Truth",
+    1: "Lie",
+    2: "Falsehood",
+    3: "Secret"
+  };
+
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
@@ -805,7 +828,7 @@
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
-  var activeKind  = null;   /* "term" | "meta" | null */
+  var activeKind  = null;
   var activeIndex = null;
 
   var initialLoad = true;
@@ -816,15 +839,15 @@
    * ================================================================ */
 
   var TERM_SECONDARY = {
-    0: [1, 2],   /* S1 active -> S2, ~S1 */
-    3: [1, 2]    /* ~S2 active -> S2, ~S1 */
+    0: [1, 2],
+    3: [1, 2]
   };
 
   var META_SECONDARY = {
-    0: [1, 3],   /* M1 -> M2, M4 */
-    1: [2, 0],   /* M2 -> M3, M1 */
-    2: [3, 1],   /* M3 -> M4, M2 */
-    3: [2, 0]    /* M4 -> M3, M1 */
+    0: [1, 3],
+    1: [2, 0],
+    2: [3, 1],
+    3: [2, 0]
   };
 
   /* ================================================================
@@ -853,6 +876,13 @@
     fields[i].source = "empty";
     termInputs[i].value = "";
     pendingCandidates[i] = [];
+  }
+
+  function setMetaField(i, value, source) {
+    metaFields[i].value     = value || "";
+    metaFields[i].source    = value ? source : "empty";
+    metaFields[i].lastValue = value || metaFields[i].lastValue;
+    metaInputs[i].value     = metaFields[i].value;
   }
 
   /* ================================================================
@@ -1048,18 +1078,10 @@
 
   /* ================================================================
    *  Highlight application
-   *
-   *  Applying a class that's already present does not restart a CSS
-   *  animation. To ensure the pulse fires on every click — including
-   *  when moving between fields — we strip the class, force a
-   *  reflow, then reapply.
    * ================================================================ */
 
   function restartAnimation(el, className) {
     el.classList.remove(className);
-    /* Reading offsetWidth forces the browser to recompute layout,
-       which flushes the removal so the next add restarts the
-       animation. */
     void el.offsetWidth;
     el.classList.add(className);
   }
@@ -1346,42 +1368,23 @@
 
   /* ================================================================
    *  PNG export
+   *
+   *  Rendered at 1000x1000 for a cleaner result, while the diagram
+   *  itself is laid out in a 500-point coordinate space. SCALE is
+   *  applied uniformly to positions, sizes, and font metrics.
    * ================================================================ */
 
-  function drawWrappedText(ctx, text, cx, cy, maxWidth, lineHeight) {
-    var words = String(text || "").split(/\s+/);
-    var lines = [];
-    var current = "";
-
-    for (var i = 0; i < words.length; i++) {
-      var attempt = current ? current + " " + words[i] : words[i];
-      if (ctx.measureText(attempt).width <= maxWidth || !current) {
-        current = attempt;
-      } else {
-        lines.push(current);
-        current = words[i];
-      }
-    }
-    if (current) lines.push(current);
-
-    var totalHeight = lines.length * lineHeight;
-    var startY = cy - totalHeight / 2 + lineHeight / 2;
-
-    lines.forEach(function (line, idx) {
-      ctx.fillText(line, cx, startY + idx * lineHeight);
-    });
-
-    return lines.length;
-  }
-
   function exportDiagramAsPng() {
-    var SIZE = 500;
-    var ctx;
+    var SIZE  = 500;
+    var SCALE = 2;
+    var OUT   = SIZE * SCALE;
 
     var themeBg   = "#1a1208";
     var themeText = "#ffb347";
     var themeMut  = "#a87537";
     var themeLine = "#8a5e2a";
+
+    var ctx;
 
     function val(f, fallback) {
       var v = (f.value || "").trim();
@@ -1398,12 +1401,15 @@
     var m4  = val(metaFields[3], "M\u2084");
 
     var canvas = document.createElement("canvas");
-    canvas.width  = SIZE;
-    canvas.height = SIZE;
+    canvas.width  = OUT;
+    canvas.height = OUT;
     ctx = canvas.getContext("2d");
 
+    /* Fill in logical units, then scale the context so all drawing
+       commands below can use the 500-point coordinate space. */
     ctx.fillStyle = themeBg;
-    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.fillRect(0, 0, OUT, OUT);
+    ctx.scale(SCALE, SCALE);
 
     function X(pct) { return (pct / 100) * SIZE; }
     function Y(pct) { return (pct / 100) * SIZE; }
@@ -1418,6 +1424,7 @@
     var ns1Pos = { x: X(31), y: Y(69) };
     var ns2Pos = { x: X(69), y: Y(69) };
 
+    /* Dotted diamond */
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([2, 6]);
@@ -1430,6 +1437,7 @@
     ctx.closePath();
     ctx.stroke();
 
+    /* Inner square */
     ctx.setLineDash([]);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1440,6 +1448,7 @@
     ctx.closePath();
     ctx.stroke();
 
+    /* Dashed diagonals */
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -1457,12 +1466,15 @@
 
     function drawLabelBox(value, label, pos, opts) {
       opts = opts || {};
-      var boxW = opts.boxW || (SIZE * 0.22);
-      var padX = 8;
-      var padY = 6;
+      var boxW  = opts.boxW || (SIZE * 0.22);
+      var padX  = 8;
+      var padY  = 6;
 
-      var mainFont = "600 " + (opts.mainSize || 15) + "px " + sansStack;
-      var labelFont = "600 " + (opts.labelSize || 10) + "px " + sansStack;
+      var mainSize  = opts.mainSize  || 15;
+      var labelSize = opts.labelSize || 10;
+
+      var mainFont  = "600 " + mainSize  + "px " + sansStack;
+      var labelFont = "600 " + labelSize + "px " + sansStack;
 
       ctx.font = mainFont;
 
@@ -1481,11 +1493,13 @@
       });
       if (current) lines.push(current);
 
-      var lineH = (opts.mainSize || 15) * 1.2;
-      var textH = lines.length * lineH;
-      var labelH = (opts.labelSize || 10) * 1.4;
-      var boxH = textH + labelH + padY * 2;
+      var lineH  = mainSize * 1.2;
+      var textH  = lines.length * lineH;
+      var labelH = labelSize * 1.4;
+      var boxH   = textH + labelH + padY * 2;
 
+      /* Erase the underlying lines with a small margin so the box
+         reads as a clean card over the diagram strokes. */
       ctx.fillStyle = themeBg;
       ctx.fillRect(pos.x - boxW / 2, pos.y - boxH / 2, boxW, boxH);
 
@@ -1588,14 +1602,13 @@
   });
 
   byId("gs-reset").addEventListener("click", function () {
+    /* Reset returns to the same sample state the page opens with. */
     for (var k = 0; k < 4; k++) {
-      metaFields[k].value     = "";
-      metaFields[k].source    = "empty";
-      metaFields[k].lastValue = "";
-      metaInputs[k].value     = "";
+      setMetaField(k, SAMPLE_METAS[k], "set");
     }
-    setField(0, TERM_DEFAULTS[0], "set");
-    setField(1, TERM_DEFAULTS[1], "provisional");
+    for (var i = 0; i < 4; i++) {
+      setField(i, SAMPLE_TERMS[i], "set");
+    }
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
@@ -1617,12 +1630,20 @@
   });
 
   /* ================================================================
-   *  Init
+   *  Init — opens with a full sample square
    * ================================================================ */
 
   function init() {
-    setField(0, TERM_DEFAULTS[0], "set");
-    setField(1, TERM_DEFAULTS[1], "provisional");
+    /* Terms */
+    for (var i = 0; i < 4; i++) {
+      setField(i, SAMPLE_TERMS[i], "set");
+    }
+
+    /* Metaterms: user-set so the composition doesn't overwrite them */
+    for (var k = 0; k < 4; k++) {
+      setMetaField(k, SAMPLE_METAS[k], "set");
+    }
+
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
