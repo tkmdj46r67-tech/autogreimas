@@ -21,11 +21,9 @@
     --gs-accent-fg: #1a1208;
     --gs-line:      #8a5e2a;
 
-    /* Secondary highlight (less prioritized) */
     --gs-accent-2:  #c98840;
     --gs-accent-2-dim: rgba(201, 136, 64, 0.45);
 
-    /* Obsidian variable overrides so theme colors map to amber */
     --background-primary:        #1a1208;
     --background-secondary:      #241a0a;
     --text-normal:               #ffb347;
@@ -34,7 +32,9 @@
     --interactive-accent:        #ffb347;
     --text-on-accent:            #1a1208;
     --text-faint:                #8a5e2a;
-    --font-interface: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
+
+    --font-interface: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      "Helvetica Neue", Arial, sans-serif;
   }
 
   * { box-sizing: border-box; }
@@ -51,7 +51,6 @@
     justify-content: center;
     -webkit-text-size-adjust: 100%;
 
-    /* Subtle scanline overlay for CRT feel */
     background-image:
       repeating-linear-gradient(
         0deg,
@@ -295,7 +294,6 @@
     transition: color .15s ease, text-shadow .15s ease;
   }
 
-  /* Active field: primary amber glow, pulsing */
   .gs-field.is-active label,
   .gs-field.is-active label .gs-tag {
     color: var(--gs-accent);
@@ -321,7 +319,6 @@
     }
   }
 
-  /* Secondary field: dimmer amber glow, pulsing */
   .gs-field.is-secondary label,
   .gs-field.is-secondary label .gs-tag {
     color: var(--gs-accent-2);
@@ -808,7 +805,6 @@
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
-  /* Which field is focused ("term" or "meta"), and its index. */
   var activeKind  = null;   /* "term" | "meta" | null */
   var activeIndex = null;
 
@@ -817,16 +813,6 @@
 
   /* ================================================================
    *  Highlight rules
-   *
-   *  For term fields:
-   *    active S1 -> secondary S2, ~S1
-   *    active ~S2 -> secondary S2, ~S1
-   *
-   *  For metaterm fields:
-   *    active M1 -> secondary M2, M4
-   *    active M2 -> secondary M3, M1
-   *    active M3 -> secondary M4, M2
-   *    active M4 -> secondary M3, M1
    * ================================================================ */
 
   var TERM_SECONDARY = {
@@ -1063,12 +1049,20 @@
   /* ================================================================
    *  Highlight application
    *
-   *  Applies the .is-active class to the currently focused field,
-   *  and .is-secondary to the related fields per the rules above.
-   *  Also applies .is-box-active / .is-box-secondary to the
-   *  corresponding diagram boxes so the glow is visible on the
-   *  diamond itself.
+   *  Applying a class that's already present does not restart a CSS
+   *  animation. To ensure the pulse fires on every click — including
+   *  when moving between fields — we strip the class, force a
+   *  reflow, then reapply.
    * ================================================================ */
+
+  function restartAnimation(el, className) {
+    el.classList.remove(className);
+    /* Reading offsetWidth forces the browser to recompute layout,
+       which flushes the removal so the next add restarts the
+       animation. */
+    void el.offsetWidth;
+    el.classList.add(className);
+  }
 
   function clearAllHighlights() {
     [0,1,2,3].forEach(function (i) {
@@ -1086,23 +1080,23 @@
 
     if (activeKind === "term") {
       var i = activeIndex;
-      fieldWrappers[i].classList.add("is-active");
-      termBoxes[i].classList.add("is-box-active");
+      restartAnimation(fieldWrappers[i], "is-active");
+      restartAnimation(termBoxes[i],     "is-box-active");
 
       var secondaries = TERM_SECONDARY[i] || [];
       secondaries.forEach(function (j) {
-        fieldWrappers[j].classList.add("is-secondary");
-        termBoxes[j].classList.add("is-box-secondary");
+        restartAnimation(fieldWrappers[j], "is-secondary");
+        restartAnimation(termBoxes[j],     "is-box-secondary");
       });
     } else if (activeKind === "meta") {
       var k = activeIndex;
-      metaWrappers[k].classList.add("is-active");
-      metaBoxes[k].classList.add("is-box-active");
+      restartAnimation(metaWrappers[k], "is-active");
+      restartAnimation(metaBoxes[k],    "is-box-active");
 
       var metaSec = META_SECONDARY[k] || [];
       metaSec.forEach(function (j) {
-        metaWrappers[j].classList.add("is-secondary");
-        metaBoxes[j].classList.add("is-box-secondary");
+        restartAnimation(metaWrappers[j], "is-secondary");
+        restartAnimation(metaBoxes[j],    "is-box-secondary");
       });
     }
   }
@@ -1258,8 +1252,6 @@
       deriveAll();
       updateFieldStyles();
 
-      /* Clear the highlight if focus did not move to another
-         tracked field. */
       setTimeout(function () {
         if (document.activeElement !== input) {
           activeKind  = null;
@@ -1283,7 +1275,7 @@
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
-    var input   = metaInputs[i];
+    var input = metaInputs[i];
 
     input.addEventListener("focus", function () {
       activeKind  = "meta";
@@ -1461,16 +1453,16 @@
 
     ctx.setLineDash([]);
 
+    var sansStack = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
     function drawLabelBox(value, label, pos, opts) {
       opts = opts || {};
       var boxW = opts.boxW || (SIZE * 0.22);
       var padX = 8;
       var padY = 6;
 
-      var mainFont = "600 " + (opts.mainSize || 15) + "px " +
-                     "'IBM Plex Mono', 'Courier New', monospace";
-      var labelFont = "600 " + (opts.labelSize || 10) + "px " +
-                      "'IBM Plex Mono', 'Courier New', monospace";
+      var mainFont = "600 " + (opts.mainSize || 15) + "px " + sansStack;
+      var labelFont = "600 " + (opts.labelSize || 10) + "px " + sansStack;
 
       ctx.font = mainFont;
 
