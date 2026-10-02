@@ -522,7 +522,7 @@
 
   <div class="gs-actions">
     <button type="button" id="gs-update">Update square</button>
-    <button type="button" id="gs-copy-png" class="gs-tertiary">Copy image</button>
+    <button type="button" id="gs-png" class="gs-tertiary">Download PNG</button>
     <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
     <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
     <button type="button" id="gs-clear" class="gs-secondary">Clear</button>
@@ -1110,6 +1110,242 @@
   });
 
   /* ================================================================
+   *  PNG export — draw the diagram directly on a canvas
+   *
+   *  The diagram is simple enough (six lines, eight labels) that
+   *  drawing it from scratch is more reliable than serializing the
+   *  DOM. No foreignObject, no CSS inlining, no external libraries.
+   * ================================================================ */
+
+  function drawWrappedText(ctx, text, cx, cy, maxWidth, lineHeight) {
+    /* Wrap on spaces if the text is wider than maxWidth. */
+    var words = String(text || "").split(/\s+/);
+    var lines = [];
+    var current = "";
+
+    for (var i = 0; i < words.length; i++) {
+      var attempt = current ? current + " " + words[i] : words[i];
+      if (ctx.measureText(attempt).width <= maxWidth || !current) {
+        current = attempt;
+      } else {
+        lines.push(current);
+        current = words[i];
+      }
+    }
+    if (current) lines.push(current);
+
+    var totalHeight = lines.length * lineHeight;
+    var startY = cy - totalHeight / 2 + lineHeight / 2;
+
+    lines.forEach(function (line, idx) {
+      ctx.fillText(line, cx, startY + idx * lineHeight);
+    });
+
+    return lines.length;
+  }
+
+  function exportDiagramAsPng() {
+    var SIZE = 500;
+    var ctx;
+
+    /* Read theme colors so the PNG matches the page appearance. */
+    var bodyStyle = getComputedStyle(document.body);
+    var themeBg   = bodyStyle.backgroundColor || "#ffffff";
+    var themeText = bodyStyle.color || "#000000";
+    var themeMut  = getComputedStyle(document.documentElement)
+                      .getPropertyValue("--gs-muted").trim() || "#6b7280";
+    var themeLine = getComputedStyle(document.documentElement)
+                      .getPropertyValue("--gs-line").trim() || "#9aa3b2";
+
+    /* Pull the current values from state. */
+    function val(f, fallback) {
+      var v = (f.value || "").trim();
+      return v || fallback;
+    }
+
+    var s1  = val(fields[0], "S\u2081");
+    var s2  = val(fields[1], "S\u2082");
+    var ns1 = val(fields[2], "~S\u2081");
+    var ns2 = val(fields[3], "~S\u2082");
+    var m1  = val(metaFields[0], "M\u2081");
+    var m2  = val(metaFields[1], "M\u2082");
+    var m3  = val(metaFields[2], "M\u2083");
+    var m4  = val(metaFields[3], "M\u2084");
+
+    var canvas = document.createElement("canvas");
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
+    ctx = canvas.getContext("2d");
+
+    /* Background */
+    ctx.fillStyle = themeBg;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    /* Coordinates: mirror the on-page layout (percentages of SIZE). */
+    function X(pct) { return (pct / 100) * SIZE; }
+    function Y(pct) { return (pct / 100) * SIZE; }
+
+    /* Diamond vertices */
+    var m1Pos = { x: X(50), y: Y(10) };
+    var m2Pos = { x: X(92), y: Y(50) };
+    var m3Pos = { x: X(50), y: Y(90) };
+    var m4Pos = { x: X(8),  y: Y(50) };
+
+    /* Inner square corners */
+    var s1Pos  = { x: X(31), y: Y(31) };
+    var s2Pos  = { x: X(69), y: Y(31) };
+    var ns1Pos = { x: X(31), y: Y(69) };
+    var ns2Pos = { x: X(69), y: Y(69) };
+
+    /* Draw the dotted diamond */
+    ctx.strokeStyle = themeLine;
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([2, 6]);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(m1Pos.x, m1Pos.y);
+    ctx.lineTo(m2Pos.x, m2Pos.y);
+    ctx.lineTo(m3Pos.x, m3Pos.y);
+    ctx.lineTo(m4Pos.x, m4Pos.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    /* Draw the inner square */
+    ctx.setLineDash([]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(s1Pos.x,  s1Pos.y);
+    ctx.lineTo(s2Pos.x,  s2Pos.y);
+    ctx.lineTo(ns2Pos.x, ns2Pos.y);
+    ctx.lineTo(ns1Pos.x, ns1Pos.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    /* Draw the two diagonals */
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(s1Pos.x, s1Pos.y);
+    ctx.lineTo(ns2Pos.x, ns2Pos.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(s2Pos.x, s2Pos.y);
+    ctx.lineTo(ns1Pos.x, ns1Pos.y);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    /* Draw label boxes with text. We measure to size the boxes. */
+    function drawLabelBox(value, label, pos, opts) {
+      opts = opts || {};
+      var boxW = opts.boxW || (SIZE * 0.22);
+      var padX = 8;
+      var padY = 6;
+
+      var mainFont = "600 " + (opts.mainSize || 15) + "px " +
+                     "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+      var labelFont = "600 " + (opts.labelSize || 10) + "px " +
+                      "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+
+      ctx.font = mainFont;
+      var mainMetrics = ctx.measureText(value);
+
+      /* Wrap into multiple lines if needed. */
+      var maxTextW = boxW - padX * 2;
+      var words = String(value).split(/\s+/);
+      var lines = [];
+      var current = "";
+      words.forEach(function (w) {
+        var att = current ? current + " " + w : w;
+        if (ctx.measureText(att).width <= maxTextW || !current) {
+          current = att;
+        } else {
+          lines.push(current);
+          current = w;
+        }
+      });
+      if (current) lines.push(current);
+
+      var lineH = (opts.mainSize || 15) * 1.2;
+      var textH = lines.length * lineH;
+      var labelH = (opts.labelSize || 10) * 1.4;
+      var boxH = textH + labelH + padY * 2;
+
+      /* Background */
+      ctx.fillStyle = themeBg;
+      ctx.fillRect(pos.x - boxW / 2, pos.y - boxH / 2, boxW, boxH);
+
+      /* Text */
+      ctx.fillStyle = themeText;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = mainFont;
+
+      var textTop = pos.y - boxH / 2 + padY + lineH / 2;
+      lines.forEach(function (line, idx) {
+        ctx.fillText(line, pos.x, textTop + idx * lineH);
+      });
+
+      /* Label under the text */
+      ctx.fillStyle = themeMut;
+      ctx.font = labelFont;
+      ctx.fillText(label, pos.x, pos.y + boxH / 2 - padY - labelH / 2 + 2);
+    }
+
+    /* Draw the four inner terms */
+    drawLabelBox(s1,  "S\u2081",  s1Pos,  { boxW: SIZE * 0.20 });
+    drawLabelBox(s2,  "S\u2082",  s2Pos,  { boxW: SIZE * 0.20 });
+    drawLabelBox(ns1, "~S\u2081", ns1Pos, { boxW: SIZE * 0.20 });
+    drawLabelBox(ns2, "~S\u2082", ns2Pos, { boxW: SIZE * 0.20 });
+
+    /* Draw the four metaterms */
+    drawLabelBox(m1, "M\u2081", m1Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
+    drawLabelBox(m2, "M\u2082", m2Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
+    drawLabelBox(m3, "M\u2083", m3Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
+    drawLabelBox(m4, "M\u2084", m4Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
+
+    /* Trigger the download. Try the modern blob API first, then a
+       data-URL anchor fallback. */
+    function triggerDownload(href) {
+      var a = document.createElement("a");
+      a.href = href;
+      a.download = "greimas-square.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    if (canvas.toBlob) {
+      canvas.toBlob(function (blob) {
+        if (!blob) {
+          /* toBlob failed for some reason; fall back to data URL. */
+          try {
+            triggerDownload(canvas.toDataURL("image/png"));
+            showCopyStatus("PNG downloaded.");
+          } catch (e) {
+            console.error("Data URL fallback failed:", e);
+            showCopyStatus("PNG export failed.");
+          }
+          return;
+        }
+        var url = URL.createObjectURL(blob);
+        triggerDownload(url);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showCopyStatus("PNG downloaded.");
+      }, "image/png");
+    } else {
+      /* Older browsers: use data URL directly. */
+      try {
+        triggerDownload(canvas.toDataURL("image/png"));
+        showCopyStatus("PNG downloaded.");
+      } catch (e) {
+        console.error("Data URL export failed:", e);
+        showCopyStatus("PNG export failed.");
+      }
+    }
+  }
+
+  /* ================================================================
    *  Status message
    * ================================================================ */
 
@@ -1122,175 +1358,6 @@
   }
 
   /* ================================================================
-   *  Render the diagram to a PNG blob
-   *
-   *  Serializes .gs-stage into an SVG wrapper via foreignObject,
-   *  draws it to a canvas at SIZE x SIZE, and resolves with a
-   *  PNG Blob.
-   * ================================================================ */
-
-  function renderStageToPngBlob(size) {
-    return new Promise(function (resolve, reject) {
-      var stage = document.querySelector(".gs-stage");
-      if (!stage) { reject(new Error("No stage element.")); return; }
-
-      var rect = stage.getBoundingClientRect();
-
-      var bodyStyle  = getComputedStyle(document.body);
-      var bgColor    = bodyStyle.backgroundColor || "#ffffff";
-      var textColor  = bodyStyle.color || "#000000";
-      var fontFamily = bodyStyle.fontFamily || "sans-serif";
-
-      var clone = stage.cloneNode(true);
-      inlineAllStyles(stage, clone);
-
-      /* Strip the pulse animation class from the clone so we don't
-         capture a mid-animation frame. */
-      var pulsed = clone.querySelectorAll(".gs-pulse");
-      Array.prototype.forEach.call(pulsed, function (el) {
-        el.classList.remove("gs-pulse");
-      });
-
-      var w = rect.width  || 900;
-      var h = rect.height || 900;
-
-      var svgNS = "http://www.w3.org/2000/svg";
-      var svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("xmlns", svgNS);
-      svg.setAttribute("width",  size);
-      svg.setAttribute("height", size);
-      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
-
-      var fo = document.createElementNS(svgNS, "foreignObject");
-      fo.setAttribute("x", "0");
-      fo.setAttribute("y", "0");
-      fo.setAttribute("width", w);
-      fo.setAttribute("height", h);
-
-      var wrapper = document.createElement("div");
-      wrapper.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-      wrapper.style.width      = w + "px";
-      wrapper.style.height     = h + "px";
-      wrapper.style.background = bgColor;
-      wrapper.style.color      = textColor;
-      wrapper.style.fontFamily = fontFamily;
-      wrapper.appendChild(clone);
-
-      fo.appendChild(wrapper);
-      svg.appendChild(fo);
-
-      var svgString;
-      try {
-        svgString = new XMLSerializer().serializeToString(svg);
-      } catch (e) {
-        reject(e); return;
-      }
-
-      var svgBlob = new Blob([svgString],
-                             { type: "image/svg+xml;charset=utf-8" });
-      var url = URL.createObjectURL(svgBlob);
-
-      var img = new Image();
-      img.onload = function () {
-        var canvas = document.createElement("canvas");
-        canvas.width  = size;
-        canvas.height = size;
-        var ctx = canvas.getContext("2d");
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, size, size);
-        ctx.drawImage(img, 0, 0, size, size);
-        URL.revokeObjectURL(url);
-
-        canvas.toBlob(function (blob) {
-          if (blob) resolve(blob);
-          else reject(new Error("toBlob returned null."));
-        }, "image/png");
-      };
-      img.onerror = function (err) {
-        URL.revokeObjectURL(url);
-        reject(new Error("Could not load serialized SVG into image."));
-      };
-      img.src = url;
-    });
-  }
-
-  /* Copy computed style of every element in the source tree onto the
-     parallel element of the clone. */
-  function inlineAllStyles(sourceRoot, cloneRoot) {
-    var sourceNodes = [sourceRoot].concat(
-      Array.prototype.slice.call(sourceRoot.querySelectorAll("*"))
-    );
-    var cloneNodes = [cloneRoot].concat(
-      Array.prototype.slice.call(cloneRoot.querySelectorAll("*"))
-    );
-
-    var props = [
-      "position", "left", "top", "right", "bottom",
-      "width", "height", "min-width", "max-width",
-      "transform",
-      "padding", "padding-top", "padding-right",
-      "padding-bottom", "padding-left",
-      "margin", "margin-top", "margin-right",
-      "margin-bottom", "margin-left",
-      "border", "border-style", "border-width", "border-color",
-      "border-radius", "background", "background-color",
-      "color", "font-family", "font-size", "font-weight",
-      "font-style", "line-height", "letter-spacing",
-      "text-align", "text-transform", "opacity",
-      "overflow-wrap", "word-break", "white-space",
-      "display", "vertical-align"
-    ];
-
-    for (var i = 0; i < sourceNodes.length; i++) {
-      var src = sourceNodes[i];
-      var dst = cloneNodes[i];
-      if (!src || !dst || !dst.style) continue;
-
-      var cs = getComputedStyle(src);
-      for (var p = 0; p < props.length; p++) {
-        var name = props[p];
-        var value = cs.getPropertyValue(name);
-        if (value && value !== "none" && value !== "normal" &&
-            value !== "auto" && value !== "0px") {
-          try { dst.style.setProperty(name, value); } catch (e) {}
-        }
-      }
-    }
-  }
-
-  /* ================================================================
-   *  Copy the rendered diagram to the clipboard as a PNG
-   * ================================================================ */
-
-  function copyDiagramAsPng() {
-    /* PNG to clipboard requires the Clipboard API with image support,
-       which is available in modern Chrome, Edge, and Safari on
-       secure origins. */
-    if (!navigator.clipboard || !window.ClipboardItem) {
-      showCopyStatus("Image clipboard not supported in this browser.");
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      showCopyStatus("Image clipboard requires HTTPS.");
-      return;
-    }
-
-    showCopyStatus("Rendering\u2026");
-
-    renderStageToPngBlob(500).then(function (blob) {
-      /* ClipboardItem requires a promise or blob keyed by MIME type. */
-      var item = new ClipboardItem({ "image/png": blob });
-      return navigator.clipboard.write([item]);
-    }).then(function () {
-      showCopyStatus("Image copied to clipboard.");
-    }).catch(function (err) {
-      console.error("Copy image failed:", err);
-      showCopyStatus("Copy failed \u2014 see console.");
-    });
-  }
-
-  /* ================================================================
    *  Buttons
    * ================================================================ */
 
@@ -1298,8 +1365,8 @@
     renderAll(true);
   });
 
-  byId("gs-copy-png").addEventListener("click", function () {
-    copyDiagramAsPng();
+  byId("gs-png").addEventListener("click", function () {
+    exportDiagramAsPng();
   });
 
   byId("gs-rotate").addEventListener("click", function () {
