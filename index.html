@@ -522,8 +522,7 @@
 
   <div class="gs-actions">
     <button type="button" id="gs-update">Update square</button>
-    <button type="button" id="gs-copy" class="gs-tertiary">Copy to clipboard</button>
-    <button type="button" id="gs-png" class="gs-tertiary">Download PNG</button>
+    <button type="button" id="gs-copy-png" class="gs-tertiary">Copy image</button>
     <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
     <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
     <button type="button" id="gs-clear" class="gs-secondary">Clear</button>
@@ -1111,64 +1110,7 @@
   });
 
   /* ================================================================
-   *  ASCII diagram builder
-   * ================================================================ */
-
-  function labeledValue(rawValue, label) {
-    var v = (rawValue || "").trim();
-    return v ? v + " (" + label + ")" : "(" + label + ")";
-  }
-
-  function centerText(text, width) {
-    if (text.length >= width) return text;
-    var total = width - text.length;
-    var left  = Math.floor(total / 2);
-    var right = total - left;
-    return " ".repeat(left) + text + " ".repeat(right);
-  }
-
-  function buildAsciiDiagram() {
-    var s1  = labeledValue(fields[0].value, "S\u2081");
-    var s2  = labeledValue(fields[1].value, "S\u2082");
-    var ns1 = labeledValue(fields[2].value, "~S\u2081");
-    var ns2 = labeledValue(fields[3].value, "~S\u2082");
-
-    var m1 = labeledValue(metaFields[0].value, "M\u2081");
-    var m2 = labeledValue(metaFields[1].value, "M\u2082");
-    var m3 = labeledValue(metaFields[2].value, "M\u2083");
-    var m4 = labeledValue(metaFields[3].value, "M\u2084");
-
-    var DIAGRAM_WIDTH = 62;
-    var lines = [];
-
-    lines.push(centerText(m1, DIAGRAM_WIDTH + 2));
-    lines.push(" ".repeat(Math.floor((DIAGRAM_WIDTH + 2) / 2)) + "|");
-
-    var leftTop  = s1.padEnd(20);
-    var rightTop = s2.padStart(20);
-    lines.push("      " + leftTop + " ————— CONTRARY ————— " + rightTop);
-    lines.push("      " + "|".padEnd(20) + "                 " + "|".padStart(20));
-
-    var m4Str = m4.padEnd(14);
-    var m2Str = m2.padStart(14);
-    lines.push(m4Str + " |                 | " + m2Str);
-    lines.push(" ".repeat(m4Str.length) + " |                 | " +
-               " ".repeat(m2Str.length));
-    lines.push(m4Str + " + — — — — — — — — + " + m2Str);
-    lines.push("      " + "|".padEnd(20) + "                 " + "|".padStart(20));
-
-    var leftBot  = ns1.padEnd(20);
-    var rightBot = ns2.padStart(20);
-    lines.push("      " + leftBot + " ——— SUBCONTRARY ——— " + rightBot);
-
-    lines.push(" ".repeat(Math.floor((DIAGRAM_WIDTH + 2) / 2)) + "|");
-    lines.push(centerText(m3, DIAGRAM_WIDTH + 2));
-
-    return lines.join("\n");
-  }
-
-  /* ================================================================
-   *  Copy to clipboard
+   *  Status message
    * ================================================================ */
 
   function showCopyStatus(msg) {
@@ -1179,150 +1121,101 @@
     }, 2500);
   }
 
-  function fallbackCopy(text) {
-    var textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.opacity = "0";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      var ok = document.execCommand("copy");
-      showCopyStatus(ok ? "Copied to clipboard."
-                        : "Copy failed \u2014 please copy manually.");
-    } catch (err) {
-      console.error("Fallback copy failed:", err);
-      showCopyStatus("Copy failed \u2014 please copy manually.");
-    }
-    document.body.removeChild(textArea);
-  }
-
-  function copyAsciiDiagram() {
-    var text = buildAsciiDiagram();
-
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(function () {
-        showCopyStatus("Copied to clipboard.");
-      }).catch(function (err) {
-        console.error("Clipboard API failed:", err);
-        fallbackCopy(text);
-      });
-    } else {
-      fallbackCopy(text);
-    }
-  }
-
   /* ================================================================
-   *  PNG export
+   *  Render the diagram to a PNG blob
    *
-   *  Serializes the .gs-stage container into an SVG wrapper using
-   *  foreignObject, then draws it to a canvas and downloads the
-   *  result as a 500x500 PNG.
+   *  Serializes .gs-stage into an SVG wrapper via foreignObject,
+   *  draws it to a canvas at SIZE x SIZE, and resolves with a
+   *  PNG Blob.
    * ================================================================ */
 
-  function exportStageAsPng() {
-    var stage = document.querySelector(".gs-stage");
-    if (!stage) {
-      showCopyStatus("Nothing to export.");
-      return;
-    }
+  function renderStageToPngBlob(size) {
+    return new Promise(function (resolve, reject) {
+      var stage = document.querySelector(".gs-stage");
+      if (!stage) { reject(new Error("No stage element.")); return; }
 
-    var SIZE = 500;
-    var rect = stage.getBoundingClientRect();
+      var rect = stage.getBoundingClientRect();
 
-    /* Read theme colors so the PNG matches the current appearance. */
-    var bodyStyle  = getComputedStyle(document.body);
-    var bgColor    = bodyStyle.backgroundColor || "#ffffff";
-    var textColor  = bodyStyle.color || "#000000";
-    var fontFamily = bodyStyle.fontFamily || "sans-serif";
+      var bodyStyle  = getComputedStyle(document.body);
+      var bgColor    = bodyStyle.backgroundColor || "#ffffff";
+      var textColor  = bodyStyle.color || "#000000";
+      var fontFamily = bodyStyle.fontFamily || "sans-serif";
 
-    /* Clone the stage and inline every computed style on every
-       descendant, since the serialized SVG will not have access to
-       the page's stylesheet. */
-    var clone = stage.cloneNode(true);
-    inlineAllStyles(stage, clone);
+      var clone = stage.cloneNode(true);
+      inlineAllStyles(stage, clone);
 
-    /* Remove any transient pulse class from the clone so the PNG
-       does not freeze a mid-animation frame. */
-    var pulsed = clone.querySelectorAll(".gs-pulse");
-    Array.prototype.forEach.call(pulsed, function (el) {
-      el.classList.remove("gs-pulse");
+      /* Strip the pulse animation class from the clone so we don't
+         capture a mid-animation frame. */
+      var pulsed = clone.querySelectorAll(".gs-pulse");
+      Array.prototype.forEach.call(pulsed, function (el) {
+        el.classList.remove("gs-pulse");
+      });
+
+      var w = rect.width  || 900;
+      var h = rect.height || 900;
+
+      var svgNS = "http://www.w3.org/2000/svg";
+      var svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("xmlns", svgNS);
+      svg.setAttribute("width",  size);
+      svg.setAttribute("height", size);
+      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+
+      var fo = document.createElementNS(svgNS, "foreignObject");
+      fo.setAttribute("x", "0");
+      fo.setAttribute("y", "0");
+      fo.setAttribute("width", w);
+      fo.setAttribute("height", h);
+
+      var wrapper = document.createElement("div");
+      wrapper.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      wrapper.style.width      = w + "px";
+      wrapper.style.height     = h + "px";
+      wrapper.style.background = bgColor;
+      wrapper.style.color      = textColor;
+      wrapper.style.fontFamily = fontFamily;
+      wrapper.appendChild(clone);
+
+      fo.appendChild(wrapper);
+      svg.appendChild(fo);
+
+      var svgString;
+      try {
+        svgString = new XMLSerializer().serializeToString(svg);
+      } catch (e) {
+        reject(e); return;
+      }
+
+      var svgBlob = new Blob([svgString],
+                             { type: "image/svg+xml;charset=utf-8" });
+      var url = URL.createObjectURL(svgBlob);
+
+      var img = new Image();
+      img.onload = function () {
+        var canvas = document.createElement("canvas");
+        canvas.width  = size;
+        canvas.height = size;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error("toBlob returned null."));
+        }, "image/png");
+      };
+      img.onerror = function (err) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not load serialized SVG into image."));
+      };
+      img.src = url;
     });
-
-    var w = rect.width  || 900;
-    var h = rect.height || 900;
-
-    var svgNS = "http://www.w3.org/2000/svg";
-    var svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("xmlns", svgNS);
-    svg.setAttribute("width",  SIZE);
-    svg.setAttribute("height", SIZE);
-    svg.setAttribute("viewBox", "0 0 " + w + " " + h);
-
-    var fo = document.createElementNS(svgNS, "foreignObject");
-    fo.setAttribute("x", "0");
-    fo.setAttribute("y", "0");
-    fo.setAttribute("width", w);
-    fo.setAttribute("height", h);
-
-    var wrapper = document.createElement("div");
-    wrapper.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-    wrapper.style.width      = w + "px";
-    wrapper.style.height     = h + "px";
-    wrapper.style.background = bgColor;
-    wrapper.style.color      = textColor;
-    wrapper.style.fontFamily = fontFamily;
-    wrapper.appendChild(clone);
-
-    fo.appendChild(wrapper);
-    svg.appendChild(fo);
-
-    var serializer = new XMLSerializer();
-    var svgString = serializer.serializeToString(svg);
-
-    var svgBlob = new Blob([svgString],
-                           { type: "image/svg+xml;charset=utf-8" });
-    var url = URL.createObjectURL(svgBlob);
-
-    var img = new Image();
-    img.onload = function () {
-      var canvas = document.createElement("canvas");
-      canvas.width  = SIZE;
-      canvas.height = SIZE;
-      var ctx = canvas.getContext("2d");
-
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, SIZE, SIZE);
-      ctx.drawImage(img, 0, 0, SIZE, SIZE);
-
-      URL.revokeObjectURL(url);
-
-      canvas.toBlob(function (blob) {
-        var pngUrl = URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.href = pngUrl;
-        a.download = "greimas-square.png";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(pngUrl);
-        showCopyStatus("PNG downloaded.");
-      }, "image/png");
-    };
-    img.onerror = function (err) {
-      console.error("PNG export failed:", err);
-      URL.revokeObjectURL(url);
-      showCopyStatus("PNG export failed.");
-    };
-    img.src = url;
   }
 
   /* Copy computed style of every element in the source tree onto the
-     corresponding element of the clone. Walk in parallel via index
-     so nested structures line up. */
+     parallel element of the clone. */
   function inlineAllStyles(sourceRoot, cloneRoot) {
     var sourceNodes = [sourceRoot].concat(
       Array.prototype.slice.call(sourceRoot.querySelectorAll("*"))
@@ -1334,7 +1227,7 @@
     var props = [
       "position", "left", "top", "right", "bottom",
       "width", "height", "min-width", "max-width",
-      "transform", "transform-origin",
+      "transform",
       "padding", "padding-top", "padding-right",
       "padding-bottom", "padding-left",
       "margin", "margin-top", "margin-right",
@@ -1345,7 +1238,7 @@
       "font-style", "line-height", "letter-spacing",
       "text-align", "text-transform", "opacity",
       "overflow-wrap", "word-break", "white-space",
-      "display", "vertical-align", "inset"
+      "display", "vertical-align"
     ];
 
     for (var i = 0; i < sourceNodes.length; i++) {
@@ -1366,6 +1259,38 @@
   }
 
   /* ================================================================
+   *  Copy the rendered diagram to the clipboard as a PNG
+   * ================================================================ */
+
+  function copyDiagramAsPng() {
+    /* PNG to clipboard requires the Clipboard API with image support,
+       which is available in modern Chrome, Edge, and Safari on
+       secure origins. */
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      showCopyStatus("Image clipboard not supported in this browser.");
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      showCopyStatus("Image clipboard requires HTTPS.");
+      return;
+    }
+
+    showCopyStatus("Rendering\u2026");
+
+    renderStageToPngBlob(500).then(function (blob) {
+      /* ClipboardItem requires a promise or blob keyed by MIME type. */
+      var item = new ClipboardItem({ "image/png": blob });
+      return navigator.clipboard.write([item]);
+    }).then(function () {
+      showCopyStatus("Image copied to clipboard.");
+    }).catch(function (err) {
+      console.error("Copy image failed:", err);
+      showCopyStatus("Copy failed \u2014 see console.");
+    });
+  }
+
+  /* ================================================================
    *  Buttons
    * ================================================================ */
 
@@ -1373,12 +1298,8 @@
     renderAll(true);
   });
 
-  byId("gs-copy").addEventListener("click", function () {
-    copyAsciiDiagram();
-  });
-
-  byId("gs-png").addEventListener("click", function () {
-    exportStageAsPng();
+  byId("gs-copy-png").addEventListener("click", function () {
+    copyDiagramAsPng();
   });
 
   byId("gs-rotate").addEventListener("click", function () {
