@@ -252,7 +252,6 @@
     opacity: .85;
   }
 
-  /* Metaterm fields: composed values show as dashed italic */
   .gs-field input.is-composed {
     border-style: dashed;
     color: var(--gs-muted);
@@ -374,6 +373,19 @@
     background: var(--gs-accent);
     color: var(--gs-accent-fg);
   }
+
+  /* Transient status message beneath the buttons */
+  .gs-copy-status {
+    margin-top: 12px;
+    text-align: center;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--gs-accent);
+    min-height: 1.1em;
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  .gs-copy-status.is-visible { opacity: 1; }
 
   @media (max-width: 620px) {
     .gs-controls { grid-template-columns: 1fr; }
@@ -511,10 +523,12 @@
 
   <div class="gs-actions">
     <button type="button" id="gs-update">Update square</button>
+    <button type="button" id="gs-copy" class="gs-tertiary">Copy to clipboard</button>
     <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
     <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
     <button type="button" id="gs-clear" class="gs-secondary">Clear</button>
   </div>
+  <div class="gs-copy-status" id="gs-copy-status"></div>
 </div>
 
 <script>
@@ -627,6 +641,7 @@
   var sugAnchor = byId("gs-suggest-anchor");
   var sugNote   = byId("gs-suggest-note");
   var sugChips  = byId("gs-suggest-chips");
+  var copyStatus = byId("gs-copy-status");
 
   /* ================================================================
    *  State
@@ -639,11 +654,6 @@
     { value: "", source: "empty", lastValue: "" }
   ];
 
-  /* Metaterm state. source is one of:
-   *   "composed" — the auto-generated value from the pair
-   *   "set"      — the user typed or chose it
-   *   "empty"    — no value
-   */
   var metaFields = [
     { value: "", source: "empty", lastValue: "" },
     { value: "", source: "empty", lastValue: "" },
@@ -917,9 +927,6 @@
 
       var resolved = (!isEmpty) ? metaLabelFor(a, b) : null;
 
-      /* Decide what the field should hold.
-       * A user-set metaterm always wins. Otherwise, the composed or
-       * resolved value is written, and the state is marked "composed". */
       var fieldValue;
       if (metaFields[i].source === "set") {
         fieldValue = metaFields[i].value;
@@ -933,12 +940,9 @@
       var mainEl = metaMains[i];
       var boxEl  = metaBoxes[i];
 
-      /* Remove any previous subtitle. */
       var prevSub = boxEl.querySelector(".gs-meta-compose");
       if (prevSub) prevSub.remove();
 
-      /* The box shows the resolved label if there is one, else the
-       * composed string, unless a custom metaterm overrides it. */
       if (metaFields[i].source === "set") {
         mainEl.textContent = metaFields[i].value;
         mainEl.classList.toggle("is-empty", !metaFields[i].value);
@@ -955,7 +959,6 @@
         mainEl.classList.toggle("is-empty", isEmpty);
       }
 
-      /* Sync the input field. */
       var inp = metaInputs[i];
       inp.value = metaFields[i].value;
       inp.classList.toggle("is-composed", metaFields[i].source === "composed");
@@ -1108,11 +1111,135 @@
   });
 
   /* ================================================================
+   *  ASCII diagram builder
+   *
+   *  Reads the current field values (the same values the diagram
+   *  reflects after an Update), appends the standard label in
+   *  parentheses, and lays them out in the same diamond structure
+   *  the copier script uses.
+   * ================================================================ */
+
+  function labeledValue(rawValue, label) {
+    var v = (rawValue || "").trim();
+    return v ? v + " (" + label + ")" : "(" + label + ")";
+  }
+
+  function centerText(text, width) {
+    if (text.length >= width) return text;
+    var total = width - text.length;
+    var left  = Math.floor(total / 2);
+    var right = total - left;
+    return " ".repeat(left) + text + " ".repeat(right);
+  }
+
+  function buildAsciiDiagram() {
+    /* Pull current values from the fields. If a field is empty,
+       labeledValue falls back to just the label in parentheses. */
+    var s1  = labeledValue(fields[0].value, "S\u2081");
+    var s2  = labeledValue(fields[1].value, "S\u2082");
+    var ns1 = labeledValue(fields[2].value, "~S\u2081");
+    var ns2 = labeledValue(fields[3].value, "~S\u2082");
+
+    /* Metaterms: read from metaFields, which holds either the
+       composed value, the resolved label, or the user's custom
+       value, depending on state. */
+    var m1 = labeledValue(metaFields[0].value, "M\u2081");
+    var m2 = labeledValue(metaFields[1].value, "M\u2082");
+    var m3 = labeledValue(metaFields[2].value, "M\u2083");
+    var m4 = labeledValue(metaFields[3].value, "M\u2084");
+
+    var DIAGRAM_WIDTH = 62;
+    var lines = [];
+
+    /* M1 block */
+    lines.push(centerText(m1, DIAGRAM_WIDTH + 2));
+    lines.push(" ".repeat(Math.floor((DIAGRAM_WIDTH + 2) / 2)) + "|");
+
+    /* Top edge: S1 — CONTRARY — S2 */
+    var leftTop  = s1.padEnd(20);
+    var rightTop = s2.padStart(20);
+    lines.push("      " + leftTop + " ————— CONTRARY ————— " + rightTop);
+    lines.push("      " + "|".padEnd(20) + "                 " + "|".padStart(20));
+
+    /* Side metaterms: M4 on the left, M2 on the right */
+    var m4Str = m4.padEnd(14);
+    var m2Str = m2.padStart(14);
+    lines.push(m4Str + " |                 | " + m2Str);
+    lines.push(" ".repeat(m4Str.length) + " |                 | " +
+               " ".repeat(m2Str.length));
+    lines.push(m4Str + " + — — — — — — — — + " + m2Str);
+    lines.push("      " + "|".padEnd(20) + "                 " + "|".padStart(20));
+
+    /* Bottom edge: ~S1 — SUBCONTRARY — ~S2 */
+    var leftBot  = ns1.padEnd(20);
+    var rightBot = ns2.padStart(20);
+    lines.push("      " + leftBot + " ——— SUBCONTRARY ——— " + rightBot);
+
+    /* M3 block */
+    lines.push(" ".repeat(Math.floor((DIAGRAM_WIDTH + 2) / 2)) + "|");
+    lines.push(centerText(m3, DIAGRAM_WIDTH + 2));
+
+    return lines.join("\n");
+  }
+
+  /* ================================================================
+   *  Copy to clipboard
+   * ================================================================ */
+
+  function showCopyStatus(msg) {
+    copyStatus.textContent = msg;
+    copyStatus.classList.add("is-visible");
+    setTimeout(function () {
+      copyStatus.classList.remove("is-visible");
+    }, 2500);
+  }
+
+  function fallbackCopy(text) {
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      var ok = document.execCommand("copy");
+      showCopyStatus(ok ? "Copied to clipboard."
+                        : "Copy failed \u2014 please copy manually.");
+    } catch (err) {
+      console.error("Fallback copy failed:", err);
+      showCopyStatus("Copy failed \u2014 please copy manually.");
+    }
+    document.body.removeChild(textArea);
+  }
+
+  function copyAsciiDiagram() {
+    var text = buildAsciiDiagram();
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        showCopyStatus("Copied to clipboard.");
+      }).catch(function (err) {
+        console.error("Clipboard API failed:", err);
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  /* ================================================================
    *  Buttons
    * ================================================================ */
 
   byId("gs-update").addEventListener("click", function () {
     renderAll(true);
+  });
+
+  byId("gs-copy").addEventListener("click", function () {
+    copyAsciiDiagram();
   });
 
   byId("gs-rotate").addEventListener("click", function () {
@@ -1128,7 +1255,6 @@
   });
 
   byId("gs-reset").addEventListener("click", function () {
-    /* Reset terms and clear any custom metaterms. */
     for (var k = 0; k < 4; k++) {
       metaFields[k].value     = "";
       metaFields[k].source    = "empty";
