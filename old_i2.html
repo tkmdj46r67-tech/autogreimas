@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Extended Greimas Square</title>
+
+<script src="contraries.js"></script>
+<script src="investments.js"></script>
+<script src="meta_labels.js"></script>
+
+<style>
+  :root {
+    --gs-bg:        var(--background-primary, #ffffff);
+    --gs-panel:     var(--background-secondary, #f4f5f7);
+    --gs-text:      var(--text-normal, #1f2328);
+    --gs-muted:     var(--text-muted, #6b7280);
+    --gs-border:    var(--background-modifier-border, #dcdfe4);
+    --gs-accent:    var(--interactive-accent, #6c5ce7);
+    --gs-accent-fg: var(--text-on-accent, #ffffff);
+    --gs-line:      var(--text-faint, #9aa3b2);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gs-bg:     var(--background-primary, #1e1e22);
+      --gs-panel:  var(--background-secondary, #26262c);
+      --gs-text:   var(--text-normal, #e7e7ea);
+      --gs-muted:  var(--text-muted, #9aa0aa);
+      --gs-border: var(--background-modifier-border, #3b3b44);
+      --gs-accent: var(--interactive-accent, #8b7bff);
+      --gs-line:   var(--text-faint, #79808f);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--gs-bg);
+    color: var(--gs-text);
+    font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, "Helvetica Neue", Arial, sans-serif);
+    font-size: 15px;
+    line-height: 1.45;
+    padding: 22px 20px 34px;
+    display: flex;
+    justify-content: center;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .gs-app { width: 100%; max-width: 900px; }
+
+  header { text-align: center; margin: 0 0 18px; }
+  header h1 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; }
+  header p  { margin: 0; font-size: .8rem; color: var(--gs-muted); }
+
+  .gs-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+  }
+
+  .gs-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+  .gs-lines line,
+  .gs-lines polygon {
+    stroke: var(--gs-line);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    fill: none;
+  }
+  .gs-lines line.gs-diag { stroke-dasharray: 6 6; opacity: .7; }
+  .gs-lines polygon.gs-diamond {
+    stroke-dasharray: 1 6;
+    stroke-linecap: round;
+    opacity: .85;
+  }
+
+  .gs-term,
+  .gs-meta,
+  .gs-rel {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border-radius: 8px;
+    background: var(--gs-bg);
+    text-align: center;
+    line-height: 1.18;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .gs-term,
+  .gs-meta { padding: 5px 9px; z-index: 2; }
+  .gs-term { max-width: 20%; }
+  .gs-meta { max-width: 22%; }
+
+  .gs-rel {
+    padding: 2px 7px;
+    max-width: 18%;
+    z-index: 1;
+    pointer-events: none;
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--gs-muted);
+    text-transform: uppercase;
+  }
+
+  .gs-term-main,
+  .gs-meta-main {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gs-text);
+    min-height: 1.18em;
+  }
+  .gs-meta-main.is-derived { font-size: .88rem; font-weight: 600; }
+
+  .gs-meta-compose {
+    margin-top: 2px;
+    font-size: .6rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    color: var(--gs-muted);
+    opacity: .8;
+  }
+
+  .gs-term-main.is-empty,
+  .gs-meta-main.is-empty { color: var(--gs-muted); font-weight: 400; }
+
+  .gs-term-label,
+  .gs-meta-label {
+    margin-top: 3px;
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+  }
+
+  .gs-tl { left: 31%; top: 31%; }
+  .gs-tr { left: 69%; top: 31%; }
+  .gs-bl { left: 31%; top: 69%; }
+  .gs-br { left: 69%; top: 69%; }
+
+  .gs-m1 { left: 50%; top: 6%; }
+  .gs-m2 { left: 93%; top: 50%; }
+  .gs-m3 { left: 50%; top: 94%; }
+  .gs-m4 { left: 7%;  top: 50%; }
+
+  .gs-rel-top    { left: 50%; top: 31%; }
+  .gs-rel-bottom { left: 50%; top: 69%; }
+  .gs-rel-left   { left: 31%; top: 50%; }
+  .gs-rel-right  { left: 69%; top: 50%; }
+
+  @keyframes gs-pulse {
+    from { transform: translate(-50%, -50%) scale(.92); opacity: .35; }
+    to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+  }
+  .gs-pulse { animation: gs-pulse .28s ease-out; }
+
+  .gs-section { margin-top: 24px; }
+  .gs-section-title {
+    margin: 0 0 4px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+  }
+  .gs-section-note {
+    margin: 0 0 12px;
+    font-size: .72rem;
+    color: var(--gs-muted);
+    line-height: 1.35;
+  }
+
+  .gs-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+
+  .gs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    position: relative;
+  }
+
+  .gs-field label {
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    transition: color .15s ease;
+  }
+  .gs-field label .gs-tag {
+    font-weight: 700;
+    color: var(--gs-text);
+    margin-right: 4px;
+    transition: color .15s ease;
+  }
+  .gs-field.is-active label,
+  .gs-field.is-active label .gs-tag { color: var(--gs-accent); }
+
+  .gs-field input {
+    width: 100%;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: .9rem;
+    color: var(--gs-text);
+    background: var(--gs-panel);
+    border: 1px solid var(--gs-border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease,
+                color .15s ease, background-color .15s ease;
+  }
+  .gs-field input:focus {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 3px rgba(124, 108, 231, .18);
+  }
+
+  .gs-field input.is-provisional {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-provisional:focus {
+    color: var(--gs-text);
+    font-style: normal;
+  }
+
+  .gs-field input.is-pending {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-pending::placeholder {
+    color: var(--gs-muted);
+    opacity: .85;
+  }
+
+  /* Metaterm fields: composed values show as dashed italic */
+  .gs-field input.is-composed {
+    border-style: dashed;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+  .gs-field input.is-composed:focus {
+    color: var(--gs-text);
+    font-style: normal;
+  }
+
+  .gs-field input.is-empty { background: transparent; }
+
+  .gs-suggest {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px dashed var(--gs-border);
+    border-radius: 10px;
+    background: var(--gs-panel);
+  }
+
+  .gs-suggest-title {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    margin-bottom: 10px;
+  }
+  .gs-suggest-title .gs-suggest-anchor { color: var(--gs-text); }
+  .gs-suggest-title .gs-suggest-note {
+    color: var(--gs-muted);
+    font-weight: 500;
+    letter-spacing: .02em;
+    text-transform: none;
+    margin-left: 4px;
+    font-size: .95em;
+  }
+
+  .gs-suggest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .gs-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--gs-border);
+    background: var(--gs-bg);
+    color: var(--gs-text);
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .06s ease, opacity .15s ease;
+  }
+  .gs-chip:hover { border-color: var(--gs-accent); }
+  .gs-chip:active { transform: translateY(1px); }
+  .gs-chip:hover .gs-chip-value { color: var(--gs-accent); }
+
+  .gs-chip.is-applied {
+    opacity: .55;
+    border-style: dashed;
+  }
+  .gs-chip.is-applied::after {
+    content: "\2713";
+    font-size: .75rem;
+    color: var(--gs-muted);
+    margin-left: 6px;
+  }
+
+  .gs-suggest-empty {
+    font-size: .78rem;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+
+  .gs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .gs-actions button {
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    cursor: pointer;
+    transition: filter .15s ease, transform .06s ease,
+                background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .gs-actions button:hover { filter: brightness(1.08); }
+  .gs-actions button:active { transform: translateY(1px); }
+  .gs-actions button.gs-secondary {
+    background: transparent;
+    color: var(--gs-muted);
+    border-color: var(--gs-border);
+  }
+  .gs-actions button.gs-secondary:hover {
+    filter: none;
+    color: var(--gs-text);
+    border-color: var(--gs-muted);
+  }
+  .gs-actions button.gs-tertiary {
+    background: transparent;
+    color: var(--gs-accent);
+    border-color: var(--gs-accent);
+  }
+  .gs-actions button.gs-tertiary:hover {
+    filter: none;
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+  }
+
+  @media (max-width: 620px) {
+    .gs-controls { grid-template-columns: 1fr; }
+    .gs-term { max-width: 24%; padding: 4px 6px; }
+    .gs-meta { max-width: 26%; padding: 4px 6px; }
+    .gs-rel  { max-width: 22%; font-size: .58rem; }
+    .gs-term-main { font-size: .84rem; }
+    .gs-meta-main.is-derived { font-size: .74rem; }
+    .gs-meta-compose { font-size: .54rem; }
+    .gs-term-label, .gs-meta-label { font-size: .56rem; }
+    .gs-actions button { padding: 8px 16px; font-size: .82rem; }
+    .gs-chip { font-size: .78rem; padding: 5px 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gs-app">
+  <header>
+    <h1>Extended Greimas Square</h1>
+    <p>Click any field to see suggestions or write your own. Chips fill the active field. Press Update square to render.</p>
+  </header>
+
+  <div class="gs-stage">
+    <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
+         aria-hidden="true" focusable="false">
+      <polygon class="gs-diamond" points="50,6 93,50 50,94 7,50" />
+      <line x1="31" y1="31" x2="69" y2="31"></line>
+      <line x1="69" y1="31" x2="69" y2="69"></line>
+      <line x1="69" y1="69" x2="31" y2="69"></line>
+      <line x1="31" y1="69" x2="31" y2="31"></line>
+      <line class="gs-diag" x1="31" y1="31" x2="69" y2="69"></line>
+      <line class="gs-diag" x1="69" y1="31" x2="31" y2="69"></line>
+    </svg>
+
+    <div class="gs-term gs-tl" id="term-1">
+      <div class="gs-term-main" id="term-1-main">Being</div>
+      <div class="gs-term-label">S₁</div>
+    </div>
+    <div class="gs-term gs-tr" id="term-2">
+      <div class="gs-term-main" id="term-2-main">Seeming</div>
+      <div class="gs-term-label">S₂</div>
+    </div>
+    <div class="gs-term gs-bl" id="term-3">
+      <div class="gs-term-main" id="term-3-main">Non-being</div>
+      <div class="gs-term-label">~S₁</div>
+    </div>
+    <div class="gs-term gs-br" id="term-4">
+      <div class="gs-term-main" id="term-4-main">Non-seeming</div>
+      <div class="gs-term-label">~S₂</div>
+    </div>
+
+    <div class="gs-rel gs-rel-top"    id="rel-1">Contrary</div>
+    <div class="gs-rel gs-rel-bottom" id="rel-2">Subcontrary</div>
+    <div class="gs-rel gs-rel-left"   id="rel-3">Contradiction</div>
+    <div class="gs-rel gs-rel-right"  id="rel-4">Contradiction</div>
+
+    <div class="gs-meta gs-m1" id="meta-1">
+      <div class="gs-meta-main is-derived" id="meta-1-main">Being · Seeming</div>
+      <div class="gs-meta-label">M₁</div>
+    </div>
+    <div class="gs-meta gs-m2" id="meta-2">
+      <div class="gs-meta-main is-derived" id="meta-2-main">Seeming · Non-seeming</div>
+      <div class="gs-meta-label">M₂</div>
+    </div>
+    <div class="gs-meta gs-m3" id="meta-3">
+      <div class="gs-meta-main is-derived" id="meta-3-main">Non-being · Non-seeming</div>
+      <div class="gs-meta-label">M₃</div>
+    </div>
+    <div class="gs-meta gs-m4" id="meta-4">
+      <div class="gs-meta-main is-derived" id="meta-4-main">Being · Non-being</div>
+      <div class="gs-meta-label">M₄</div>
+    </div>
+  </div>
+
+  <div class="gs-section">
+    <h2 class="gs-section-title">Terms</h2>
+    <p class="gs-section-note">
+      Click any field to activate it. Solid fields are your choices; dashed italic fields are auto-derived.
+    </p>
+
+    <div class="gs-controls">
+      <div class="gs-field" id="field-1">
+        <label for="in-1"><span class="gs-tag">S₁</span> top left</label>
+        <input id="in-1" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-2">
+        <label for="in-2"><span class="gs-tag">S₂</span> top right</label>
+        <input id="in-2" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-3">
+        <label for="in-3"><span class="gs-tag">~S₁</span> bottom left</label>
+        <input id="in-3" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-4">
+        <label for="in-4"><span class="gs-tag">~S₂</span> bottom right</label>
+        <input id="in-4" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="gs-suggest" id="gs-suggest">
+      <div class="gs-suggest-title">
+        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">any field</span>
+        <span class="gs-suggest-note" id="gs-suggest-note"></span>
+      </div>
+      <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
+    </div>
+  </div>
+
+  <div class="gs-section">
+    <h2 class="gs-section-title">Metaterms</h2>
+    <p class="gs-section-note">
+      Auto-composed from the terms. Click any field to write your own value.
+      M₁ = S₁ · S₂ &nbsp;|&nbsp; M₂ = S₂ · ~S₂ &nbsp;|&nbsp; M₃ = ~S₁ · ~S₂ &nbsp;|&nbsp; M₄ = S₁ · ~S₁
+    </p>
+    <div class="gs-controls">
+      <div class="gs-field" id="field-9">
+        <label for="in-9"><span class="gs-tag">M₁</span> top vertex</label>
+        <input id="in-9" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-10">
+        <label for="in-10"><span class="gs-tag">M₂</span> right vertex</label>
+        <input id="in-10" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-11">
+        <label for="in-11"><span class="gs-tag">M₃</span> bottom vertex</label>
+        <input id="in-11" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-12">
+        <label for="in-12"><span class="gs-tag">M₄</span> left vertex</label>
+        <input id="in-12" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+  </div>
+
+  <div class="gs-actions">
+    <button type="button" id="gs-update">Update square</button>
+    <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
+    <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
+    <button type="button" id="gs-clear" class="gs-secondary">Clear</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ----------------------------------------------------------------
+   *  Defensive fallbacks for the external data files
+   * ---------------------------------------------------------------- */
+
+  if (typeof CONTRARIES === "undefined") {
+    window.CONTRARIES = {};
+    console.warn("contraries.js did not load; CONTRARIES is empty.");
+  }
+  if (typeof INVESTMENTS === "undefined") {
+    window.INVESTMENTS = {};
+    console.warn("investments.js did not load; INVESTMENTS is empty.");
+  }
+  if (typeof META_LABELS === "undefined") {
+    window.META_LABELS = {};
+    console.warn("meta_labels.js did not load; META_LABELS is empty.");
+  }
+
+  /* ================================================================
+   *  Table lookups
+   * ================================================================ */
+
+  function lookupContraries(term) {
+    var key = (term || "").trim().toLowerCase();
+    if (!key) return [];
+    var entry = CONTRARIES[key];
+    if (!entry) return [];
+    return Array.isArray(entry) ? entry.slice() : [entry];
+  }
+
+  function lookupInvestments(term) {
+    var key = (term || "").trim().toLowerCase();
+    if (!key) return [];
+    var entry = INVESTMENTS[key];
+    if (!entry) return [];
+    return Array.isArray(entry) ? entry.slice() : [entry];
+  }
+
+  function titleCase(s) {
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function metaLabelFor(a, b) {
+    var ka = titleCase((a || "").trim());
+    var kb = titleCase((b || "").trim());
+    if (!ka || !kb) return null;
+    return META_LABELS[ka + " \u00B7 " + kb] || null;
+  }
+
+  /* ================================================================
+   *  Text helpers
+   * ================================================================ */
+
+  var NEG_PREFIX = "non-";
+  var SEP = " \u00B7 ";
+
+  var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
+  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+
+  var META_PAIRS = [
+    { a: 0, b: 1 },
+    { a: 1, b: 3 },
+    { a: 2, b: 3 },
+    { a: 0, b: 2 }
+  ];
+
+  function negate(term) {
+    var t = (term || "").trim();
+    if (!t) return "";
+    var lower = t.toLowerCase();
+    if (lower.indexOf(NEG_PREFIX) === 0) {
+      var base = t.slice(NEG_PREFIX.length);
+      if (!base) return "";
+      var startsUpper = t.charAt(0) === t.charAt(0).toUpperCase() &&
+                        t.charAt(0) !== t.charAt(0).toLowerCase();
+      return startsUpper ? base.charAt(0).toUpperCase() + base.slice(1) : base;
+    }
+    var cap = t.charAt(0) === t.charAt(0).toUpperCase() &&
+              t.charAt(0) !== t.charAt(0).toLowerCase();
+    return cap ? "Non-" + t.charAt(0).toLowerCase() + t.slice(1)
+               : NEG_PREFIX + t;
+  }
+
+  function sameValue(a, b) {
+    return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+  }
+
+  /* ================================================================
+   *  DOM
+   * ================================================================ */
+
+  function byId(id) { return document.getElementById(id); }
+
+  var termInputs    = [1,2,3,4].map(function (n) { return byId("in-" + n); });
+  var fieldWrappers = [1,2,3,4].map(function (n) { return byId("field-" + n); });
+  var termMains     = [1,2,3,4].map(function (n) { return byId("term-" + n + "-main"); });
+  var termBoxes     = [1,2,3,4].map(function (n) { return byId("term-" + n); });
+  var metaMains     = [1,2,3,4].map(function (n) { return byId("meta-" + n + "-main"); });
+  var metaInputs    = [9,10,11,12].map(function (n) { return byId("in-" + n); });
+  var metaBoxes     = [1,2,3,4].map(function (n) { return byId("meta-" + n); });
+  var metaWrappers  = [9,10,11,12].map(function (n) { return byId("field-" + n); });
+
+  var sugAnchor = byId("gs-suggest-anchor");
+  var sugNote   = byId("gs-suggest-note");
+  var sugChips  = byId("gs-suggest-chips");
+
+  /* ================================================================
+   *  State
+   * ================================================================ */
+
+  var fields = [
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" }
+  ];
+
+  /* Metaterm state. source is one of:
+   *   "composed" — the auto-generated value from the pair
+   *   "set"      — the user typed or chose it
+   *   "empty"    — no value
+   */
+  var metaFields = [
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" }
+  ];
+
+  var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
+  var activeField = null;
+
+  var initialLoad = true;
+  setTimeout(function () { initialLoad = false; }, 150);
+
+  /* ================================================================
+   *  State mutators
+   * ================================================================ */
+
+  function setField(i, value, source) {
+    fields[i].value     = value || "";
+    fields[i].source    = value ? source : "empty";
+    fields[i].lastValue = value || fields[i].lastValue;
+    termInputs[i].value = fields[i].value;
+    if (source !== "pending") {
+      pendingCandidates[i] = [];
+    }
+  }
+
+  function setPending(i, candidates) {
+    fields[i].value  = "";
+    fields[i].source = "pending";
+    termInputs[i].value = "";
+    pendingCandidates[i] = candidates.slice();
+  }
+
+  function clearField(i) {
+    fields[i].value  = "";
+    fields[i].source = "empty";
+    termInputs[i].value = "";
+    pendingCandidates[i] = [];
+  }
+
+  /* ================================================================
+   *  Derivation
+   * ================================================================ */
+
+  function deriveS2FromS1() {
+    if (fields[1].source === "set") return;
+
+    var s1 = (fields[0].value || "").trim();
+    if (!s1) {
+      if (fields[1].source !== "empty") clearField(1);
+      return;
+    }
+
+    var candidates = lookupContraries(s1).map(titleCase);
+
+    if (candidates.length === 0) {
+      if (fields[1].source !== "empty") clearField(1);
+      return;
+    }
+    if (candidates.length === 1) {
+      setField(1, candidates[0], "provisional");
+      return;
+    }
+    setPending(1, candidates);
+  }
+
+  function deriveContradiction(sourceField, targetField) {
+    if (fields[targetField].source === "set") return;
+
+    var src = (fields[sourceField].value || "").trim();
+    if (!src) {
+      if (fields[targetField].source !== "empty") clearField(targetField);
+      return;
+    }
+
+    var investments = lookupInvestments(src).map(titleCase);
+
+    if (investments.length === 0) {
+      setField(targetField, negate(src), "provisional");
+      return;
+    }
+    if (investments.length === 1) {
+      setField(targetField, investments[0], "provisional");
+      return;
+    }
+    setPending(targetField, investments);
+  }
+
+  function deriveAll() {
+    deriveS2FromS1();
+    deriveContradiction(0, 2);
+    deriveContradiction(1, 3);
+  }
+
+  /* ================================================================
+   *  Suggestion derivation
+   * ================================================================ */
+
+  function deriveSuggestionsFor(i) {
+    if (fields[i].source === "pending" && pendingCandidates[i].length) {
+      return {
+        candidates: pendingCandidates[i].slice(),
+        note: "(" + pendingCandidates[i].length + " options)"
+      };
+    }
+
+    if (i === 0) {
+      return { candidates: [], note: "Type in S\u2081 freely." };
+    }
+
+    if (i === 1) {
+      var s1 = (fields[0].value || "").trim();
+      if (!s1) return { candidates: [], note: "Fill S\u2081 first." };
+      return {
+        candidates: lookupContraries(s1).map(titleCase),
+        note: "(contrary of " + s1 + ")"
+      };
+    }
+
+    if (i === 2) {
+      var s1b = (fields[0].value || "").trim();
+      if (!s1b) return { candidates: [], note: "Fill S\u2081 first." };
+      var ivs1 = lookupInvestments(s1b).map(titleCase);
+      if (ivs1.length) {
+        return { candidates: ivs1, note: "(investment of " + s1b + ")" };
+      }
+      return {
+        candidates: [negate(s1b)],
+        note: "(mechanical negation of " + s1b + ")"
+      };
+    }
+
+    if (i === 3) {
+      var s2 = (fields[1].value || "").trim();
+      if (!s2) return { candidates: [], note: "Fill S\u2082 first." };
+      var ivs2 = lookupInvestments(s2).map(titleCase);
+      if (ivs2.length) {
+        return { candidates: ivs2, note: "(investment of " + s2 + ")" };
+      }
+      return {
+        candidates: [negate(s2)],
+        note: "(mechanical negation of " + s2 + ")"
+      };
+    }
+
+    return { candidates: [], note: "" };
+  }
+
+  /* ================================================================
+   *  Suggestion panel
+   * ================================================================ */
+
+  function renderSuggestions() {
+    sugChips.innerHTML = "";
+
+    if (activeField === null) {
+      sugAnchor.textContent = "any field";
+      sugNote.textContent = "";
+      var hint = document.createElement("div");
+      hint.className = "gs-suggest-empty";
+      hint.textContent = "Click a term field above to see suggestions.";
+      sugChips.appendChild(hint);
+      return;
+    }
+
+    sugAnchor.textContent = TERM_LABELS[activeField];
+
+    var derived = deriveSuggestionsFor(activeField);
+    sugNote.textContent = derived.note || "";
+
+    if (derived.candidates.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "gs-suggest-empty";
+      if (activeField === 0) {
+        empty.textContent = "No suggestions for S\u2081; type freely.";
+      } else if (activeField === 1) {
+        empty.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
+      } else if (activeField === 2) {
+        empty.textContent = "Fill S\u2081 to derive its contradiction.";
+      } else {
+        empty.textContent = "Fill S\u2082 to derive its contradiction.";
+      }
+      sugChips.appendChild(empty);
+      return;
+    }
+
+    var currentValue = fields[activeField].value;
+
+    derived.candidates.forEach(function (value) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gs-chip";
+      if (sameValue(currentValue, value)) btn.classList.add("is-applied");
+
+      var val = document.createElement("span");
+      val.className = "gs-chip-value";
+      val.textContent = value;
+      btn.appendChild(val);
+
+      btn.addEventListener("click", function () {
+        setField(activeField, value, "set");
+        deriveAll();
+        updateFieldStyles();
+        renderSuggestions();
+      });
+
+      sugChips.appendChild(btn);
+    });
+  }
+
+  /* ================================================================
+   *  Field styling
+   * ================================================================ */
+
+  function updateFieldStyles() {
+    for (var i = 0; i < 4; i++) {
+      var inp = termInputs[i];
+      inp.classList.toggle("is-provisional", fields[i].source === "provisional");
+      inp.classList.toggle("is-pending",     fields[i].source === "pending");
+      inp.classList.toggle("is-empty",       fields[i].source === "empty");
+
+      if (fields[i].source === "pending") {
+        var n = pendingCandidates[i].length;
+        inp.placeholder = n + " options \u2014 click to choose";
+      } else {
+        inp.placeholder = "";
+      }
+
+      fieldWrappers[i].classList.toggle("is-active", activeField === i);
+    }
+  }
+
+  /* ================================================================
+   *  Render diagram
+   * ================================================================ */
+
+  function pulse(el) {
+    el.classList.remove("gs-pulse");
+    void el.offsetWidth;
+    el.classList.add("gs-pulse");
+  }
+
+  function setMain(el, value) {
+    var v = (value || "").trim();
+    if (v) {
+      el.textContent = v;
+      el.classList.remove("is-empty");
+    } else {
+      el.textContent = "\u2014";
+      el.classList.add("is-empty");
+    }
+  }
+
+  function renderTerms(animate) {
+    for (var i = 0; i < 4; i++) {
+      setMain(termMains[i], fields[i].value);
+      if (animate) pulse(termBoxes[i]);
+    }
+  }
+
+  function renderMetaterms(animate) {
+    for (var i = 0; i < 4; i++) {
+      var pair = META_PAIRS[i];
+      var a = (fields[pair.a].value || "").trim();
+      var b = (fields[pair.b].value || "").trim();
+
+      var composed = (a || TERM_PLACEHOLDERS[pair.a]) + SEP +
+                     (b || TERM_PLACEHOLDERS[pair.b]);
+      var isEmpty = !a || !b;
+
+      var resolved = (!isEmpty) ? metaLabelFor(a, b) : null;
+
+      /* Decide what the field should hold.
+       * A user-set metaterm always wins. Otherwise, the composed or
+       * resolved value is written, and the state is marked "composed". */
+      var fieldValue;
+      if (metaFields[i].source === "set") {
+        fieldValue = metaFields[i].value;
+      } else {
+        fieldValue = resolved ? resolved : (isEmpty ? "" : composed);
+        metaFields[i].value     = fieldValue;
+        metaFields[i].source    = fieldValue ? "composed" : "empty";
+        metaFields[i].lastValue = fieldValue || metaFields[i].lastValue;
+      }
+
+      var mainEl = metaMains[i];
+      var boxEl  = metaBoxes[i];
+
+      /* Remove any previous subtitle. */
+      var prevSub = boxEl.querySelector(".gs-meta-compose");
+      if (prevSub) prevSub.remove();
+
+      /* The box shows the resolved label if there is one, else the
+       * composed string, unless a custom metaterm overrides it. */
+      if (metaFields[i].source === "set") {
+        mainEl.textContent = metaFields[i].value;
+        mainEl.classList.toggle("is-empty", !metaFields[i].value);
+      } else if (resolved) {
+        mainEl.textContent = resolved;
+        mainEl.classList.remove("is-empty");
+
+        var sub = document.createElement("div");
+        sub.className = "gs-meta-compose";
+        sub.textContent = composed;
+        mainEl.parentNode.insertBefore(sub, mainEl.nextSibling);
+      } else {
+        mainEl.textContent = composed;
+        mainEl.classList.toggle("is-empty", isEmpty);
+      }
+
+      /* Sync the input field. */
+      var inp = metaInputs[i];
+      inp.value = metaFields[i].value;
+      inp.classList.toggle("is-composed", metaFields[i].source === "composed");
+      inp.classList.toggle("is-empty",    metaFields[i].source === "empty");
+
+      if (animate) pulse(boxEl);
+    }
+  }
+
+  function renderAll(animate) {
+    renderTerms(animate);
+    renderMetaterms(animate);
+  }
+
+  /* ================================================================
+   *  Input handling — the four term fields
+   * ================================================================ */
+
+  [0,1,2,3].forEach(function (i) {
+    var input = termInputs[i];
+
+    input.addEventListener("focus", function () {
+      activeField = i;
+
+      if (initialLoad) {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = fields[i].source;
+        updateFieldStyles();
+        renderSuggestions();
+        return;
+      }
+
+      if (input.value) {
+        input.dataset.priorValue  = fields[i].value;
+        input.dataset.priorSource = fields[i].source;
+        input.value = "";
+        input.classList.add("is-empty");
+        input.classList.remove("is-provisional", "is-pending");
+      } else {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = fields[i].source;
+      }
+
+      updateFieldStyles();
+      renderSuggestions();
+    });
+
+    input.addEventListener("input", function () {
+      var v = input.value;
+      fields[i].value  = v;
+      fields[i].source = v ? "set" : "empty";
+      if (v) input.classList.remove("is-empty", "is-pending", "is-provisional");
+      pendingCandidates[i] = [];
+
+      deriveAll();
+      updateFieldStyles();
+      renderSuggestions();
+    });
+
+    input.addEventListener("blur", function () {
+      var priorValue  = input.dataset.priorValue;
+      var priorSource = input.dataset.priorSource;
+
+      if (!input.value && priorValue) {
+        setField(i, priorValue, priorSource || "set");
+      } else if (!input.value) {
+        fields[i].value  = "";
+        fields[i].source = "empty";
+      }
+
+      delete input.dataset.priorValue;
+      delete input.dataset.priorSource;
+
+      deriveAll();
+      updateFieldStyles();
+      renderSuggestions();
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  });
+
+  /* ================================================================
+   *  Input handling — the four metaterm fields
+   * ================================================================ */
+
+  [0,1,2,3].forEach(function (i) {
+    var input   = metaInputs[i];
+    var wrapper = metaWrappers[i];
+
+    input.addEventListener("focus", function () {
+      wrapper.classList.add("is-active");
+
+      if (initialLoad) {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = metaFields[i].source;
+        return;
+      }
+
+      if (input.value) {
+        input.dataset.priorValue  = metaFields[i].value;
+        input.dataset.priorSource = metaFields[i].source;
+        input.value = "";
+        input.classList.remove("is-composed");
+      } else {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = metaFields[i].source;
+      }
+    });
+
+    input.addEventListener("input", function () {
+      var v = input.value;
+      metaFields[i].value  = v;
+      metaFields[i].source = v ? "set" : "empty";
+      if (v) input.classList.remove("is-composed");
+    });
+
+    input.addEventListener("blur", function () {
+      wrapper.classList.remove("is-active");
+
+      var priorValue  = input.dataset.priorValue;
+      var priorSource = input.dataset.priorSource;
+
+      if (!input.value && priorValue) {
+        metaFields[i].value     = priorValue;
+        metaFields[i].source    = priorSource || "composed";
+        metaFields[i].lastValue = priorValue;
+        input.value = priorValue;
+      } else if (!input.value) {
+        metaFields[i].value  = "";
+        metaFields[i].source = "empty";
+      }
+
+      delete input.dataset.priorValue;
+      delete input.dataset.priorSource;
+
+      renderMetaterms(false);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  });
+
+  /* ================================================================
+   *  Buttons
+   * ================================================================ */
+
+  byId("gs-update").addEventListener("click", function () {
+    renderAll(true);
+  });
+
+  byId("gs-rotate").addEventListener("click", function () {
+    var v = fields.map(function (f) { return f.value; });
+    setField(0, v[2], "set");
+    setField(1, v[0], "set");
+    setField(2, v[3], "set");
+    setField(3, v[1], "set");
+    deriveAll();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-reset").addEventListener("click", function () {
+    /* Reset terms and clear any custom metaterms. */
+    for (var k = 0; k < 4; k++) {
+      metaFields[k].value     = "";
+      metaFields[k].source    = "empty";
+      metaFields[k].lastValue = "";
+      metaInputs[k].value     = "";
+    }
+    setField(0, TERM_DEFAULTS[0], "set");
+    setField(1, TERM_DEFAULTS[1], "provisional");
+    deriveAll();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  byId("gs-clear").addEventListener("click", function () {
+    for (var i = 0; i < 4; i++) clearField(i);
+    for (var k = 0; k < 4; k++) {
+      metaFields[k].value     = "";
+      metaFields[k].source    = "empty";
+      metaFields[k].lastValue = "";
+      metaInputs[k].value     = "";
+      metaInputs[k].classList.remove("is-composed");
+    }
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(true);
+  });
+
+  /* ================================================================
+   *  Init
+   * ================================================================ */
+
+  function init() {
+    setField(0, TERM_DEFAULTS[0], "set");
+    setField(1, TERM_DEFAULTS[1], "provisional");
+    deriveAll();
+    updateFieldStyles();
+    renderSuggestions();
+    renderAll(false);
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
