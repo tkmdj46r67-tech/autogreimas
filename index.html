@@ -11,25 +11,30 @@
 
 <style>
   :root {
-    --gs-bg:        var(--background-primary, #ffffff);
-    --gs-panel:     var(--background-secondary, #f4f5f7);
-    --gs-text:      var(--text-normal, #1f2328);
-    --gs-muted:     var(--text-muted, #6b7280);
-    --gs-border:    var(--background-modifier-border, #dcdfe4);
-    --gs-accent:    var(--interactive-accent, #6c5ce7);
-    --gs-accent-fg: var(--text-on-accent, #ffffff);
-    --gs-line:      var(--text-faint, #9aa3b2);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --gs-bg:     var(--background-primary, #1e1e22);
-      --gs-panel:  var(--background-secondary, #26262c);
-      --gs-text:   var(--text-normal, #e7e7ea);
-      --gs-muted:  var(--text-muted, #9aa0aa);
-      --gs-border: var(--background-modifier-border, #3b3b44);
-      --gs-accent: var(--interactive-accent, #8b7bff);
-      --gs-line:   var(--text-faint, #79808f);
-    }
+    /* Amber CRT palette */
+    --gs-bg:        #1a1208;
+    --gs-panel:     #241a0a;
+    --gs-text:      #ffb347;
+    --gs-muted:     #a87537;
+    --gs-border:    #5c3f1a;
+    --gs-accent:    #ffb347;
+    --gs-accent-fg: #1a1208;
+    --gs-line:      #8a5e2a;
+
+    /* Secondary highlight (less prioritized) */
+    --gs-accent-2:  #c98840;
+    --gs-accent-2-dim: rgba(201, 136, 64, 0.45);
+
+    /* Obsidian variable overrides so theme colors map to amber */
+    --background-primary:        #1a1208;
+    --background-secondary:      #241a0a;
+    --text-normal:               #ffb347;
+    --text-muted:                #a87537;
+    --background-modifier-border: #5c3f1a;
+    --interactive-accent:        #ffb347;
+    --text-on-accent:            #1a1208;
+    --text-faint:                #8a5e2a;
+    --font-interface: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
   }
 
   * { box-sizing: border-box; }
@@ -38,21 +43,43 @@
   body {
     background: var(--gs-bg);
     color: var(--gs-text);
-    font-family: var(--font-interface, -apple-system, BlinkMacSystemFont, "Segoe UI",
-                 Roboto, "Helvetica Neue", Arial, sans-serif);
+    font-family: var(--font-interface);
     font-size: 15px;
     line-height: 1.45;
     padding: 22px 20px 34px;
     display: flex;
     justify-content: center;
     -webkit-text-size-adjust: 100%;
+
+    /* Subtle scanline overlay for CRT feel */
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgba(255, 179, 71, 0.025) 0px,
+        rgba(255, 179, 71, 0.025) 1px,
+        transparent 1px,
+        transparent 3px
+      );
   }
 
   .gs-app { width: 100%; max-width: 900px; }
 
   header { text-align: center; margin: 0 0 18px; }
-  header h1 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; }
-  header p  { margin: 0; font-size: .8rem; color: var(--gs-muted); }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--gs-accent);
+    text-shadow: 0 0 8px rgba(255, 179, 71, 0.45);
+  }
+  header p  {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--gs-muted);
+    letter-spacing: .03em;
+  }
 
   .gs-stage {
     position: relative;
@@ -89,7 +116,7 @@
   .gs-rel {
     position: absolute;
     transform: translate(-50%, -50%);
-    border-radius: 8px;
+    border-radius: 4px;
     background: var(--gs-bg);
     text-align: center;
     line-height: 1.18;
@@ -99,7 +126,12 @@
   }
 
   .gs-term,
-  .gs-meta { padding: 5px 9px; z-index: 2; }
+  .gs-meta {
+    padding: 5px 9px;
+    z-index: 2;
+    border: 1px solid transparent;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
   .gs-term { max-width: 20%; }
   .gs-meta { max-width: 22%; }
 
@@ -110,7 +142,7 @@
     pointer-events: none;
     font-size: .68rem;
     font-weight: 600;
-    letter-spacing: .04em;
+    letter-spacing: .08em;
     color: var(--gs-muted);
     text-transform: uppercase;
   }
@@ -121,6 +153,7 @@
     font-weight: 600;
     color: var(--gs-text);
     min-height: 1.18em;
+    text-shadow: 0 0 6px rgba(255, 179, 71, 0.25);
   }
   .gs-meta-main.is-derived { font-size: .88rem; font-weight: 600; }
 
@@ -141,9 +174,57 @@
     margin-top: 3px;
     font-size: .62rem;
     font-weight: 600;
-    letter-spacing: .1em;
+    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--gs-muted);
+  }
+
+  /* Diagram boxes: amber glow when their field is active or secondary */
+  .gs-term.is-box-active,
+  .gs-meta.is-box-active {
+    border-color: var(--gs-accent);
+    box-shadow:
+      0 0 0 1px var(--gs-accent),
+      0 0 12px rgba(255, 179, 71, 0.55),
+      0 0 24px rgba(255, 179, 71, 0.25);
+    animation: gs-glow-primary 1.4s ease-in-out infinite;
+  }
+
+  .gs-term.is-box-secondary,
+  .gs-meta.is-box-secondary {
+    border-color: var(--gs-accent-2);
+    box-shadow:
+      0 0 0 1px var(--gs-accent-2-dim),
+      0 0 10px var(--gs-accent-2-dim);
+    animation: gs-glow-secondary 1.8s ease-in-out infinite;
+  }
+
+  @keyframes gs-glow-primary {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px var(--gs-accent),
+        0 0 10px rgba(255, 179, 71, 0.45),
+        0 0 20px rgba(255, 179, 71, 0.18);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px var(--gs-accent),
+        0 0 18px rgba(255, 179, 71, 0.8),
+        0 0 36px rgba(255, 179, 71, 0.4);
+    }
+  }
+
+  @keyframes gs-glow-secondary {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px var(--gs-accent-2-dim),
+        0 0 8px var(--gs-accent-2-dim);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px var(--gs-accent-2),
+        0 0 14px rgba(201, 136, 64, 0.5);
+    }
   }
 
   .gs-tl { left: 31%; top: 31%; }
@@ -172,7 +253,7 @@
     margin: 0 0 4px;
     font-size: .7rem;
     font-weight: 700;
-    letter-spacing: .12em;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--gs-muted);
   }
@@ -195,12 +276,14 @@
     gap: 5px;
     min-width: 0;
     position: relative;
+    border-radius: 6px;
+    transition: box-shadow .2s ease;
   }
 
   .gs-field label {
     font-size: .68rem;
     font-weight: 600;
-    letter-spacing: .05em;
+    letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--gs-muted);
     transition: color .15s ease;
@@ -209,10 +292,55 @@
     font-weight: 700;
     color: var(--gs-text);
     margin-right: 4px;
-    transition: color .15s ease;
+    transition: color .15s ease, text-shadow .15s ease;
   }
+
+  /* Active field: primary amber glow, pulsing */
   .gs-field.is-active label,
-  .gs-field.is-active label .gs-tag { color: var(--gs-accent); }
+  .gs-field.is-active label .gs-tag {
+    color: var(--gs-accent);
+    text-shadow: 0 0 6px rgba(255, 179, 71, 0.6);
+  }
+
+  .gs-field.is-active input {
+    animation: gs-field-pulse-primary 1.4s ease-in-out infinite;
+  }
+
+  @keyframes gs-field-pulse-primary {
+    0%, 100% {
+      border-color: var(--gs-accent);
+      box-shadow:
+        0 0 0 2px rgba(255, 179, 71, 0.25),
+        0 0 12px rgba(255, 179, 71, 0.4);
+    }
+    50% {
+      border-color: var(--gs-accent);
+      box-shadow:
+        0 0 0 3px rgba(255, 179, 71, 0.45),
+        0 0 22px rgba(255, 179, 71, 0.75);
+    }
+  }
+
+  /* Secondary field: dimmer amber glow, pulsing */
+  .gs-field.is-secondary label,
+  .gs-field.is-secondary label .gs-tag {
+    color: var(--gs-accent-2);
+  }
+
+  .gs-field.is-secondary input {
+    animation: gs-field-pulse-secondary 1.8s ease-in-out infinite;
+  }
+
+  @keyframes gs-field-pulse-secondary {
+    0%, 100% {
+      border-color: var(--gs-accent-2-dim);
+      box-shadow: 0 0 8px rgba(201, 136, 64, 0.25);
+    }
+    50% {
+      border-color: var(--gs-accent-2);
+      box-shadow: 0 0 14px rgba(201, 136, 64, 0.5);
+    }
+  }
 
   .gs-field input {
     width: 100%;
@@ -222,14 +350,14 @@
     color: var(--gs-text);
     background: var(--gs-panel);
     border: 1px solid var(--gs-border);
-    border-radius: 8px;
+    border-radius: 4px;
     outline: none;
     transition: border-color .15s ease, box-shadow .15s ease,
                 color .15s ease, background-color .15s ease;
   }
   .gs-field input:focus {
     border-color: var(--gs-accent);
-    box-shadow: 0 0 0 3px rgba(124, 108, 231, .18);
+    box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
   }
 
   .gs-field input.is-provisional {
@@ -268,19 +396,22 @@
     margin-top: 16px;
     padding: 12px 14px;
     border: 1px dashed var(--gs-border);
-    border-radius: 10px;
+    border-radius: 6px;
     background: var(--gs-panel);
   }
 
   .gs-suggest-title {
     font-size: .68rem;
     font-weight: 700;
-    letter-spacing: .1em;
+    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--gs-muted);
     margin-bottom: 10px;
   }
-  .gs-suggest-title .gs-suggest-anchor { color: var(--gs-text); }
+  .gs-suggest-title .gs-suggest-anchor {
+    color: var(--gs-accent);
+    text-shadow: 0 0 5px rgba(255, 179, 71, 0.4);
+  }
   .gs-suggest-title .gs-suggest-note {
     color: var(--gs-muted);
     font-weight: 500;
@@ -308,9 +439,13 @@
     font-size: .85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: border-color .15s ease, transform .06s ease, opacity .15s ease;
+    transition: border-color .15s ease, transform .06s ease,
+                opacity .15s ease, box-shadow .15s ease;
   }
-  .gs-chip:hover { border-color: var(--gs-accent); }
+  .gs-chip:hover {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
+  }
   .gs-chip:active { transform: translateY(1px); }
   .gs-chip:hover .gs-chip-value { color: var(--gs-accent); }
 
@@ -340,18 +475,24 @@
   }
   .gs-actions button {
     font: inherit;
-    font-size: .88rem;
+    font-size: .85rem;
     font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
     padding: 9px 22px;
-    border-radius: 8px;
+    border-radius: 4px;
     border: 1px solid transparent;
     background: var(--gs-accent);
     color: var(--gs-accent-fg);
     cursor: pointer;
     transition: filter .15s ease, transform .06s ease,
-                background-color .15s ease, color .15s ease, border-color .15s ease;
+                background-color .15s ease, color .15s ease,
+                border-color .15s ease, box-shadow .15s ease;
   }
-  .gs-actions button:hover { filter: brightness(1.08); }
+  .gs-actions button:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 0 12px rgba(255, 179, 71, 0.5);
+  }
   .gs-actions button:active { transform: translateY(1px); }
   .gs-actions button.gs-secondary {
     background: transparent;
@@ -362,6 +503,7 @@
     filter: none;
     color: var(--gs-text);
     border-color: var(--gs-muted);
+    box-shadow: 0 0 8px rgba(168, 117, 55, 0.4);
   }
   .gs-actions button.gs-tertiary {
     background: transparent;
@@ -372,6 +514,7 @@
     filter: none;
     background: var(--gs-accent);
     color: var(--gs-accent-fg);
+    box-shadow: 0 0 14px rgba(255, 179, 71, 0.6);
   }
 
   .gs-copy-status {
@@ -379,7 +522,10 @@
     text-align: center;
     font-size: .8rem;
     font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
     color: var(--gs-accent);
+    text-shadow: 0 0 6px rgba(255, 179, 71, 0.5);
     min-height: 1.1em;
     opacity: 0;
     transition: opacity .2s ease;
@@ -395,7 +541,7 @@
     .gs-meta-main.is-derived { font-size: .74rem; }
     .gs-meta-compose { font-size: .54rem; }
     .gs-term-label, .gs-meta-label { font-size: .56rem; }
-    .gs-actions button { padding: 8px 16px; font-size: .82rem; }
+    .gs-actions button { padding: 8px 16px; font-size: .78rem; }
     .gs-chip { font-size: .78rem; padding: 5px 11px; }
   }
 </style>
@@ -405,7 +551,7 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Click any field to see suggestions or write your own. Chips fill the active field. Press Update square to render.</p>
+    <p>Click any field to see suggestions or write your own.</p>
   </header>
 
   <div class="gs-stage">
@@ -661,10 +807,39 @@
   ];
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
-  var activeField = null;
+
+  /* Which field is focused ("term" or "meta"), and its index. */
+  var activeKind  = null;   /* "term" | "meta" | null */
+  var activeIndex = null;
 
   var initialLoad = true;
   setTimeout(function () { initialLoad = false; }, 150);
+
+  /* ================================================================
+   *  Highlight rules
+   *
+   *  For term fields:
+   *    active S1 -> secondary S2, ~S1
+   *    active ~S2 -> secondary S2, ~S1
+   *
+   *  For metaterm fields:
+   *    active M1 -> secondary M2, M4
+   *    active M2 -> secondary M3, M1
+   *    active M3 -> secondary M4, M2
+   *    active M4 -> secondary M3, M1
+   * ================================================================ */
+
+  var TERM_SECONDARY = {
+    0: [1, 2],   /* S1 active -> S2, ~S1 */
+    3: [1, 2]    /* ~S2 active -> S2, ~S1 */
+  };
+
+  var META_SECONDARY = {
+    0: [1, 3],   /* M1 -> M2, M4 */
+    1: [2, 0],   /* M2 -> M3, M1 */
+    2: [3, 1],   /* M3 -> M4, M2 */
+    3: [2, 0]    /* M4 -> M3, M1 */
+  };
 
   /* ================================================================
    *  State mutators
@@ -809,7 +984,7 @@
   function renderSuggestions() {
     sugChips.innerHTML = "";
 
-    if (activeField === null) {
+    if (activeKind !== "term" || activeIndex === null) {
       sugAnchor.textContent = "any field";
       sugNote.textContent = "";
       var hint = document.createElement("div");
@@ -819,19 +994,19 @@
       return;
     }
 
-    sugAnchor.textContent = TERM_LABELS[activeField];
+    sugAnchor.textContent = TERM_LABELS[activeIndex];
 
-    var derived = deriveSuggestionsFor(activeField);
+    var derived = deriveSuggestionsFor(activeIndex);
     sugNote.textContent = derived.note || "";
 
     if (derived.candidates.length === 0) {
       var empty = document.createElement("div");
       empty.className = "gs-suggest-empty";
-      if (activeField === 0) {
+      if (activeIndex === 0) {
         empty.textContent = "No suggestions for S\u2081; type freely.";
-      } else if (activeField === 1) {
+      } else if (activeIndex === 1) {
         empty.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
-      } else if (activeField === 2) {
+      } else if (activeIndex === 2) {
         empty.textContent = "Fill S\u2081 to derive its contradiction.";
       } else {
         empty.textContent = "Fill S\u2082 to derive its contradiction.";
@@ -840,7 +1015,7 @@
       return;
     }
 
-    var currentValue = fields[activeField].value;
+    var currentValue = fields[activeIndex].value;
 
     derived.candidates.forEach(function (value) {
       var btn = document.createElement("button");
@@ -854,9 +1029,10 @@
       btn.appendChild(val);
 
       btn.addEventListener("click", function () {
-        setField(activeField, value, "set");
+        setField(activeIndex, value, "set");
         deriveAll();
         updateFieldStyles();
+        updateHighlights();
         renderSuggestions();
       });
 
@@ -881,8 +1057,53 @@
       } else {
         inp.placeholder = "";
       }
+    }
+  }
 
-      fieldWrappers[i].classList.toggle("is-active", activeField === i);
+  /* ================================================================
+   *  Highlight application
+   *
+   *  Applies the .is-active class to the currently focused field,
+   *  and .is-secondary to the related fields per the rules above.
+   *  Also applies .is-box-active / .is-box-secondary to the
+   *  corresponding diagram boxes so the glow is visible on the
+   *  diamond itself.
+   * ================================================================ */
+
+  function clearAllHighlights() {
+    [0,1,2,3].forEach(function (i) {
+      fieldWrappers[i].classList.remove("is-active", "is-secondary");
+      termBoxes[i].classList.remove("is-box-active", "is-box-secondary");
+      metaWrappers[i].classList.remove("is-active", "is-secondary");
+      metaBoxes[i].classList.remove("is-box-active", "is-box-secondary");
+    });
+  }
+
+  function updateHighlights() {
+    clearAllHighlights();
+
+    if (activeKind === null || activeIndex === null) return;
+
+    if (activeKind === "term") {
+      var i = activeIndex;
+      fieldWrappers[i].classList.add("is-active");
+      termBoxes[i].classList.add("is-box-active");
+
+      var secondaries = TERM_SECONDARY[i] || [];
+      secondaries.forEach(function (j) {
+        fieldWrappers[j].classList.add("is-secondary");
+        termBoxes[j].classList.add("is-box-secondary");
+      });
+    } else if (activeKind === "meta") {
+      var k = activeIndex;
+      metaWrappers[k].classList.add("is-active");
+      metaBoxes[k].classList.add("is-box-active");
+
+      var metaSec = META_SECONDARY[k] || [];
+      metaSec.forEach(function (j) {
+        metaWrappers[j].classList.add("is-secondary");
+        metaBoxes[j].classList.add("is-box-secondary");
+      });
     }
   }
 
@@ -980,12 +1201,14 @@
     var input = termInputs[i];
 
     input.addEventListener("focus", function () {
-      activeField = i;
+      activeKind  = "term";
+      activeIndex = i;
 
       if (initialLoad) {
         input.dataset.priorValue  = "";
         input.dataset.priorSource = fields[i].source;
         updateFieldStyles();
+        updateHighlights();
         renderSuggestions();
         return;
       }
@@ -1002,6 +1225,7 @@
       }
 
       updateFieldStyles();
+      updateHighlights();
       renderSuggestions();
     });
 
@@ -1033,7 +1257,17 @@
 
       deriveAll();
       updateFieldStyles();
-      renderSuggestions();
+
+      /* Clear the highlight if focus did not move to another
+         tracked field. */
+      setTimeout(function () {
+        if (document.activeElement !== input) {
+          activeKind  = null;
+          activeIndex = null;
+          updateHighlights();
+          renderSuggestions();
+        }
+      }, 0);
     });
 
     input.addEventListener("keydown", function (e) {
@@ -1050,14 +1284,15 @@
 
   [0,1,2,3].forEach(function (i) {
     var input   = metaInputs[i];
-    var wrapper = metaWrappers[i];
 
     input.addEventListener("focus", function () {
-      wrapper.classList.add("is-active");
+      activeKind  = "meta";
+      activeIndex = i;
 
       if (initialLoad) {
         input.dataset.priorValue  = "";
         input.dataset.priorSource = metaFields[i].source;
+        updateHighlights();
         return;
       }
 
@@ -1070,6 +1305,8 @@
         input.dataset.priorValue  = "";
         input.dataset.priorSource = metaFields[i].source;
       }
+
+      updateHighlights();
     });
 
     input.addEventListener("input", function () {
@@ -1080,8 +1317,6 @@
     });
 
     input.addEventListener("blur", function () {
-      wrapper.classList.remove("is-active");
-
       var priorValue  = input.dataset.priorValue;
       var priorSource = input.dataset.priorSource;
 
@@ -1099,6 +1334,14 @@
       delete input.dataset.priorSource;
 
       renderMetaterms(false);
+
+      setTimeout(function () {
+        if (document.activeElement !== input) {
+          activeKind  = null;
+          activeIndex = null;
+          updateHighlights();
+        }
+      }, 0);
     });
 
     input.addEventListener("keydown", function (e) {
@@ -1110,15 +1353,10 @@
   });
 
   /* ================================================================
-   *  PNG export — draw the diagram directly on a canvas
-   *
-   *  The diagram is simple enough (six lines, eight labels) that
-   *  drawing it from scratch is more reliable than serializing the
-   *  DOM. No foreignObject, no CSS inlining, no external libraries.
+   *  PNG export
    * ================================================================ */
 
   function drawWrappedText(ctx, text, cx, cy, maxWidth, lineHeight) {
-    /* Wrap on spaces if the text is wider than maxWidth. */
     var words = String(text || "").split(/\s+/);
     var lines = [];
     var current = "";
@@ -1148,16 +1386,11 @@
     var SIZE = 500;
     var ctx;
 
-    /* Read theme colors so the PNG matches the page appearance. */
-    var bodyStyle = getComputedStyle(document.body);
-    var themeBg   = bodyStyle.backgroundColor || "#ffffff";
-    var themeText = bodyStyle.color || "#000000";
-    var themeMut  = getComputedStyle(document.documentElement)
-                      .getPropertyValue("--gs-muted").trim() || "#6b7280";
-    var themeLine = getComputedStyle(document.documentElement)
-                      .getPropertyValue("--gs-line").trim() || "#9aa3b2";
+    var themeBg   = "#1a1208";
+    var themeText = "#ffb347";
+    var themeMut  = "#a87537";
+    var themeLine = "#8a5e2a";
 
-    /* Pull the current values from state. */
     function val(f, fallback) {
       var v = (f.value || "").trim();
       return v || fallback;
@@ -1177,27 +1410,22 @@
     canvas.height = SIZE;
     ctx = canvas.getContext("2d");
 
-    /* Background */
     ctx.fillStyle = themeBg;
     ctx.fillRect(0, 0, SIZE, SIZE);
 
-    /* Coordinates: mirror the on-page layout (percentages of SIZE). */
     function X(pct) { return (pct / 100) * SIZE; }
     function Y(pct) { return (pct / 100) * SIZE; }
 
-    /* Diamond vertices */
     var m1Pos = { x: X(50), y: Y(10) };
     var m2Pos = { x: X(92), y: Y(50) };
     var m3Pos = { x: X(50), y: Y(90) };
     var m4Pos = { x: X(8),  y: Y(50) };
 
-    /* Inner square corners */
     var s1Pos  = { x: X(31), y: Y(31) };
     var s2Pos  = { x: X(69), y: Y(31) };
     var ns1Pos = { x: X(31), y: Y(69) };
     var ns2Pos = { x: X(69), y: Y(69) };
 
-    /* Draw the dotted diamond */
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([2, 6]);
@@ -1210,7 +1438,6 @@
     ctx.closePath();
     ctx.stroke();
 
-    /* Draw the inner square */
     ctx.setLineDash([]);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1221,7 +1448,6 @@
     ctx.closePath();
     ctx.stroke();
 
-    /* Draw the two diagonals */
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -1235,7 +1461,6 @@
 
     ctx.setLineDash([]);
 
-    /* Draw label boxes with text. We measure to size the boxes. */
     function drawLabelBox(value, label, pos, opts) {
       opts = opts || {};
       var boxW = opts.boxW || (SIZE * 0.22);
@@ -1243,14 +1468,12 @@
       var padY = 6;
 
       var mainFont = "600 " + (opts.mainSize || 15) + "px " +
-                     "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+                     "'IBM Plex Mono', 'Courier New', monospace";
       var labelFont = "600 " + (opts.labelSize || 10) + "px " +
-                      "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+                      "'IBM Plex Mono', 'Courier New', monospace";
 
       ctx.font = mainFont;
-      var mainMetrics = ctx.measureText(value);
 
-      /* Wrap into multiple lines if needed. */
       var maxTextW = boxW - padX * 2;
       var words = String(value).split(/\s+/);
       var lines = [];
@@ -1271,11 +1494,9 @@
       var labelH = (opts.labelSize || 10) * 1.4;
       var boxH = textH + labelH + padY * 2;
 
-      /* Background */
       ctx.fillStyle = themeBg;
       ctx.fillRect(pos.x - boxW / 2, pos.y - boxH / 2, boxW, boxH);
 
-      /* Text */
       ctx.fillStyle = themeText;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -1286,26 +1507,21 @@
         ctx.fillText(line, pos.x, textTop + idx * lineH);
       });
 
-      /* Label under the text */
       ctx.fillStyle = themeMut;
       ctx.font = labelFont;
       ctx.fillText(label, pos.x, pos.y + boxH / 2 - padY - labelH / 2 + 2);
     }
 
-    /* Draw the four inner terms */
     drawLabelBox(s1,  "S\u2081",  s1Pos,  { boxW: SIZE * 0.20 });
     drawLabelBox(s2,  "S\u2082",  s2Pos,  { boxW: SIZE * 0.20 });
     drawLabelBox(ns1, "~S\u2081", ns1Pos, { boxW: SIZE * 0.20 });
     drawLabelBox(ns2, "~S\u2082", ns2Pos, { boxW: SIZE * 0.20 });
 
-    /* Draw the four metaterms */
     drawLabelBox(m1, "M\u2081", m1Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m2, "M\u2082", m2Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m3, "M\u2083", m3Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m4, "M\u2084", m4Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
 
-    /* Trigger the download. Try the modern blob API first, then a
-       data-URL anchor fallback. */
     function triggerDownload(href) {
       var a = document.createElement("a");
       a.href = href;
@@ -1318,7 +1534,6 @@
     if (canvas.toBlob) {
       canvas.toBlob(function (blob) {
         if (!blob) {
-          /* toBlob failed for some reason; fall back to data URL. */
           try {
             triggerDownload(canvas.toDataURL("image/png"));
             showCopyStatus("PNG downloaded.");
@@ -1334,7 +1549,6 @@
         showCopyStatus("PNG downloaded.");
       }, "image/png");
     } else {
-      /* Older browsers: use data URL directly. */
       try {
         triggerDownload(canvas.toDataURL("image/png"));
         showCopyStatus("PNG downloaded.");
