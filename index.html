@@ -22,8 +22,6 @@
 
     --gs-accent-2:  #c98840;
     --gs-accent-2-dim: rgba(201, 136, 64, 0.45);
-    --gs-accent-3:  #8a5e2a;
-    --gs-accent-3-dim: rgba(138, 94, 42, 0.4);
 
     --background-primary:        #1a1208;
     --background-secondary:      #241a0a;
@@ -110,13 +108,6 @@
     stroke-linecap: round;
     opacity: .85;
   }
-  /* The outer complementarity ring: dotted, distinct from the metaterm diamond */
-  .gs-lines polygon.gs-outer-ring {
-    stroke-dasharray: 1 7;
-    stroke-linecap: round;
-    opacity: .7;
-  }
-  /* Connector lines from each complementarity to its two metaterms */
   .gs-lines line.gs-comp-link {
     stroke: var(--gs-line);
     stroke-dasharray: 1 5;
@@ -395,16 +386,6 @@
     font-style: normal;
   }
 
-  .gs-field input.is-pending {
-    border-style: dashed;
-    color: var(--gs-muted);
-    font-style: italic;
-  }
-  .gs-field input.is-pending::placeholder {
-    color: var(--gs-muted);
-    opacity: .85;
-  }
-
   .gs-field input.is-composed {
     border-style: dashed;
     color: var(--gs-muted);
@@ -417,82 +398,9 @@
 
   .gs-field input.is-empty { background: transparent; }
 
-  .gs-suggest {
-    margin-top: 16px;
-    padding: 12px 14px;
-    border: 1px dashed var(--gs-border);
-    border-radius: 6px;
-    background: var(--gs-panel);
-  }
-
-  .gs-suggest-title {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--gs-muted);
-    margin-bottom: 10px;
-  }
-  .gs-suggest-title .gs-suggest-anchor {
-    color: var(--gs-accent);
-    text-shadow: 0 0 5px rgba(255, 179, 71, 0.4);
-  }
-  .gs-suggest-title .gs-suggest-note {
-    color: var(--gs-muted);
-    font-weight: 500;
-    letter-spacing: .02em;
-    text-transform: none;
-    margin-left: 4px;
-    font-size: .95em;
-  }
-
-  .gs-suggest-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .gs-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--gs-border);
-    background: var(--gs-bg);
-    color: var(--gs-text);
-    font: inherit;
-    font-size: .85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color .15s ease, transform .06s ease,
-                opacity .15s ease, box-shadow .15s ease;
-  }
-  .gs-chip:hover {
-    border-color: var(--gs-accent);
-    box-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
-  }
-  .gs-chip:active { transform: translateY(1px); }
-  .gs-chip:hover .gs-chip-value { color: var(--gs-accent); }
-
-  .gs-chip.is-applied {
-    opacity: .55;
-    border-style: dashed;
-  }
-  .gs-chip.is-applied::after {
-    content: "\2713";
-    font-size: .75rem;
-    color: var(--gs-muted);
-    margin-left: 6px;
-  }
-
-  .gs-suggest-empty {
-    font-size: .78rem;
-    color: var(--gs-muted);
-    font-style: italic;
-  }
-
+  /* Readout */
   .gs-readout {
-    margin-top: 12px;
+    margin-top: 16px;
     padding: 12px 14px;
     border: 1px dashed var(--gs-border);
     border-radius: 6px;
@@ -522,7 +430,162 @@
     font-size: .82rem;
   }
 
-  /* Semantic union row */
+  /* ================================================================
+   *  Suggestion scratchpad
+   * ================================================================ */
+
+  .gs-scratch {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px dashed var(--gs-border);
+    border-radius: 6px;
+    background: var(--gs-panel);
+  }
+
+  .gs-scratch-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gs-border);
+  }
+
+  .gs-scratch-tab {
+    font: inherit;
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--gs-border);
+    background: transparent;
+    color: var(--gs-muted);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease,
+                background-color .15s ease, box-shadow .15s ease;
+  }
+  .gs-scratch-tab:hover {
+    color: var(--gs-text);
+    border-color: var(--gs-muted);
+  }
+  .gs-scratch-tab.is-selected {
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 10px rgba(255, 179, 71, 0.45);
+  }
+
+  .gs-scratch-anchor {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .gs-scratch-anchor input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 11px;
+    font: inherit;
+    font-size: .9rem;
+    color: var(--gs-text);
+    background: var(--gs-bg);
+    border: 1px solid var(--gs-border);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .gs-scratch-anchor input:focus {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
+  }
+  .gs-scratch-anchor input::placeholder {
+    color: var(--gs-text);
+    opacity: .4;
+  }
+
+  .gs-scratch-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .gs-scratch-column { min-width: 0; }
+
+  .gs-scratch-column-title {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    margin-bottom: 4px;
+  }
+  .gs-scratch-column-target {
+    font-size: .58rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--gs-accent);
+    margin-bottom: 8px;
+    opacity: .85;
+  }
+
+  .gs-scratch-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .gs-scratch-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--gs-border);
+    background: var(--gs-bg);
+    color: var(--gs-text);
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease,
+                transform .06s ease, opacity .15s ease;
+  }
+  .gs-scratch-chip:hover {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 10px rgba(255, 179, 71, 0.4);
+  }
+  .gs-scratch-chip:active { transform: translateY(1px); }
+
+  .gs-scratch-chip.is-applied {
+    opacity: .55;
+    border-style: dashed;
+  }
+  .gs-scratch-chip.is-applied::after {
+    content: "\2713";
+    font-size: .72rem;
+    color: var(--gs-muted);
+    margin-left: 6px;
+  }
+
+  .gs-scratch-empty {
+    font-size: .72rem;
+    color: var(--gs-muted);
+    font-style: italic;
+  }
+
+  .gs-scratch-compose {
+    font-size: .8rem;
+    line-height: 1.55;
+    color: var(--gs-muted);
+    margin-bottom: 12px;
+  }
+  .gs-scratch-compose strong {
+    color: var(--gs-text);
+    font-weight: 600;
+  }
+
+  /* Semantic union row (kept as standalone tool) */
   .gs-union-row {
     margin-top: 12px;
     display: flex;
@@ -555,7 +618,6 @@
     border-color: var(--gs-accent);
     box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
   }
-
   .gs-union-inputs input::placeholder {
     color: var(--gs-text);
     opacity: .55;
@@ -599,7 +661,6 @@
     color: var(--gs-accent);
     text-shadow: 0 0 8px rgba(255, 179, 71, 0.45);
     letter-spacing: .02em;
-    transition: opacity .2s ease;
   }
   .gs-union-result.is-empty {
     color: var(--gs-muted);
@@ -695,7 +756,7 @@
     .gs-term-label, .gs-meta-label { font-size: .56rem; }
     .gs-comp-label { font-size: .52rem; }
     .gs-actions button { padding: 8px 16px; font-size: .78rem; }
-    .gs-chip { font-size: .78rem; padding: 5px 11px; }
+    .gs-scratch-columns { grid-template-columns: 1fr; }
     .gs-readout-text { font-size: .82rem; }
     .gs-union-row { flex-direction: column; align-items: stretch; }
     .gs-union-result { min-width: 0; }
@@ -707,38 +768,26 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Click any field to see suggestions or write your own.</p>
+    <p>Four fields for the square. A scratchpad below for exploring terms.</p>
   </header>
 
   <div class="gs-stage">
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
-      <!-- Outer complementarity ring, dotted -->
-     <!-- <polygon class="gs-outer-ring" points="79,21 79,79 21,79 21,21" /> --> 
-      <!-- Metaterm diamond, dotted -->
       <polygon class="gs-diamond" points="50,6 93,50 50,94 7,50" />
-      <!-- Inner square -->
       <line x1="31" y1="31" x2="69" y2="31"></line>
       <line x1="69" y1="31" x2="69" y2="69"></line>
       <line x1="69" y1="69" x2="31" y2="69"></line>
       <line x1="31" y1="69" x2="31" y2="31"></line>
-      <!-- Diagonals -->
       <line class="gs-diag" x1="31" y1="31" x2="69" y2="69"></line>
       <line class="gs-diag" x1="69" y1="31" x2="31" y2="69"></line>
 
-      <!-- Complementarity connectors: C1 <-> M1, M2 -->
       <line class="gs-comp-link" x1="79" y1="21" x2="50" y2="6"></line>
       <line class="gs-comp-link" x1="79" y1="21" x2="93" y2="50"></line>
-
-      <!-- C2 <-> M2, M3 -->
       <line class="gs-comp-link" x1="79" y1="79" x2="93" y2="50"></line>
       <line class="gs-comp-link" x1="79" y1="79" x2="50" y2="94"></line>
-
-      <!-- C3 <-> M3, M4 -->
       <line class="gs-comp-link" x1="21" y1="79" x2="50" y2="94"></line>
       <line class="gs-comp-link" x1="21" y1="79" x2="7"  y2="50"></line>
-
-      <!-- C4 <-> M4, M1 -->
       <line class="gs-comp-link" x1="21" y1="21" x2="7"  y2="50"></line>
       <line class="gs-comp-link" x1="21" y1="21" x2="50" y2="6"></line>
     </svg>
@@ -803,7 +852,7 @@
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
-      Click any field to activate it. Solid fields are your choices; dashed italic fields are auto-derived.
+      The square's four terms. Click a field to select all its text; type to replace. Use the scratchpad below to explore alternatives.
     </p>
 
     <div class="gs-controls">
@@ -825,18 +874,29 @@
       </div>
     </div>
 
-    <div class="gs-suggest" id="gs-suggest">
-      <div class="gs-suggest-title">
-        Suggestions for <span class="gs-suggest-anchor" id="gs-suggest-anchor">any field</span>
-        <span class="gs-suggest-note" id="gs-suggest-note"></span>
-      </div>
-      <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
-    </div>
-
     <div class="gs-readout" id="gs-readout">
       <div class="gs-readout-text is-placeholder" id="gs-readout-text">
         Click any field to see its relational statement.
       </div>
+    </div>
+  </div>
+
+  <div class="gs-section">
+    <h2 class="gs-section-title">Suggestion scratchpad</h2>
+    <p class="gs-section-note">
+      Pick a slot, enter a term, and see the three derivations. Clicking a chip places it in the square. Nothing here changes the square until you click.
+    </p>
+
+    <div class="gs-scratch">
+      <div class="gs-scratch-tabs" id="gs-scratch-tabs"></div>
+
+      <div class="gs-scratch-anchor">
+        <input id="gs-scratch-input" type="text"
+               placeholder="enter a term to derive from…"
+               autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div id="gs-scratch-body"></div>
     </div>
   </div>
 
@@ -867,7 +927,7 @@
 
     <div class="gs-section-title" style="margin-top: 22px;">Complementarities</div>
     <p class="gs-section-note">
-      Fill these directly — one term per vertex on the outer ring. No auto-composition.
+      Fill these directly — one term per vertex on the outer ring.
       C₁ sits between M₁ and M₂, C₂ between M₂ and M₃, C₃ between M₃ and M₄, C₄ between M₄ and M₁.
     </p>
     <div class="gs-controls">
@@ -888,9 +948,10 @@
         <input id="in-16" type="text" autocomplete="off" spellcheck="false" />
       </div>
     </div>
+  </div>
 
-    <!-- ===== Semantic union ===== -->
-    <div class="gs-section-title" style="margin-top: 22px;">Semantic union</div>
+  <div class="gs-section">
+    <h2 class="gs-section-title">Semantic union</h2>
     <p class="gs-section-note">
       Two terms in — find a third term that encompasses both.
     </p>
@@ -992,7 +1053,6 @@
     3: "Revelation"
   };
 
-  var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var META_LABELS_UI    = ["M\u2081", "M\u2082", "M\u2083", "M\u2084"];
@@ -1026,6 +1086,21 @@
     return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
   }
 
+  function dedupe(arr) {
+    var seen = {};
+    var out = [];
+    arr.forEach(function (v) {
+      if (!v) return;
+      var trimmed = String(v).trim();
+      if (!trimmed) return;
+      var k = trimmed.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = true;
+      out.push(trimmed);
+    });
+    return out;
+  }
+
   /* ================================================================
    *  DOM
    * ================================================================ */
@@ -1047,11 +1122,12 @@
   var compBoxes     = [1,2,3,4].map(function (n) { return byId("comp-" + n); });
   var compWrappers  = [13,14,15,16].map(function (n) { return byId("field-" + n); });
 
-  var sugAnchor = byId("gs-suggest-anchor");
-  var sugNote   = byId("gs-suggest-note");
-  var sugChips  = byId("gs-suggest-chips");
-  var copyStatus = byId("gs-copy-status");
   var readoutText = byId("gs-readout-text");
+  var copyStatus  = byId("gs-copy-status");
+
+  var scratchTabs  = byId("gs-scratch-tabs");
+  var scratchInput = byId("gs-scratch-input");
+  var scratchBody  = byId("gs-scratch-body");
 
   var unionA      = byId("gs-union-a");
   var unionB      = byId("gs-union-b");
@@ -1064,27 +1140,25 @@
    * ================================================================ */
 
   var fields = [
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" }
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" }
   ];
 
   var metaFields = [
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" }
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" }
   ];
 
   var compFields = [
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" },
-    { value: "", source: "empty", lastValue: "" }
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" },
+    { value: "", source: "empty" }
   ];
-
-  var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
   var activeKind  = null;
   var activeIndex = null;
@@ -1119,41 +1193,29 @@
   function setField(i, value, source) {
     fields[i].value     = value || "";
     fields[i].source    = value ? source : "empty";
-    fields[i].lastValue = value || fields[i].lastValue;
     termInputs[i].value = fields[i].value;
-    if (source !== "pending") pendingCandidates[i] = [];
-  }
-
-  function setPending(i, candidates) {
-    fields[i].value  = "";
-    fields[i].source = "pending";
-    termInputs[i].value = "";
-    pendingCandidates[i] = candidates.slice();
   }
 
   function clearField(i) {
     fields[i].value  = "";
     fields[i].source = "empty";
     termInputs[i].value = "";
-    pendingCandidates[i] = [];
   }
 
   function setMetaField(i, value, source) {
-    metaFields[i].value     = value || "";
-    metaFields[i].source    = value ? source : "empty";
-    metaFields[i].lastValue = value || metaFields[i].lastValue;
-    metaInputs[i].value     = metaFields[i].value;
+    metaFields[i].value  = value || "";
+    metaFields[i].source = value ? source : "empty";
+    metaInputs[i].value  = metaFields[i].value;
   }
 
   function setCompField(i, value, source) {
-    compFields[i].value     = value || "";
-    compFields[i].source    = value ? source : "empty";
-    compFields[i].lastValue = value || compFields[i].lastValue;
-    compInputs[i].value     = compFields[i].value;
+    compFields[i].value  = value || "";
+    compFields[i].source = value ? source : "empty";
+    compInputs[i].value  = compFields[i].value;
   }
 
   /* ================================================================
-   *  Derivation
+   *  Derivation (auto-fill of the square)
    * ================================================================ */
 
   function deriveS2FromS1() {
@@ -1171,11 +1233,7 @@
       if (fields[1].source !== "empty") clearField(1);
       return;
     }
-    if (candidates.length === 1) {
-      setField(1, candidates[0], "provisional");
-      return;
-    }
-    setPending(1, candidates);
+    setField(1, candidates[0], "provisional");
   }
 
   function deriveContradiction(sourceField, targetField) {
@@ -1188,16 +1246,11 @@
     }
 
     var investments = lookupInvestments(src).map(titleCase);
-
-    if (investments.length === 0) {
-      setField(targetField, negate(src), "provisional");
-      return;
-    }
-    if (investments.length === 1) {
+    if (investments.length) {
       setField(targetField, investments[0], "provisional");
       return;
     }
-    setPending(targetField, investments);
+    setField(targetField, negate(src), "provisional");
   }
 
   function deriveAll() {
@@ -1207,61 +1260,7 @@
   }
 
   /* ================================================================
-   *  Suggestion derivation
-   * ================================================================ */
-
-  function deriveSuggestionsFor(i) {
-    if (fields[i].source === "pending" && pendingCandidates[i].length) {
-      return {
-        candidates: pendingCandidates[i].slice(),
-        note: "(" + pendingCandidates[i].length + " options)"
-      };
-    }
-
-    if (i === 0) {
-      return { candidates: [], note: "Type in S\u2081 freely." };
-    }
-
-    if (i === 1) {
-      var s1 = (fields[0].value || "").trim();
-      if (!s1) return { candidates: [], note: "Fill S\u2081 first." };
-      return {
-        candidates: lookupContraries(s1).map(titleCase),
-        note: "(contrary of " + s1 + ")"
-      };
-    }
-
-    if (i === 2) {
-      var s1b = (fields[0].value || "").trim();
-      if (!s1b) return { candidates: [], note: "Fill S\u2081 first." };
-      var ivs1 = lookupInvestments(s1b).map(titleCase);
-      if (ivs1.length) {
-        return { candidates: ivs1, note: "(investment of " + s1b + ")" };
-      }
-      return {
-        candidates: [negate(s1b)],
-        note: "(mechanical negation of " + s1b + ")"
-      };
-    }
-
-    if (i === 3) {
-      var s2 = (fields[1].value || "").trim();
-      if (!s2) return { candidates: [], note: "Fill S\u2082 first." };
-      var ivs2 = lookupInvestments(s2).map(titleCase);
-      if (ivs2.length) {
-        return { candidates: ivs2, note: "(investment of " + s2 + ")" };
-      }
-      return {
-        candidates: [negate(s2)],
-        note: "(mechanical negation of " + s2 + ")"
-      };
-    }
-
-    return { candidates: [], note: "" };
-  }
-
-  /* ================================================================
-   *  Readout construction
+   *  Readout
    * ================================================================ */
 
   function slotValue(list, idx, fallbackLabel) {
@@ -1356,70 +1355,6 @@
   }
 
   /* ================================================================
-   *  Suggestion panel
-   * ================================================================ */
-
-  function renderSuggestions() {
-    sugChips.innerHTML = "";
-
-    if (activeKind !== "term" || activeIndex === null) {
-      sugAnchor.textContent = "any field";
-      sugNote.textContent = "";
-      var hint = document.createElement("div");
-      hint.className = "gs-suggest-empty";
-      hint.textContent = "Click a term field above to see suggestions.";
-      sugChips.appendChild(hint);
-      return;
-    }
-
-    sugAnchor.textContent = TERM_LABELS[activeIndex];
-
-    var derived = deriveSuggestionsFor(activeIndex);
-    sugNote.textContent = derived.note || "";
-
-    if (derived.candidates.length === 0) {
-      var empty = document.createElement("div");
-      empty.className = "gs-suggest-empty";
-      if (activeIndex === 0) {
-        empty.textContent = "No suggestions for S\u2081; type freely.";
-      } else if (activeIndex === 1) {
-        empty.textContent = "Fill S\u2081 to see contrary suggestions for S\u2082.";
-      } else if (activeIndex === 2) {
-        empty.textContent = "Fill S\u2081 to derive its contradiction.";
-      } else {
-        empty.textContent = "Fill S\u2082 to derive its contradiction.";
-      }
-      sugChips.appendChild(empty);
-      return;
-    }
-
-    var currentValue = fields[activeIndex].value;
-
-    derived.candidates.forEach(function (value) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "gs-chip";
-      if (sameValue(currentValue, value)) btn.classList.add("is-applied");
-
-      var val = document.createElement("span");
-      val.className = "gs-chip-value";
-      val.textContent = value;
-      btn.appendChild(val);
-
-      btn.addEventListener("click", function () {
-        setField(activeIndex, value, "set");
-        deriveAll();
-        updateFieldStyles();
-        updateHighlights();
-        renderSuggestions();
-        renderReadout();
-      });
-
-      sugChips.appendChild(btn);
-    });
-  }
-
-  /* ================================================================
    *  Field styling
    * ================================================================ */
 
@@ -1427,15 +1362,7 @@
     for (var i = 0; i < 4; i++) {
       var inp = termInputs[i];
       inp.classList.toggle("is-provisional", fields[i].source === "provisional");
-      inp.classList.toggle("is-pending",     fields[i].source === "pending");
       inp.classList.toggle("is-empty",       fields[i].source === "empty");
-
-      if (fields[i].source === "pending") {
-        var n = pendingCandidates[i].length;
-        inp.placeholder = n + " options \u2014 click to choose";
-      } else {
-        inp.placeholder = "";
-      }
     }
   }
 
@@ -1543,9 +1470,8 @@
         fieldValue = metaFields[i].value;
       } else {
         fieldValue = resolved ? resolved : (isEmpty ? "" : composed);
-        metaFields[i].value     = fieldValue;
-        metaFields[i].source    = fieldValue ? "composed" : "empty";
-        metaFields[i].lastValue = fieldValue || metaFields[i].lastValue;
+        metaFields[i].value  = fieldValue;
+        metaFields[i].source = fieldValue ? "composed" : "empty";
       }
 
       var mainEl = metaMains[i];
@@ -1595,7 +1521,7 @@
   }
 
   /* ================================================================
-   *  Input handling — the four term fields
+   *  Square input handling — select-all on focus
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
@@ -1605,30 +1531,12 @@
       activeKind  = "term";
       activeIndex = i;
 
-      if (initialLoad) {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = fields[i].source;
-        updateFieldStyles();
-        updateHighlights();
-        renderSuggestions();
-        renderReadout();
-        return;
-      }
-
-      if (input.value) {
-        input.dataset.priorValue  = fields[i].value;
-        input.dataset.priorSource = fields[i].source;
-        input.value = "";
-        input.classList.add("is-empty");
-        input.classList.remove("is-provisional", "is-pending");
-      } else {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = fields[i].source;
-      }
+      setTimeout(function () {
+        if (document.activeElement === input) input.select();
+      }, 0);
 
       updateFieldStyles();
       updateHighlights();
-      renderSuggestions();
       renderReadout();
     });
 
@@ -1636,37 +1544,19 @@
       var v = input.value;
       fields[i].value  = v;
       fields[i].source = v ? "set" : "empty";
-      if (v) input.classList.remove("is-empty", "is-pending", "is-provisional");
-      pendingCandidates[i] = [];
+      if (v) input.classList.remove("is-empty");
 
       deriveAll();
       updateFieldStyles();
-      renderSuggestions();
+      renderScratchpad();
     });
 
     input.addEventListener("blur", function () {
-      var priorValue  = input.dataset.priorValue;
-      var priorSource = input.dataset.priorSource;
-
-      if (!input.value && priorValue) {
-        setField(i, priorValue, priorSource || "set");
-      } else if (!input.value) {
-        fields[i].value  = "";
-        fields[i].source = "empty";
-      }
-
-      delete input.dataset.priorValue;
-      delete input.dataset.priorSource;
-
-      deriveAll();
-      updateFieldStyles();
-
       setTimeout(function () {
         if (document.activeElement !== input) {
           activeKind  = null;
           activeIndex = null;
           updateHighlights();
-          renderSuggestions();
           renderReadout();
         }
       }, 0);
@@ -1681,7 +1571,7 @@
   });
 
   /* ================================================================
-   *  Input handling — the four metaterm fields
+   *  Metaterm field handling
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
@@ -1691,23 +1581,9 @@
       activeKind  = "meta";
       activeIndex = i;
 
-      if (initialLoad) {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = metaFields[i].source;
-        updateHighlights();
-        renderReadout();
-        return;
-      }
-
-      if (input.value) {
-        input.dataset.priorValue  = metaFields[i].value;
-        input.dataset.priorSource = metaFields[i].source;
-        input.value = "";
-        input.classList.remove("is-composed");
-      } else {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = metaFields[i].source;
-      }
+      setTimeout(function () {
+        if (document.activeElement === input) input.select();
+      }, 0);
 
       updateHighlights();
       renderReadout();
@@ -1717,28 +1593,11 @@
       var v = input.value;
       metaFields[i].value  = v;
       metaFields[i].source = v ? "set" : "empty";
-      if (v) input.classList.remove("is-composed");
+      if (v) input.classList.remove("is-composed", "is-empty");
+      renderScratchpad();
     });
 
     input.addEventListener("blur", function () {
-      var priorValue  = input.dataset.priorValue;
-      var priorSource = input.dataset.priorSource;
-
-      if (!input.value && priorValue) {
-        metaFields[i].value     = priorValue;
-        metaFields[i].source    = priorSource || "composed";
-        metaFields[i].lastValue = priorValue;
-        input.value = priorValue;
-      } else if (!input.value) {
-        metaFields[i].value  = "";
-        metaFields[i].source = "empty";
-      }
-
-      delete input.dataset.priorValue;
-      delete input.dataset.priorSource;
-
-      renderMetaterms(false);
-
       setTimeout(function () {
         if (document.activeElement !== input) {
           activeKind  = null;
@@ -1758,7 +1617,7 @@
   });
 
   /* ================================================================
-   *  Input handling — the four complementarity fields
+   *  Complementarity field handling
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
@@ -1768,22 +1627,9 @@
       activeKind  = "comp";
       activeIndex = i;
 
-      if (initialLoad) {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = compFields[i].source;
-        updateHighlights();
-        renderReadout();
-        return;
-      }
-
-      if (input.value) {
-        input.dataset.priorValue  = compFields[i].value;
-        input.dataset.priorSource = compFields[i].source;
-        input.value = "";
-      } else {
-        input.dataset.priorValue  = "";
-        input.dataset.priorSource = compFields[i].source;
-      }
+      setTimeout(function () {
+        if (document.activeElement === input) input.select();
+      }, 0);
 
       updateHighlights();
       renderReadout();
@@ -1794,27 +1640,10 @@
       compFields[i].value  = v;
       compFields[i].source = v ? "set" : "empty";
       compInputs[i].classList.toggle("is-empty", !v);
+      renderScratchpad();
     });
 
     input.addEventListener("blur", function () {
-      var priorValue  = input.dataset.priorValue;
-      var priorSource = input.dataset.priorSource;
-
-      if (!input.value && priorValue) {
-        compFields[i].value     = priorValue;
-        compFields[i].source    = priorSource || "set";
-        compFields[i].lastValue = priorValue;
-        input.value = priorValue;
-      } else if (!input.value) {
-        compFields[i].value  = "";
-        compFields[i].source = "empty";
-      }
-
-      delete input.dataset.priorValue;
-      delete input.dataset.priorSource;
-
-      renderComps(false);
-
       setTimeout(function () {
         if (document.activeElement !== input) {
           activeKind  = null;
@@ -1831,6 +1660,312 @@
         input.blur();
       }
     });
+  });
+
+  /* ================================================================
+   *  Suggestion scratchpad
+   * ================================================================ */
+
+  var SCRATCH_SLOTS = [
+    { id: "S\u2081",  kind: "term", index: 0 },
+    { id: "S\u2082",  kind: "term", index: 1 },
+    { id: "~S\u2081", kind: "term", index: 2 },
+    { id: "~S\u2082", kind: "term", index: 3 },
+    { id: "M\u2081",  kind: "meta", index: 0 },
+    { id: "M\u2082",  kind: "meta", index: 1 },
+    { id: "M\u2083",  kind: "meta", index: 2 },
+    { id: "M\u2084",  kind: "meta", index: 3 },
+    { id: "C\u2081",  kind: "comp", index: 0 },
+    { id: "C\u2082",  kind: "comp", index: 1 },
+    { id: "C\u2083",  kind: "comp", index: 2 },
+    { id: "C\u2084",  kind: "comp", index: 3 }
+  ];
+
+  var scratchSlotIndex = 0;
+
+  function currentSlotValue(slot) {
+    if (slot.kind === "term") return fields[slot.index].value;
+    if (slot.kind === "meta") return metaFields[slot.index].value;
+    return compFields[slot.index].value;
+  }
+
+  function applyScratchValue(slot, value) {
+    if (slot.kind === "term") {
+      setField(slot.index, value, "set");
+      deriveAll();
+      updateFieldStyles();
+      renderTerms(false);
+    } else if (slot.kind === "meta") {
+      setMetaField(slot.index, value, "set");
+      renderMetaterms(false);
+    } else {
+      setCompField(slot.index, value, "set");
+      renderComps(false);
+    }
+  }
+
+  /* Mapping: anchor term -> three target term indices. */
+  function termTargets(termIndex) {
+    switch (termIndex) {
+      case 0: return { contrary: 1, contradiction: 2, double: 3 };
+      case 1: return { contrary: 0, contradiction: 3, double: 2 };
+      case 2: return { contrary: 3, contradiction: 0, double: 1 };
+      case 3: return { contrary: 2, contradiction: 1, double: 0 };
+    }
+    return null;
+  }
+
+  function deriveScratchTermSuggestions(anchorValue) {
+    var v = (anchorValue || "").trim();
+    if (!v) return { contrary: [], contradiction: [], double: [] };
+
+    var contraries = dedupe(lookupContraries(v).map(titleCase));
+
+    var contradiction = [];
+    contradiction.push(negate(v));
+    lookupInvestments(v).forEach(function (inv) {
+      contradiction.push(titleCase(inv));
+    });
+    contradiction = dedupe(contradiction);
+
+    var doubles = [];
+    contraries.forEach(function (c) {
+      doubles.push(negate(c));
+      lookupInvestments(c).forEach(function (inv) {
+        doubles.push(titleCase(inv));
+      });
+    });
+    doubles = dedupe(doubles);
+
+    return {
+      contrary: contraries,
+      contradiction: contradiction,
+      double: doubles
+    };
+  }
+
+  /* Composing terms for a meta or comp slot. Returns [termA, termB]. */
+  function composingTerms(slot) {
+    if (slot.kind === "meta") {
+      var pair = META_PAIRS[slot.index];
+      return [fields[pair.a].value, fields[pair.b].value];
+    }
+    if (slot.kind === "comp") {
+      var a = slot.index;
+      var b = (slot.index + 1) % 4;
+      return [metaFields[a].value, metaFields[b].value];
+    }
+    return null;
+  }
+
+  function makeChip(value, isApplied, onClick) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "gs-scratch-chip";
+    if (isApplied) btn.classList.add("is-applied");
+    btn.textContent = value;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
+  function renderScratchTabs() {
+    scratchTabs.innerHTML = "";
+    SCRATCH_SLOTS.forEach(function (slot, idx) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gs-scratch-tab";
+      if (idx === scratchSlotIndex) btn.classList.add("is-selected");
+      btn.textContent = slot.id;
+      btn.addEventListener("click", function () {
+        if (scratchSlotIndex === idx) return;
+        scratchSlotIndex = idx;
+        var newSlot = SCRATCH_SLOTS[idx];
+        scratchInput.value = currentSlotValue(newSlot) || "";
+        renderScratchpad();
+      });
+      scratchTabs.appendChild(btn);
+    });
+  }
+
+  function renderScratchColumns(anchorValue, targets) {
+    scratchBody.innerHTML = "";
+    var derived = deriveScratchTermSuggestions(anchorValue);
+
+    var grid = document.createElement("div");
+    grid.className = "gs-scratch-columns";
+
+    function makeColumn(title, targetLabel, chips, targetIndex) {
+      var col = document.createElement("div");
+      col.className = "gs-scratch-column";
+
+      var t = document.createElement("div");
+      t.className = "gs-scratch-column-title";
+      t.textContent = title;
+      col.appendChild(t);
+
+      var tgt = document.createElement("div");
+      tgt.className = "gs-scratch-column-target";
+      tgt.textContent = "\u2192 " + targetLabel;
+      col.appendChild(tgt);
+
+      var chipRow = document.createElement("div");
+      chipRow.className = "gs-scratch-chips";
+
+      var targetSlot = SCRATCH_SLOTS[targetIndex];
+      var targetValue = targetSlot ? currentSlotValue(targetSlot) : "";
+
+      if (chips.length === 0) {
+        var empty = document.createElement("div");
+        empty.className = "gs-scratch-empty";
+        empty.textContent = anchorValue.trim()
+          ? "no entries"
+          : "type a term above";
+        chipRow.appendChild(empty);
+      } else {
+        chips.forEach(function (value) {
+          var applied = sameValue(value, targetValue);
+          var chip = makeChip(value, applied, function () {
+            applyScratchValue(targetSlot, value);
+            renderScratchpad();
+          });
+          chipRow.appendChild(chip);
+        });
+      }
+
+      col.appendChild(chipRow);
+      return col;
+    }
+
+    grid.appendChild(makeColumn(
+      "Contrary", "\u200b", derived.contrary, targets.contrary
+    ));
+    // patch: set proper target label
+    var cols = grid.children;
+    cols[0].querySelector(".gs-scratch-column-target").textContent =
+      "\u2192 " + SCRATCH_SLOTS[targets.contrary].id;
+
+    grid.appendChild(makeColumn(
+      "Contradiction", SCRATCH_SLOTS[targets.contradiction].id,
+      derived.contradiction, targets.contradiction
+    ));
+
+    grid.appendChild(makeColumn(
+      "Double contrary", SCRATCH_SLOTS[targets.double].id,
+      derived.double, targets.double
+    ));
+
+    scratchBody.appendChild(grid);
+  }
+
+  function renderScratchCompose(slot) {
+    scratchBody.innerHTML = "";
+
+    var pair = composingTerms(slot);
+    if (!pair) return;
+
+    var a = (pair[0] || "").trim();
+    var b = (pair[1] || "").trim();
+
+    var comp = document.createElement("div");
+    comp.className = "gs-scratch-compose";
+
+    var sourceLabels;
+    if (slot.kind === "meta") {
+      var mp = META_PAIRS[slot.index];
+      sourceLabels = [TERM_LABELS[mp.a], TERM_LABELS[mp.b]];
+    } else {
+      var aIdx = slot.index;
+      var bIdx = (slot.index + 1) % 4;
+      sourceLabels = [META_LABELS_UI[aIdx], META_LABELS_UI[bIdx]];
+    }
+
+    comp.innerHTML =
+      "Composes from <strong>" + sourceLabels[0] + "</strong> and <strong>" +
+      sourceLabels[1] + "</strong>" +
+      " \u2014 currently <strong>" + escapeHtml(a || "\u2014") +
+      "</strong> and <strong>" + escapeHtml(b || "\u2014") + "</strong>.";
+
+    scratchBody.appendChild(comp);
+
+    var chipRow = document.createElement("div");
+    chipRow.className = "gs-scratch-chips";
+
+    if (!a || !b) {
+      var empty = document.createElement("div");
+      empty.className = "gs-scratch-empty";
+      empty.textContent = "Fill the composing terms in the square first.";
+      chipRow.appendChild(empty);
+      scratchBody.appendChild(chipRow);
+      return;
+    }
+
+    if (!unionReady) {
+      var loading = document.createElement("div");
+      loading.className = "gs-scratch-empty";
+      loading.textContent = "Semantic-union dataset still loading…";
+      chipRow.appendChild(loading);
+      scratchBody.appendChild(chipRow);
+      return;
+    }
+
+    var result = findUnion(a, b);
+    if (!result || !result.word) {
+      var none = document.createElement("div");
+      none.className = "gs-scratch-empty";
+      none.textContent = (result && result.reason) || "no union found.";
+      chipRow.appendChild(none);
+      scratchBody.appendChild(chipRow);
+      return;
+    }
+
+    var targetSlot = slot;
+    var targetValue = currentSlotValue(targetSlot);
+    var applied = sameValue(result.word, targetValue);
+
+    var chip = makeChip(titleCase(result.word), applied, function () {
+      applyScratchValue(targetSlot, titleCase(result.word));
+      renderScratchpad();
+    });
+    chipRow.appendChild(chip);
+
+    if (result.alternatives && result.alternatives.length) {
+      result.alternatives.forEach(function (alt) {
+        var altApplied = sameValue(alt, targetValue);
+        var altChip = makeChip(titleCase(alt), altApplied, function () {
+          applyScratchValue(targetSlot, titleCase(alt));
+          renderScratchpad();
+        });
+        chipRow.appendChild(altChip);
+      });
+    }
+
+    scratchBody.appendChild(chipRow);
+  }
+
+  function renderScratchpad() {
+    renderScratchTabs();
+
+    var slot = SCRATCH_SLOTS[scratchSlotIndex];
+
+    if (slot.kind === "term") {
+      var anchorValue = scratchInput.value;
+      var targets = termTargets(slot.index);
+      renderScratchColumns(anchorValue, targets);
+    } else {
+      // For meta/comp slots, the anchor input is unused; hide it visually.
+      renderScratchCompose(slot);
+    }
+  }
+
+  scratchInput.addEventListener("input", function () {
+    var slot = SCRATCH_SLOTS[scratchSlotIndex];
+    if (slot.kind === "term") {
+      renderScratchColumns(scratchInput.value, termTargets(slot.index));
+    }
+  });
+
+  scratchInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") e.preventDefault();
   });
 
   /* ================================================================
@@ -1892,6 +2027,9 @@
         unionMeta.textContent =
           "Loaded " + edges.length.toLocaleString() + " edges across " +
           unionOutgoing.size.toLocaleString() + " concepts.";
+
+        // Refresh scratchpad in case an M/C slot is selected.
+        renderScratchpad();
       })
       .catch(function (err) {
         unionMeta.textContent = "Failed to load dataset: " + err.message;
@@ -2092,21 +2230,11 @@
     var c3Pos = { x: X(21), y: Y(79) };
     var c4Pos = { x: X(21), y: Y(21) };
 
-    /* Outer complementarity ring 
+    /* Metaterm diamond */
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
-    ctx.setLineDash([1, 6]);
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(X(79), Y(21));
-    ctx.lineTo(X(79), Y(79));
-    ctx.lineTo(X(21), Y(79));
-    ctx.lineTo(X(21), Y(21));
-    ctx.closePath();
-    ctx.stroke(); */
-
-    /* Metaterm diamond */
     ctx.setLineDash([2, 6]);
+    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(m1Pos.x, m1Pos.y);
     ctx.lineTo(m2Pos.x, m2Pos.y);
@@ -2115,7 +2243,7 @@
     ctx.closePath();
     ctx.stroke();
 
-    /* Complementarity connectors: C1 <-> M1, M2; etc. */
+    /* Complementarity connectors */
     ctx.setLineDash([1, 5]);
     ctx.lineWidth = 1.2;
     ctx.globalAlpha = 0.55;
@@ -2290,26 +2418,19 @@
     exportDiagramAsPng();
   });
 
-   byId("gs-rotate").addEventListener("click", function () {
-    /* Rotate the four inner terms one position clockwise:
-       TL -> TR -> BR -> BL -> TL
-       i.e. new[0]=old[2], new[1]=old[0], new[2]=old[3], new[3]=old[1] */
+  byId("gs-rotate").addEventListener("click", function () {
     var v = fields.map(function (f) { return f.value; });
     setField(0, v[2], "set");
     setField(1, v[0], "set");
     setField(2, v[3], "set");
     setField(3, v[1], "set");
 
-    /* Rotate the four metaterms one position clockwise:
-       M1 -> M2 -> M3 -> M4 -> M1 */
     var mv = metaFields.map(function (f) { return f.value; });
     setMetaField(0, mv[3], "set");
     setMetaField(1, mv[0], "set");
     setMetaField(2, mv[1], "set");
     setMetaField(3, mv[2], "set");
 
-    /* Rotate the four complementarities one position clockwise:
-       C1 -> C2 -> C3 -> C4 -> C1 */
     var cv = compFields.map(function (f) { return f.value; });
     setCompField(0, cv[3], "set");
     setCompField(1, cv[0], "set");
@@ -2318,43 +2439,40 @@
 
     deriveAll();
     updateFieldStyles();
-    renderSuggestions();
     renderReadout();
+    renderScratchpad();
     renderAll(true);
   });
 
   byId("gs-reset").addEventListener("click", function () {
-    for (var k = 0; k < 4; k++) {
-      setMetaField(k, SAMPLE_METAS[k], "set");
-      setCompField(k, SAMPLE_COMPS[k], "set");
-    }
     for (var i = 0; i < 4; i++) {
       setField(i, SAMPLE_TERMS[i], "set");
+      setMetaField(i, SAMPLE_METAS[i], "set");
+      setCompField(i, SAMPLE_COMPS[i], "set");
     }
     deriveAll();
     updateFieldStyles();
-    renderSuggestions();
     renderReadout();
+    renderScratchpad();
     renderAll(true);
   });
 
   byId("gs-clear").addEventListener("click", function () {
-    for (var i = 0; i < 4; i++) clearField(i);
-    for (var k = 0; k < 4; k++) {
-      metaFields[k].value     = "";
-      metaFields[k].source    = "empty";
-      metaFields[k].lastValue = "";
-      metaInputs[k].value     = "";
-      metaInputs[k].classList.remove("is-composed");
+    for (var i = 0; i < 4; i++) {
+      clearField(i);
+      metaFields[i].value  = "";
+      metaFields[i].source = "empty";
+      metaInputs[i].value  = "";
+      metaInputs[i].classList.remove("is-composed", "is-empty");
 
-      compFields[k].value     = "";
-      compFields[k].source    = "empty";
-      compFields[k].lastValue = "";
-      compInputs[k].value     = "";
+      compFields[i].value  = "";
+      compFields[i].source = "empty";
+      compInputs[i].value  = "";
+      compInputs[i].classList.add("is-empty");
     }
     updateFieldStyles();
-    renderSuggestions();
     renderReadout();
+    renderScratchpad();
     renderAll(true);
   });
 
@@ -2365,17 +2483,19 @@
   function init() {
     for (var i = 0; i < 4; i++) {
       setField(i, SAMPLE_TERMS[i], "set");
-    }
-    for (var k = 0; k < 4; k++) {
-      setMetaField(k, SAMPLE_METAS[k], "set");
-      setCompField(k, SAMPLE_COMPS[k], "set");
+      setMetaField(i, SAMPLE_METAS[i], "set");
+      setCompField(i, SAMPLE_COMPS[i], "set");
     }
 
     deriveAll();
     updateFieldStyles();
-    renderSuggestions();
     renderReadout();
     renderAll(false);
+
+    // Populate scratchpad tab selection and anchor input from the
+    // initially selected slot (S₁).
+    scratchInput.value = currentSlotValue(SCRATCH_SLOTS[scratchSlotIndex]) || "";
+    renderScratchpad();
 
     loadUnionData();
   }
