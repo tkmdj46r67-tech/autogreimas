@@ -116,6 +116,13 @@
     stroke-linecap: round;
     opacity: .7;
   }
+  /* Connector lines from each complementarity to its two metaterms */
+  .gs-lines line.gs-comp-link {
+    stroke: var(--gs-line);
+    stroke-dasharray: 1 5;
+    stroke-linecap: round;
+    opacity: .55;
+  }
 
   .gs-term,
   .gs-meta,
@@ -193,7 +200,6 @@
   }
   .gs-comp-label { font-size: .58rem; }
 
-  /* Glow styles */
   .gs-term.is-box-active,
   .gs-meta.is-box-active,
   .gs-comp.is-box-active {
@@ -243,7 +249,6 @@
     }
   }
 
-  /* Positions */
   .gs-tl { left: 31%; top: 31%; }
   .gs-tr { left: 69%; top: 31%; }
   .gs-bl { left: 31%; top: 69%; }
@@ -254,11 +259,6 @@
   .gs-m3 { left: 50%; top: 94%; }
   .gs-m4 { left: 7%;  top: 50%; }
 
-  /* Complementarities: midpoints of the arcs between adjacent metaterms.
-     C1 sits between M1 (top) and M2 (right), i.e. upper-right diagonal.
-     C2 between M2 (right) and M3 (bottom), i.e. lower-right diagonal.
-     C3 between M3 (bottom) and M4 (left), i.e. lower-left diagonal.
-     C4 between M4 (left) and M1 (top), i.e. upper-left diagonal. */
   .gs-c1 { left: 79%; top: 21%; }
   .gs-c2 { left: 79%; top: 79%; }
   .gs-c3 { left: 21%; top: 79%; }
@@ -556,6 +556,11 @@
     box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
   }
 
+  .gs-union-inputs input::placeholder {
+    color: var(--gs-text);
+    opacity: .55;
+  }
+
   .gs-union-btn {
     font: inherit;
     font-size: .85rem;
@@ -720,6 +725,22 @@
       <!-- Diagonals -->
       <line class="gs-diag" x1="31" y1="31" x2="69" y2="69"></line>
       <line class="gs-diag" x1="69" y1="31" x2="31" y2="69"></line>
+
+      <!-- Complementarity connectors: C1 <-> M1, M2 -->
+      <line class="gs-comp-link" x1="79" y1="21" x2="50" y2="6"></line>
+      <line class="gs-comp-link" x1="79" y1="21" x2="93" y2="50"></line>
+
+      <!-- C2 <-> M2, M3 -->
+      <line class="gs-comp-link" x1="79" y1="79" x2="93" y2="50"></line>
+      <line class="gs-comp-link" x1="79" y1="79" x2="50" y2="94"></line>
+
+      <!-- C3 <-> M3, M4 -->
+      <line class="gs-comp-link" x1="21" y1="79" x2="50" y2="94"></line>
+      <line class="gs-comp-link" x1="21" y1="79" x2="7"  y2="50"></line>
+
+      <!-- C4 <-> M4, M1 -->
+      <line class="gs-comp-link" x1="21" y1="21" x2="7"  y2="50"></line>
+      <line class="gs-comp-link" x1="21" y1="21" x2="50" y2="6"></line>
     </svg>
 
     <div class="gs-term gs-tl" id="term-1">
@@ -965,10 +986,10 @@
   };
 
   var SAMPLE_COMPS = {
-    0: "Paradox",     /* C1: between M1 and M2 */
-    1: "Deception",   /* C2: between M2 and M3 */
-    2: "Subterfuge",  /* C3: between M3 and M4 */
-    3: "Revelation"   /* C4: between M4 and M1 */
+    0: "Paradox",
+    1: "Deception",
+    2: "Subterfuge",
+    3: "Revelation"
   };
 
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
@@ -1065,7 +1086,7 @@
 
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
-  var activeKind  = null;   /* "term" | "meta" | "comp" | null */
+  var activeKind  = null;
   var activeIndex = null;
 
   var initialLoad = true;
@@ -1073,18 +1094,6 @@
 
   /* ================================================================
    *  Highlight rules
-   *
-   *  For metaterms:
-   *    M1 -> M2, M4
-   *    M2 -> M3, M1
-   *    M3 -> M4, M2
-   *    M4 -> M3, M1
-   *
-   *  For complementarities:
-   *    C1 (M1·M2) -> C2, C4  (its two ring neighbours)
-   *    C2 (M2·M3) -> C3, C1
-   *    C3 (M3·M4) -> C4, C2
-   *    C4 (M4·M1) -> C1, C3
    * ================================================================ */
 
   var TERM_SECONDARY = { 0: [1, 2], 3: [1, 2] };
@@ -1299,9 +1308,6 @@
       var c = activeIndex;
       var slotC = COMP_LABELS_UI[c];
 
-      /* Complementarity: situated between two adjacent metaterms.
-         C1 between M1 & M2, C2 between M2 & M3,
-         C3 between M3 & M4, C4 between M4 & M1. */
       var metaVals = metaFields.map(function (f) { return (f.value || "").trim(); });
       var m1v = slotValue(metaVals, 0, "M\u2081");
       var m2v = slotValue(metaVals, 1, "M\u2082");
@@ -1753,9 +1759,6 @@
 
   /* ================================================================
    *  Input handling — the four complementarity fields
-   *
-   *  Same interaction model as the metaterms: focus empties, typing
-   *  commits, blur without typing restores, Enter commits and blurs.
    * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
@@ -2111,6 +2114,25 @@
     ctx.lineTo(m4Pos.x, m4Pos.y);
     ctx.closePath();
     ctx.stroke();
+
+    /* Complementarity connectors: C1 <-> M1, M2; etc. */
+    ctx.setLineDash([1, 5]);
+    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = 0.55;
+
+    var compConnectors = [
+      [c1Pos, m1Pos], [c1Pos, m2Pos],
+      [c2Pos, m2Pos], [c2Pos, m3Pos],
+      [c3Pos, m3Pos], [c3Pos, m4Pos],
+      [c4Pos, m4Pos], [c4Pos, m1Pos]
+    ];
+    compConnectors.forEach(function (pair) {
+      ctx.beginPath();
+      ctx.moveTo(pair[0].x, pair[0].y);
+      ctx.lineTo(pair[1].x, pair[1].y);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
 
     /* Inner square */
     ctx.setLineDash([]);
