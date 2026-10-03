@@ -400,7 +400,7 @@
 
   /* Readout */
   .gs-readout {
-    margin-top: 16px;
+    margin-top: 0;
     padding: 12px 14px;
     border: 1px dashed var(--gs-border);
     border-radius: 6px;
@@ -435,7 +435,7 @@
    * ================================================================ */
 
   .gs-scratch {
-    margin-top: 12px;
+    margin-top: 0;
     padding: 14px;
     border: 1px dashed var(--gs-border);
     border-radius: 6px;
@@ -481,6 +481,7 @@
     gap: 10px;
     margin-bottom: 16px;
   }
+  .gs-scratch-anchor[hidden] { display: none; }
 
   .gs-scratch-anchor input {
     flex: 1;
@@ -585,7 +586,7 @@
     font-weight: 600;
   }
 
-  /* Semantic union row (kept as standalone tool) */
+  /* Semantic overlap explorer */
   .gs-union-row {
     margin-top: 12px;
     display: flex;
@@ -768,9 +769,10 @@
 <div class="gs-app">
   <header>
     <h1>Extended Greimas Square</h1>
-    <p>Four fields for the square. A scratchpad below for exploring terms.</p>
+    <p>Enter terms, explore alternatives in the scratchpad, then update the square.</p>
   </header>
 
+  <!-- Diagram -->
   <div class="gs-stage">
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
@@ -849,12 +851,12 @@
     </div>
   </div>
 
+  <!-- 1. Terms -->
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
-      The square's four terms. Click a field to select all its text; type to replace. Use the scratchpad below to explore alternatives.
+      Click a field to select all its text; type to replace.
     </p>
-
     <div class="gs-controls">
       <div class="gs-field" id="field-1">
         <label for="in-1"><span class="gs-tag">S₁</span> top left</label>
@@ -873,33 +875,9 @@
         <input id="in-4" type="text" autocomplete="off" spellcheck="false" />
       </div>
     </div>
-
-    <div class="gs-readout" id="gs-readout">
-      <div class="gs-readout-text is-placeholder" id="gs-readout-text">
-        Click any field to see its relational statement.
-      </div>
-    </div>
   </div>
 
-  <div class="gs-section">
-    <h2 class="gs-section-title">Suggestion scratchpad</h2>
-    <p class="gs-section-note">
-      Pick a slot, enter a term, and see the three derivations. Clicking a chip places it in the square. Nothing here changes the square until you click.
-    </p>
-
-    <div class="gs-scratch">
-      <div class="gs-scratch-tabs" id="gs-scratch-tabs"></div>
-
-      <div class="gs-scratch-anchor">
-        <input id="gs-scratch-input" type="text"
-               placeholder="enter a term to derive from…"
-               autocomplete="off" spellcheck="false" />
-      </div>
-
-      <div id="gs-scratch-body"></div>
-    </div>
-  </div>
-
+  <!-- 2. Metaterms -->
   <div class="gs-section">
     <h2 class="gs-section-title">Metaterms</h2>
     <p class="gs-section-note">
@@ -924,10 +902,13 @@
         <input id="in-12" type="text" autocomplete="off" spellcheck="false" />
       </div>
     </div>
+  </div>
 
-    <div class="gs-section-title" style="margin-top: 22px;">Complementarities</div>
+  <!-- 3. Complementarities -->
+  <div class="gs-section">
+    <h2 class="gs-section-title">Complementarities</h2>
     <p class="gs-section-note">
-      Fill these directly — one term per vertex on the outer ring.
+      One term per vertex on the outer ring.
       C₁ sits between M₁ and M₂, C₂ between M₂ and M₃, C₃ between M₃ and M₄, C₄ between M₄ and M₁.
     </p>
     <div class="gs-controls">
@@ -950,8 +931,42 @@
     </div>
   </div>
 
+  <!-- 4. Suggestion scratchpad -->
   <div class="gs-section">
-    <h2 class="gs-section-title">Semantic union</h2>
+    <h2 class="gs-section-title">Suggestion scratchpad</h2>
+    <p class="gs-section-note">
+      Pick a slot, enter a term, and see the three derivations. Clicking a chip places it in the square. Nothing here changes the square until you click.
+    </p>
+
+    <div class="gs-scratch">
+      <div class="gs-scratch-tabs" id="gs-scratch-tabs"></div>
+
+      <div class="gs-scratch-anchor" id="gs-scratch-anchor-row">
+        <input id="gs-scratch-input" type="text"
+               placeholder="enter a term to derive from…"
+               autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div id="gs-scratch-body"></div>
+    </div>
+  </div>
+
+  <!-- 5. Relational statement -->
+  <div class="gs-section">
+    <h2 class="gs-section-title">Relational statement</h2>
+    <p class="gs-section-note">
+      Describes the slot currently selected in the scratchpad.
+    </p>
+    <div class="gs-readout" id="gs-readout">
+      <div class="gs-readout-text is-placeholder" id="gs-readout-text">
+        Select a slot in the scratchpad to see its relational statement.
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Semantic overlap explorer -->
+  <div class="gs-section">
+    <h2 class="gs-section-title">Semantic overlap explorer</h2>
     <p class="gs-section-note">
       Two terms in — find a third term that encompasses both.
     </p>
@@ -1125,9 +1140,10 @@
   var readoutText = byId("gs-readout-text");
   var copyStatus  = byId("gs-copy-status");
 
-  var scratchTabs  = byId("gs-scratch-tabs");
-  var scratchInput = byId("gs-scratch-input");
-  var scratchBody  = byId("gs-scratch-body");
+  var scratchTabs       = byId("gs-scratch-tabs");
+  var scratchInput      = byId("gs-scratch-input");
+  var scratchAnchorRow  = byId("gs-scratch-anchor-row");
+  var scratchBody       = byId("gs-scratch-body");
 
   var unionA      = byId("gs-union-a");
   var unionB      = byId("gs-union-b");
@@ -1162,9 +1178,6 @@
 
   var activeKind  = null;
   var activeIndex = null;
-
-  var initialLoad = true;
-  setTimeout(function () { initialLoad = false; }, 150);
 
   /* ================================================================
    *  Highlight rules
@@ -1260,66 +1273,97 @@
   }
 
   /* ================================================================
-   *  Readout
+   *  Readout — keyed to scratchpad slot
    * ================================================================ */
 
-  function slotValue(list, idx, fallbackLabel) {
-    var v = (list[idx] || "").trim();
-    return v || fallbackLabel;
+  var SCRATCH_SLOTS = [
+    { id: "S\u2081",  kind: "term", index: 0 },
+    { id: "S\u2082",  kind: "term", index: 1 },
+    { id: "~S\u2081", kind: "term", index: 2 },
+    { id: "~S\u2082", kind: "term", index: 3 },
+    { id: "M\u2081",  kind: "meta", index: 0 },
+    { id: "M\u2082",  kind: "meta", index: 1 },
+    { id: "M\u2083",  kind: "meta", index: 2 },
+    { id: "M\u2084",  kind: "meta", index: 3 },
+    { id: "C\u2081",  kind: "comp", index: 0 },
+    { id: "C\u2082",  kind: "comp", index: 1 },
+    { id: "C\u2083",  kind: "comp", index: 2 },
+    { id: "C\u2084",  kind: "comp", index: 3 }
+  ];
+
+  var scratchSlotIndex = 0;
+
+  function currentSlotValue(slot) {
+    if (slot.kind === "term") return fields[slot.index].value;
+    if (slot.kind === "meta") return metaFields[slot.index].value;
+    return compFields[slot.index].value;
   }
 
-  function buildReadout() {
-    if (activeKind === null || activeIndex === null) return null;
+  function slotById(slotId) {
+    for (var i = 0; i < SCRATCH_SLOTS.length; i++) {
+      if (SCRATCH_SLOTS[i].id === slotId) return i;
+    }
+    return -1;
+  }
 
-    var termValues = fields.map(function (f) { return (f.value || "").trim(); });
+  function slotLabel(slot) {
+    if (slot.kind === "term") return TERM_LABELS[slot.index];
+    if (slot.kind === "meta") return META_LABELS_UI[slot.index];
+    return COMP_LABELS_UI[slot.index];
+  }
 
-    if (activeKind === "term") {
-      var i = activeIndex;
-      var slot = TERM_LABELS[i];
+  function slotValueOrLabel(slot) {
+    var v = (currentSlotValue(slot) || "").trim();
+    return v || slotLabel(slot);
+  }
 
-      var s1  = slotValue(termValues, 0, "S\u2081");
-      var s2  = slotValue(termValues, 1, "S\u2082");
-      var ns1 = slotValue(termValues, 2, "~S\u2081");
-      var ns2 = slotValue(termValues, 3, "~S\u2082");
+  function buildReadoutForSlot(slot) {
+    var s1  = slotValueOrLabel(SCRATCH_SLOTS[0]);
+    var s2  = slotValueOrLabel(SCRATCH_SLOTS[1]);
+    var ns1 = slotValueOrLabel(SCRATCH_SLOTS[2]);
+    var ns2 = slotValueOrLabel(SCRATCH_SLOTS[3]);
+    var m1  = slotValueOrLabel(SCRATCH_SLOTS[4]);
+    var m2  = slotValueOrLabel(SCRATCH_SLOTS[5]);
+    var m3  = slotValueOrLabel(SCRATCH_SLOTS[6]);
+    var m4  = slotValueOrLabel(SCRATCH_SLOTS[7]);
 
-      if (i === 0) return { tag: slot, text: slot + " is: anti-" + s2 + ", and non-" + ns1 };
-      if (i === 1) return { tag: slot, text: slot + " is: anti-" + s1 + ", and non-" + ns2 };
-      if (i === 2) return { tag: slot, text: slot + " is: anti-" + ns2 + ", and non-" + s1 };
-      if (i === 3) return { tag: slot, text: slot + " is: anti-" + ns1 + ", and non-" + s2 };
+    var tag = slotLabel(slot);
+    var text;
+
+    if (slot.kind === "term") {
+      if (slot.index === 0) {
+        text = tag + " is: anti-" + s2 + ", and non-" + ns1;
+      } else if (slot.index === 1) {
+        text = tag + " is: anti-" + s1 + ", and non-" + ns2;
+      } else if (slot.index === 2) {
+        text = tag + " is: anti-" + ns2 + ", and non-" + s1;
+      } else {
+        text = tag + " is: anti-" + ns1 + ", and non-" + s2;
+      }
+    } else if (slot.kind === "meta") {
+      if (slot.index === 0) {
+        text = tag + " is: " + s1 + " + " + s2;
+      } else if (slot.index === 1) {
+        text = tag + " is: " + s2 + " + " + ns2;
+      } else if (slot.index === 2) {
+        text = tag + " is: " + ns1 + " + " + ns2;
+      } else {
+        text = tag + " is: " + s1 + " + " + ns1;
+      }
+    } else {
+      /* comp */
+      if (slot.index === 0) {
+        text = tag + " is the complement of " + m1 + " and " + m2;
+      } else if (slot.index === 1) {
+        text = tag + " is the complement of " + m2 + " and " + m3;
+      } else if (slot.index === 2) {
+        text = tag + " is the complement of " + m3 + " and " + m4;
+      } else {
+        text = tag + " is the complement of " + m4 + " and " + m1;
+      }
     }
 
-    if (activeKind === "meta") {
-      var k = activeIndex;
-      var slotM = META_LABELS_UI[k];
-
-      var s1v  = slotValue(termValues, 0, "S\u2081");
-      var s2v  = slotValue(termValues, 1, "S\u2082");
-      var ns1v = slotValue(termValues, 2, "~S\u2081");
-      var ns2v = slotValue(termValues, 3, "~S\u2082");
-
-      if (k === 0) return { tag: slotM, text: slotM + " is: " + s1v + " + " + s2v };
-      if (k === 1) return { tag: slotM, text: slotM + " is: " + s2v + " + " + ns2v };
-      if (k === 2) return { tag: slotM, text: slotM + " is: " + ns1v + " + " + ns2v };
-      if (k === 3) return { tag: slotM, text: slotM + " is: " + s1v + " + " + ns1v };
-    }
-
-    if (activeKind === "comp") {
-      var c = activeIndex;
-      var slotC = COMP_LABELS_UI[c];
-
-      var metaVals = metaFields.map(function (f) { return (f.value || "").trim(); });
-      var m1v = slotValue(metaVals, 0, "M\u2081");
-      var m2v = slotValue(metaVals, 1, "M\u2082");
-      var m3v = slotValue(metaVals, 2, "M\u2083");
-      var m4v = slotValue(metaVals, 3, "M\u2084");
-
-      if (c === 0) return { tag: slotC, text: slotC + " is between: " + m1v + " and " + m2v };
-      if (c === 1) return { tag: slotC, text: slotC + " is between: " + m2v + " and " + m3v };
-      if (c === 2) return { tag: slotC, text: slotC + " is between: " + m3v + " and " + m4v };
-      if (c === 3) return { tag: slotC, text: slotC + " is between: " + m4v + " and " + m1v };
-    }
-
-    return null;
+    return { tag: tag, text: text };
   }
 
   function escapeHtml(s) {
@@ -1335,14 +1379,8 @@
     readoutText.classList.remove("is-placeholder");
     readoutText.innerHTML = "";
 
-    var result = buildReadout();
-
-    if (!result) {
-      readoutText.classList.add("is-placeholder");
-      readoutText.textContent =
-        "Click any field to see its relational statement.";
-      return;
-    }
+    var slot = SCRATCH_SLOTS[scratchSlotIndex];
+    var result = buildReadoutForSlot(slot);
 
     var body = result.text;
     if (body.indexOf(result.tag) === 0) {
@@ -1521,6 +1559,33 @@
   }
 
   /* ================================================================
+   *  Scratchpad slot switching
+   *
+   *  The readout always follows the scratchpad's selected slot.
+   *  Focusing a field in the square syncs the scratchpad to that
+   *  field's slot, so the readout stays coherent with whatever the
+   *  user is currently attending to.
+   * ================================================================ */
+
+  function setScratchSlot(idx) {
+    if (idx < 0 || idx >= SCRATCH_SLOTS.length) return;
+    scratchSlotIndex = idx;
+
+    var slot = SCRATCH_SLOTS[idx];
+
+    if (slot.kind === "term") {
+      scratchAnchorRow.hidden = false;
+      scratchInput.value = currentSlotValue(slot) || "";
+    } else {
+      scratchAnchorRow.hidden = true;
+      scratchInput.value = "";
+    }
+
+    renderScratchpad();
+    renderReadout();
+  }
+
+  /* ================================================================
    *  Square input handling — select-all on focus
    * ================================================================ */
 
@@ -1537,7 +1602,7 @@
 
       updateFieldStyles();
       updateHighlights();
-      renderReadout();
+      setScratchSlot(i);
     });
 
     input.addEventListener("input", function () {
@@ -1549,6 +1614,7 @@
       deriveAll();
       updateFieldStyles();
       renderScratchpad();
+      renderReadout();
     });
 
     input.addEventListener("blur", function () {
@@ -1557,7 +1623,6 @@
           activeKind  = null;
           activeIndex = null;
           updateHighlights();
-          renderReadout();
         }
       }, 0);
     });
@@ -1570,10 +1635,7 @@
     });
   });
 
-  /* ================================================================
-   *  Metaterm field handling
-   * ================================================================ */
-
+  /* Metaterm field handling */
   [0,1,2,3].forEach(function (i) {
     var input = metaInputs[i];
 
@@ -1586,7 +1648,7 @@
       }, 0);
 
       updateHighlights();
-      renderReadout();
+      setScratchSlot(4 + i);
     });
 
     input.addEventListener("input", function () {
@@ -1595,6 +1657,7 @@
       metaFields[i].source = v ? "set" : "empty";
       if (v) input.classList.remove("is-composed", "is-empty");
       renderScratchpad();
+      renderReadout();
     });
 
     input.addEventListener("blur", function () {
@@ -1603,7 +1666,6 @@
           activeKind  = null;
           activeIndex = null;
           updateHighlights();
-          renderReadout();
         }
       }, 0);
     });
@@ -1616,10 +1678,7 @@
     });
   });
 
-  /* ================================================================
-   *  Complementarity field handling
-   * ================================================================ */
-
+  /* Complementarity field handling */
   [0,1,2,3].forEach(function (i) {
     var input = compInputs[i];
 
@@ -1632,7 +1691,7 @@
       }, 0);
 
       updateHighlights();
-      renderReadout();
+      setScratchSlot(8 + i);
     });
 
     input.addEventListener("input", function () {
@@ -1641,6 +1700,7 @@
       compFields[i].source = v ? "set" : "empty";
       compInputs[i].classList.toggle("is-empty", !v);
       renderScratchpad();
+      renderReadout();
     });
 
     input.addEventListener("blur", function () {
@@ -1649,7 +1709,6 @@
           activeKind  = null;
           activeIndex = null;
           updateHighlights();
-          renderReadout();
         }
       }, 0);
     });
@@ -1663,31 +1722,8 @@
   });
 
   /* ================================================================
-   *  Suggestion scratchpad
+   *  Scratchpad render
    * ================================================================ */
-
-  var SCRATCH_SLOTS = [
-    { id: "S\u2081",  kind: "term", index: 0 },
-    { id: "S\u2082",  kind: "term", index: 1 },
-    { id: "~S\u2081", kind: "term", index: 2 },
-    { id: "~S\u2082", kind: "term", index: 3 },
-    { id: "M\u2081",  kind: "meta", index: 0 },
-    { id: "M\u2082",  kind: "meta", index: 1 },
-    { id: "M\u2083",  kind: "meta", index: 2 },
-    { id: "M\u2084",  kind: "meta", index: 3 },
-    { id: "C\u2081",  kind: "comp", index: 0 },
-    { id: "C\u2082",  kind: "comp", index: 1 },
-    { id: "C\u2083",  kind: "comp", index: 2 },
-    { id: "C\u2084",  kind: "comp", index: 3 }
-  ];
-
-  var scratchSlotIndex = 0;
-
-  function currentSlotValue(slot) {
-    if (slot.kind === "term") return fields[slot.index].value;
-    if (slot.kind === "meta") return metaFields[slot.index].value;
-    return compFields[slot.index].value;
-  }
 
   function applyScratchValue(slot, value) {
     if (slot.kind === "term") {
@@ -1702,9 +1738,11 @@
       setCompField(slot.index, value, "set");
       renderComps(false);
     }
+    renderScratchpad();
+    renderReadout();
   }
 
-  /* Mapping: anchor term -> three target term indices. */
+  /* Anchor term index -> three target term indices. */
   function termTargets(termIndex) {
     switch (termIndex) {
       case 0: return { contrary: 1, contradiction: 2, double: 3 };
@@ -1744,7 +1782,6 @@
     };
   }
 
-  /* Composing terms for a meta or comp slot. Returns [termA, termB]. */
   function composingTerms(slot) {
     if (slot.kind === "meta") {
       var pair = META_PAIRS[slot.index];
@@ -1778,10 +1815,7 @@
       btn.textContent = slot.id;
       btn.addEventListener("click", function () {
         if (scratchSlotIndex === idx) return;
-        scratchSlotIndex = idx;
-        var newSlot = SCRATCH_SLOTS[idx];
-        scratchInput.value = currentSlotValue(newSlot) || "";
-        renderScratchpad();
+        setScratchSlot(idx);
       });
       scratchTabs.appendChild(btn);
     });
@@ -1794,7 +1828,7 @@
     var grid = document.createElement("div");
     grid.className = "gs-scratch-columns";
 
-    function makeColumn(title, targetLabel, chips, targetIndex) {
+    function makeColumn(title, targetIdx, chips) {
       var col = document.createElement("div");
       col.className = "gs-scratch-column";
 
@@ -1805,14 +1839,14 @@
 
       var tgt = document.createElement("div");
       tgt.className = "gs-scratch-column-target";
-      tgt.textContent = "\u2192 " + targetLabel;
+      tgt.textContent = "\u2192 " + SCRATCH_SLOTS[targetIdx].id;
       col.appendChild(tgt);
 
       var chipRow = document.createElement("div");
       chipRow.className = "gs-scratch-chips";
 
-      var targetSlot = SCRATCH_SLOTS[targetIndex];
-      var targetValue = targetSlot ? currentSlotValue(targetSlot) : "";
+      var targetSlot = SCRATCH_SLOTS[targetIdx];
+      var targetValue = currentSlotValue(targetSlot);
 
       if (chips.length === 0) {
         var empty = document.createElement("div");
@@ -1826,7 +1860,6 @@
           var applied = sameValue(value, targetValue);
           var chip = makeChip(value, applied, function () {
             applyScratchValue(targetSlot, value);
-            renderScratchpad();
           });
           chipRow.appendChild(chip);
         });
@@ -1836,23 +1869,9 @@
       return col;
     }
 
-    grid.appendChild(makeColumn(
-      "Contrary", "\u200b", derived.contrary, targets.contrary
-    ));
-    // patch: set proper target label
-    var cols = grid.children;
-    cols[0].querySelector(".gs-scratch-column-target").textContent =
-      "\u2192 " + SCRATCH_SLOTS[targets.contrary].id;
-
-    grid.appendChild(makeColumn(
-      "Contradiction", SCRATCH_SLOTS[targets.contradiction].id,
-      derived.contradiction, targets.contradiction
-    ));
-
-    grid.appendChild(makeColumn(
-      "Double contrary", SCRATCH_SLOTS[targets.double].id,
-      derived.double, targets.double
-    ));
+    grid.appendChild(makeColumn("Contrary", targets.contrary, derived.contrary));
+    grid.appendChild(makeColumn("Contradiction", targets.contradiction, derived.contradiction));
+    grid.appendChild(makeColumn("Double contrary", targets.double, derived.double));
 
     scratchBody.appendChild(grid);
   }
@@ -1902,7 +1921,7 @@
     if (!unionReady) {
       var loading = document.createElement("div");
       loading.className = "gs-scratch-empty";
-      loading.textContent = "Semantic-union dataset still loading…";
+      loading.textContent = "Semantic-overlap dataset still loading…";
       chipRow.appendChild(loading);
       scratchBody.appendChild(chipRow);
       return;
@@ -1912,7 +1931,7 @@
     if (!result || !result.word) {
       var none = document.createElement("div");
       none.className = "gs-scratch-empty";
-      none.textContent = (result && result.reason) || "no union found.";
+      none.textContent = (result && result.reason) || "no overlap found.";
       chipRow.appendChild(none);
       scratchBody.appendChild(chipRow);
       return;
@@ -1924,7 +1943,6 @@
 
     var chip = makeChip(titleCase(result.word), applied, function () {
       applyScratchValue(targetSlot, titleCase(result.word));
-      renderScratchpad();
     });
     chipRow.appendChild(chip);
 
@@ -1933,7 +1951,6 @@
         var altApplied = sameValue(alt, targetValue);
         var altChip = makeChip(titleCase(alt), altApplied, function () {
           applyScratchValue(targetSlot, titleCase(alt));
-          renderScratchpad();
         });
         chipRow.appendChild(altChip);
       });
@@ -1948,11 +1965,10 @@
     var slot = SCRATCH_SLOTS[scratchSlotIndex];
 
     if (slot.kind === "term") {
-      var anchorValue = scratchInput.value;
-      var targets = termTargets(slot.index);
-      renderScratchColumns(anchorValue, targets);
+      scratchAnchorRow.hidden = false;
+      renderScratchColumns(scratchInput.value, termTargets(slot.index));
     } else {
-      // For meta/comp slots, the anchor input is unused; hide it visually.
+      scratchAnchorRow.hidden = true;
       renderScratchCompose(slot);
     }
   }
@@ -1969,7 +1985,7 @@
   });
 
   /* ================================================================
-   *  Semantic union
+   *  Semantic overlap explorer
    * ================================================================ */
 
   var UNION_DATA_URL = "conceptnet_filtered.json";
@@ -2028,12 +2044,11 @@
           "Loaded " + edges.length.toLocaleString() + " edges across " +
           unionOutgoing.size.toLocaleString() + " concepts.";
 
-        // Refresh scratchpad in case an M/C slot is selected.
         renderScratchpad();
       })
       .catch(function (err) {
         unionMeta.textContent = "Failed to load dataset: " + err.message;
-        console.error("Union dataset error:", err);
+        console.error("Overlap dataset error:", err);
       });
   }
 
@@ -2439,8 +2454,8 @@
 
     deriveAll();
     updateFieldStyles();
-    renderReadout();
     renderScratchpad();
+    renderReadout();
     renderAll(true);
   });
 
@@ -2452,8 +2467,8 @@
     }
     deriveAll();
     updateFieldStyles();
-    renderReadout();
     renderScratchpad();
+    renderReadout();
     renderAll(true);
   });
 
@@ -2471,8 +2486,8 @@
       compInputs[i].classList.add("is-empty");
     }
     updateFieldStyles();
-    renderReadout();
     renderScratchpad();
+    renderReadout();
     renderAll(true);
   });
 
@@ -2489,13 +2504,10 @@
 
     deriveAll();
     updateFieldStyles();
-    renderReadout();
     renderAll(false);
 
-    // Populate scratchpad tab selection and anchor input from the
-    // initially selected slot (S₁).
-    scratchInput.value = currentSlotValue(SCRATCH_SLOTS[scratchSlotIndex]) || "";
-    renderScratchpad();
+    /* Set the scratchpad to S₁ by default and reflect it in the readout. */
+    setScratchSlot(0);
 
     loadUnionData();
   }
