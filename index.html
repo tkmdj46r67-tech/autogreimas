@@ -2290,12 +2290,32 @@
     exportDiagramAsPng();
   });
 
-  byId("gs-rotate").addEventListener("click", function () {
+   byId("gs-rotate").addEventListener("click", function () {
+    /* Rotate the four inner terms one position clockwise:
+       TL -> TR -> BR -> BL -> TL
+       i.e. new[0]=old[2], new[1]=old[0], new[2]=old[3], new[3]=old[1] */
     var v = fields.map(function (f) { return f.value; });
     setField(0, v[2], "set");
     setField(1, v[0], "set");
     setField(2, v[3], "set");
     setField(3, v[1], "set");
+
+    /* Rotate the four metaterms one position clockwise:
+       M1 -> M2 -> M3 -> M4 -> M1 */
+    var mv = metaFields.map(function (f) { return f.value; });
+    setMetaField(0, mv[3], "set");
+    setMetaField(1, mv[0], "set");
+    setMetaField(2, mv[1], "set");
+    setMetaField(3, mv[2], "set");
+
+    /* Rotate the four complementarities one position clockwise:
+       C1 -> C2 -> C3 -> C4 -> C1 */
+    var cv = compFields.map(function (f) { return f.value; });
+    setCompField(0, cv[3], "set");
+    setCompField(1, cv[0], "set");
+    setCompField(2, cv[1], "set");
+    setCompField(3, cv[2], "set");
+
     deriveAll();
     updateFieldStyles();
     renderSuggestions();
