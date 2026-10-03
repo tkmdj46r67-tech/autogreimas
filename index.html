@@ -714,7 +714,7 @@
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
       <!-- Outer complementarity ring, dotted -->
-      <polygon class="gs-outer-ring" points="79,21 79,79 21,79 21,21" />
+     <!-- <polygon class="gs-outer-ring" points="79,21 79,79 21,79 21,21" /> --> 
       <!-- Metaterm diamond, dotted -->
       <polygon class="gs-diamond" points="50,6 93,50 50,94 7,50" />
       <!-- Inner square -->
@@ -2092,7 +2092,7 @@
     var c3Pos = { x: X(21), y: Y(79) };
     var c4Pos = { x: X(21), y: Y(21) };
 
-    /* Outer complementarity ring */
+    /* Outer complementarity ring 
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
     ctx.setLineDash([1, 6]);
@@ -2103,7 +2103,7 @@
     ctx.lineTo(X(21), Y(79));
     ctx.lineTo(X(21), Y(21));
     ctx.closePath();
-    ctx.stroke();
+    ctx.stroke(); */
 
     /* Metaterm diamond */
     ctx.setLineDash([2, 6]);
