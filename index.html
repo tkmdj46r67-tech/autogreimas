@@ -586,6 +586,36 @@
     font-weight: 600;
   }
 
+  /* Similar wordforms row */
+  .gs-scratch-similar {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--gs-border);
+  }
+
+  .gs-scratch-similar-label {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    margin-bottom: 8px;
+  }
+
+  .gs-scratch-chip-similar {
+    border-style: dashed;
+    color: var(--gs-accent);
+    border-color: var(--gs-accent);
+    opacity: .85;
+  }
+
+  .gs-scratch-chip-similar:hover {
+    opacity: 1;
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
+  }
+
   /* Semantic overlap explorer */
   .gs-union-row {
     margin-top: 12px;
@@ -1117,6 +1147,101 @@
   }
 
   /* ================================================================
+   *  Stem-based near-wordform matching
+   *
+   *  Reduces a word to a rough root by stripping common suffixes
+   *  and prefixes, then finds dictionary keys sharing that root.
+   * ================================================================ */
+
+  var STEM_SUFFIXES = [
+    "lessness", "fulness", "ization", "isation", "ification",
+    "ically", "icality", "icalness", "istically",
+    "icity", "ation", "ition",
+    "ism", "ist", "ity", "ness", "ment", "ance", "ence",
+    "ual", "ial", "ful", "less", "like", "ish",
+    "al", "ic", "ive", "ous", "ly", "ed", "ing", "s", "y"
+  ];
+
+  var STEM_PREFIXES = [
+    "non", "un", "in", "im", "il", "ir", "dis", "anti",
+    "pre", "post", "de", "re"
+  ];
+
+  function normalizeStem(word) {
+    var s = (word || "").toLowerCase().replace(/[-'\u2019]/g, "");
+    if (!s) return "";
+
+    /* Strip suffixes iteratively; stop when the root is short
+       enough that further stripping would be destructive. */
+    var changed = true;
+    var guard = 0;
+    while (changed && s.length > 4 && guard++ < 4) {
+      changed = false;
+      for (var i = 0; i < STEM_SUFFIXES.length; i++) {
+        var suf = STEM_SUFFIXES[i];
+        if (s.length - suf.length >= 3 &&
+            s.slice(-suf.length) === suf) {
+          s = s.slice(0, -suf.length);
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    /* Strip one prefix. */
+    for (var j = 0; j < STEM_PREFIXES.length; j++) {
+      var pre = STEM_PREFIXES[j];
+      if (s.length - pre.length >= 3 &&
+          s.slice(0, pre.length) === pre) {
+        s = s.slice(pre.length);
+        break;
+      }
+    }
+
+    return s;
+  }
+
+  var stemIndex = null;
+
+  function buildStemIndex() {
+    stemIndex = {};
+
+    function addKey(k) {
+      var stem = normalizeStem(k);
+      if (!stem || stem.length < 3) return;
+      if (!stemIndex[stem]) stemIndex[stem] = [];
+      stemIndex[stem].push(k);
+    }
+
+    Object.keys(CONTRARIES).forEach(addKey);
+    Object.keys(INVESTMENTS).forEach(addKey);
+  }
+
+  function findSimilarTerms(input, limit) {
+    limit = limit || 8;
+    if (!stemIndex) buildStemIndex();
+
+    var stem = normalizeStem(input);
+    if (!stem || stem.length < 3) return [];
+
+    var matches = stemIndex[stem] || [];
+    var inputLower = (input || "").toLowerCase().trim();
+    var seen = {};
+    var out = [];
+
+    for (var i = 0; i < matches.length; i++) {
+      var k = matches[i];
+      if (k.toLowerCase() === inputLower) continue;
+      if (seen[k]) continue;
+      seen[k] = true;
+      out.push(k);
+      if (out.length >= limit) break;
+    }
+
+    return out;
+  }
+
+  /* ================================================================
    *  DOM
    * ================================================================ */
 
@@ -1299,13 +1424,6 @@
     return compFields[slot.index].value;
   }
 
-  function slotById(slotId) {
-    for (var i = 0; i < SCRATCH_SLOTS.length; i++) {
-      if (SCRATCH_SLOTS[i].id === slotId) return i;
-    }
-    return -1;
-  }
-
   function slotLabel(slot) {
     if (slot.kind === "term") return TERM_LABELS[slot.index];
     if (slot.kind === "meta") return META_LABELS_UI[slot.index];
@@ -1351,7 +1469,6 @@
         text = tag + " is: " + s1 + " + " + ns1;
       }
     } else {
-      /* comp */
       if (slot.index === 0) {
         text = tag + " is the complement of " + m1 + " and " + m2;
       } else if (slot.index === 1) {
@@ -1560,11 +1677,6 @@
 
   /* ================================================================
    *  Scratchpad slot switching
-   *
-   *  The readout always follows the scratchpad's selected slot.
-   *  Focusing a field in the square syncs the scratchpad to that
-   *  field's slot, so the readout stays coherent with whatever the
-   *  user is currently attending to.
    * ================================================================ */
 
   function setScratchSlot(idx) {
@@ -1742,7 +1854,6 @@
     renderReadout();
   }
 
-  /* Anchor term index -> three target term indices. */
   function termTargets(termIndex) {
     switch (termIndex) {
       case 0: return { contrary: 1, contradiction: 2, double: 3 };
@@ -1874,6 +1985,42 @@
     grid.appendChild(makeColumn("Double contrary", targets.double, derived.double));
 
     scratchBody.appendChild(grid);
+
+    /* Related wordforms row */
+    var trimmed = (anchorValue || "").trim();
+    if (trimmed.length >= 3) {
+      var similar = findSimilarTerms(trimmed);
+      if (similar.length) {
+        var simRow = document.createElement("div");
+        simRow.className = "gs-scratch-similar";
+
+        var simLabel = document.createElement("div");
+        simLabel.className = "gs-scratch-similar-label";
+        simLabel.textContent =
+          "Related wordforms in the compendium \u2014 click to derive from one";
+        simRow.appendChild(simLabel);
+
+        var simChips = document.createElement("div");
+        simChips.className = "gs-scratch-chips";
+
+        similar.forEach(function (term) {
+          var chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "gs-scratch-chip gs-scratch-chip-similar";
+          chip.textContent = term;
+          chip.addEventListener("click", function () {
+            scratchInput.value = term;
+            var slot = SCRATCH_SLOTS[scratchSlotIndex];
+            renderScratchColumns(term, termTargets(slot.index));
+            renderReadout();
+          });
+          simChips.appendChild(chip);
+        });
+
+        simRow.appendChild(simChips);
+        scratchBody.appendChild(simRow);
+      }
+    }
   }
 
   function renderScratchCompose(slot) {
@@ -2506,9 +2653,9 @@
     updateFieldStyles();
     renderAll(false);
 
-    /* Set the scratchpad to S₁ by default and reflect it in the readout. */
     setScratchSlot(0);
 
+    buildStemIndex();
     loadUnionData();
   }
 
