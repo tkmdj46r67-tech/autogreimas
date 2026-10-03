@@ -22,6 +22,8 @@
 
     --gs-accent-2:  #c98840;
     --gs-accent-2-dim: rgba(201, 136, 64, 0.45);
+    --gs-accent-3:  #8a5e2a;
+    --gs-accent-3-dim: rgba(138, 94, 42, 0.4);
 
     --background-primary:        #1a1208;
     --background-secondary:      #241a0a;
@@ -108,9 +110,16 @@
     stroke-linecap: round;
     opacity: .85;
   }
+  /* The outer complementarity ring: dotted, distinct from the metaterm diamond */
+  .gs-lines polygon.gs-outer-ring {
+    stroke-dasharray: 1 7;
+    stroke-linecap: round;
+    opacity: .7;
+  }
 
   .gs-term,
   .gs-meta,
+  .gs-comp,
   .gs-rel {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -124,7 +133,8 @@
   }
 
   .gs-term,
-  .gs-meta {
+  .gs-meta,
+  .gs-comp {
     padding: 5px 9px;
     z-index: 2;
     border: 1px solid transparent;
@@ -132,6 +142,7 @@
   }
   .gs-term { max-width: 20%; }
   .gs-meta { max-width: 22%; }
+  .gs-comp { max-width: 16%; }
 
   .gs-rel {
     padding: 2px 7px;
@@ -146,7 +157,8 @@
   }
 
   .gs-term-main,
-  .gs-meta-main {
+  .gs-meta-main,
+  .gs-comp-main {
     font-size: 1rem;
     font-weight: 600;
     color: var(--gs-text);
@@ -154,6 +166,7 @@
     text-shadow: 0 0 6px rgba(255, 179, 71, 0.25);
   }
   .gs-meta-main.is-derived { font-size: .88rem; font-weight: 600; }
+  .gs-comp-main { font-size: .9rem; font-weight: 600; }
 
   .gs-meta-compose {
     margin-top: 2px;
@@ -165,10 +178,12 @@
   }
 
   .gs-term-main.is-empty,
-  .gs-meta-main.is-empty { color: var(--gs-muted); font-weight: 400; }
+  .gs-meta-main.is-empty,
+  .gs-comp-main.is-empty { color: var(--gs-muted); font-weight: 400; }
 
   .gs-term-label,
-  .gs-meta-label {
+  .gs-meta-label,
+  .gs-comp-label {
     margin-top: 3px;
     font-size: .62rem;
     font-weight: 600;
@@ -176,9 +191,12 @@
     text-transform: uppercase;
     color: var(--gs-muted);
   }
+  .gs-comp-label { font-size: .58rem; }
 
+  /* Glow styles */
   .gs-term.is-box-active,
-  .gs-meta.is-box-active {
+  .gs-meta.is-box-active,
+  .gs-comp.is-box-active {
     border-color: var(--gs-accent);
     box-shadow:
       0 0 0 1px var(--gs-accent),
@@ -188,7 +206,8 @@
   }
 
   .gs-term.is-box-secondary,
-  .gs-meta.is-box-secondary {
+  .gs-meta.is-box-secondary,
+  .gs-comp.is-box-secondary {
     border-color: var(--gs-accent-2);
     box-shadow:
       0 0 0 1px var(--gs-accent-2-dim),
@@ -224,6 +243,7 @@
     }
   }
 
+  /* Positions */
   .gs-tl { left: 31%; top: 31%; }
   .gs-tr { left: 69%; top: 31%; }
   .gs-bl { left: 31%; top: 69%; }
@@ -233,6 +253,16 @@
   .gs-m2 { left: 93%; top: 50%; }
   .gs-m3 { left: 50%; top: 94%; }
   .gs-m4 { left: 7%;  top: 50%; }
+
+  /* Complementarities: midpoints of the arcs between adjacent metaterms.
+     C1 sits between M1 (top) and M2 (right), i.e. upper-right diagonal.
+     C2 between M2 (right) and M3 (bottom), i.e. lower-right diagonal.
+     C3 between M3 (bottom) and M4 (left), i.e. lower-left diagonal.
+     C4 between M4 (left) and M1 (top), i.e. upper-left diagonal. */
+  .gs-c1 { left: 79%; top: 21%; }
+  .gs-c2 { left: 79%; top: 79%; }
+  .gs-c3 { left: 21%; top: 79%; }
+  .gs-c4 { left: 21%; top: 21%; }
 
   .gs-rel-top    { left: 50%; top: 31%; }
   .gs-rel-bottom { left: 50%; top: 69%; }
@@ -492,9 +522,7 @@
     font-size: .82rem;
   }
 
-  /* ================================================================
-   *  Semantic union row
-   * ================================================================ */
+  /* Semantic union row */
   .gs-union-row {
     margin-top: 12px;
     display: flex;
@@ -653,11 +681,14 @@
     .gs-controls { grid-template-columns: 1fr; }
     .gs-term { max-width: 24%; padding: 4px 6px; }
     .gs-meta { max-width: 26%; padding: 4px 6px; }
+    .gs-comp { max-width: 20%; padding: 3px 5px; }
     .gs-rel  { max-width: 22%; font-size: .58rem; }
     .gs-term-main { font-size: .84rem; }
     .gs-meta-main.is-derived { font-size: .74rem; }
+    .gs-comp-main { font-size: .76rem; }
     .gs-meta-compose { font-size: .54rem; }
     .gs-term-label, .gs-meta-label { font-size: .56rem; }
+    .gs-comp-label { font-size: .52rem; }
     .gs-actions button { padding: 8px 16px; font-size: .78rem; }
     .gs-chip { font-size: .78rem; padding: 5px 11px; }
     .gs-readout-text { font-size: .82rem; }
@@ -677,11 +708,16 @@
   <div class="gs-stage">
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
+      <!-- Outer complementarity ring, dotted -->
+      <polygon class="gs-outer-ring" points="79,21 79,79 21,79 21,21" />
+      <!-- Metaterm diamond, dotted -->
       <polygon class="gs-diamond" points="50,6 93,50 50,94 7,50" />
+      <!-- Inner square -->
       <line x1="31" y1="31" x2="69" y2="31"></line>
       <line x1="69" y1="31" x2="69" y2="69"></line>
       <line x1="69" y1="69" x2="31" y2="69"></line>
       <line x1="31" y1="69" x2="31" y2="31"></line>
+      <!-- Diagonals -->
       <line class="gs-diag" x1="31" y1="31" x2="69" y2="69"></line>
       <line class="gs-diag" x1="69" y1="31" x2="31" y2="69"></line>
     </svg>
@@ -695,13 +731,13 @@
       <div class="gs-term-label">S₂</div>
     </div>
     <div class="gs-term gs-bl" id="term-3">
-  <div class="gs-term-main" id="term-3-main">Non-being</div>
-  <div class="gs-term-label">~S₁</div>
-</div>
-<div class="gs-term gs-br" id="term-4">
-  <div class="gs-term-main" id="term-4-main">Non-seeming</div>
-  <div class="gs-term-label">~S₂</div>
-</div>
+      <div class="gs-term-main" id="term-3-main">Non-being</div>
+      <div class="gs-term-label">~S₁</div>
+    </div>
+    <div class="gs-term gs-br" id="term-4">
+      <div class="gs-term-main" id="term-4-main">Non-seeming</div>
+      <div class="gs-term-label">~S₂</div>
+    </div>
 
     <div class="gs-rel gs-rel-top"    id="rel-1">Contrary</div>
     <div class="gs-rel gs-rel-bottom" id="rel-2">Subcontrary</div>
@@ -723,6 +759,23 @@
     <div class="gs-meta gs-m4" id="meta-4">
       <div class="gs-meta-main is-derived" id="meta-4-main">Secret</div>
       <div class="gs-meta-label">M₄</div>
+    </div>
+
+    <div class="gs-comp gs-c1" id="comp-1">
+      <div class="gs-comp-main" id="comp-1-main">Paradox</div>
+      <div class="gs-comp-label">C₁</div>
+    </div>
+    <div class="gs-comp gs-c2" id="comp-2">
+      <div class="gs-comp-main" id="comp-2-main">Deception</div>
+      <div class="gs-comp-label">C₂</div>
+    </div>
+    <div class="gs-comp gs-c3" id="comp-3">
+      <div class="gs-comp-main" id="comp-3-main">Subterfuge</div>
+      <div class="gs-comp-label">C₃</div>
+    </div>
+    <div class="gs-comp gs-c4" id="comp-4">
+      <div class="gs-comp-main" id="comp-4-main">Revelation</div>
+      <div class="gs-comp-label">C₄</div>
     </div>
   </div>
 
@@ -791,6 +844,30 @@
       </div>
     </div>
 
+    <div class="gs-section-title" style="margin-top: 22px;">Complementarities</div>
+    <p class="gs-section-note">
+      Fill these directly — one term per vertex on the outer ring. No auto-composition.
+      C₁ sits between M₁ and M₂, C₂ between M₂ and M₃, C₃ between M₃ and M₄, C₄ between M₄ and M₁.
+    </p>
+    <div class="gs-controls">
+      <div class="gs-field" id="field-13">
+        <label for="in-13"><span class="gs-tag">C₁</span> M₁ · M₂</label>
+        <input id="in-13" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-14">
+        <label for="in-14"><span class="gs-tag">C₂</span> M₂ · M₃</label>
+        <input id="in-14" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-15">
+        <label for="in-15"><span class="gs-tag">C₃</span> M₃ · M₄</label>
+        <input id="in-15" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="gs-field" id="field-16">
+        <label for="in-16"><span class="gs-tag">C₄</span> M₄ · M₁</label>
+        <input id="in-16" type="text" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+
     <!-- ===== Semantic union ===== -->
     <div class="gs-section-title" style="margin-top: 22px;">Semantic union</div>
     <p class="gs-section-note">
@@ -820,10 +897,6 @@
 <script>
 (function () {
   "use strict";
-
-  /* ----------------------------------------------------------------
-   *  Defensive fallbacks for the external data files
-   * ---------------------------------------------------------------- */
 
   if (typeof CONTRARIES === "undefined") {
     window.CONTRARIES = {};
@@ -877,12 +950,12 @@
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
 
- var SAMPLE_TERMS = {
-  0: "Being",
-  1: "Seeming",
-  2: "Non-being",
-  3: "Non-seeming"
-};
+  var SAMPLE_TERMS = {
+    0: "Being",
+    1: "Seeming",
+    2: "Non-being",
+    3: "Non-seeming"
+  };
 
   var SAMPLE_METAS = {
     0: "Truth",
@@ -891,10 +964,18 @@
     3: "Secret"
   };
 
+  var SAMPLE_COMPS = {
+    0: "Paradox",     /* C1: between M1 and M2 */
+    1: "Deception",   /* C2: between M2 and M3 */
+    2: "Subterfuge",  /* C3: between M3 and M4 */
+    3: "Revelation"   /* C4: between M4 and M1 */
+  };
+
   var TERM_DEFAULTS     = ["Being", "Seeming", "Non-being", "Non-seeming"];
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
   var META_LABELS_UI    = ["M\u2081", "M\u2082", "M\u2083", "M\u2084"];
+  var COMP_LABELS_UI    = ["C\u2081", "C\u2082", "C\u2083", "C\u2084"];
 
   var META_PAIRS = [
     { a: 0, b: 1 },
@@ -934,10 +1015,16 @@
   var fieldWrappers = [1,2,3,4].map(function (n) { return byId("field-" + n); });
   var termMains     = [1,2,3,4].map(function (n) { return byId("term-" + n + "-main"); });
   var termBoxes     = [1,2,3,4].map(function (n) { return byId("term-" + n); });
+
   var metaMains     = [1,2,3,4].map(function (n) { return byId("meta-" + n + "-main"); });
   var metaInputs    = [9,10,11,12].map(function (n) { return byId("in-" + n); });
   var metaBoxes     = [1,2,3,4].map(function (n) { return byId("meta-" + n); });
   var metaWrappers  = [9,10,11,12].map(function (n) { return byId("field-" + n); });
+
+  var compMains     = [1,2,3,4].map(function (n) { return byId("comp-" + n + "-main"); });
+  var compInputs    = [13,14,15,16].map(function (n) { return byId("in-" + n); });
+  var compBoxes     = [1,2,3,4].map(function (n) { return byId("comp-" + n); });
+  var compWrappers  = [13,14,15,16].map(function (n) { return byId("field-" + n); });
 
   var sugAnchor = byId("gs-suggest-anchor");
   var sugNote   = byId("gs-suggest-note");
@@ -945,7 +1032,6 @@
   var copyStatus = byId("gs-copy-status");
   var readoutText = byId("gs-readout-text");
 
-  /* Semantic union DOM */
   var unionA      = byId("gs-union-a");
   var unionB      = byId("gs-union-b");
   var unionBtn    = byId("gs-union-btn");
@@ -970,9 +1056,16 @@
     { value: "", source: "empty", lastValue: "" }
   ];
 
+  var compFields = [
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" },
+    { value: "", source: "empty", lastValue: "" }
+  ];
+
   var pendingCandidates = { 0: [], 1: [], 2: [], 3: [] };
 
-  var activeKind  = null;
+  var activeKind  = null;   /* "term" | "meta" | "comp" | null */
   var activeIndex = null;
 
   var initialLoad = true;
@@ -980,18 +1073,34 @@
 
   /* ================================================================
    *  Highlight rules
+   *
+   *  For metaterms:
+   *    M1 -> M2, M4
+   *    M2 -> M3, M1
+   *    M3 -> M4, M2
+   *    M4 -> M3, M1
+   *
+   *  For complementarities:
+   *    C1 (M1·M2) -> C2, C4  (its two ring neighbours)
+   *    C2 (M2·M3) -> C3, C1
+   *    C3 (M3·M4) -> C4, C2
+   *    C4 (M4·M1) -> C1, C3
    * ================================================================ */
 
-  var TERM_SECONDARY = {
-    0: [1, 2],
-    3: [1, 2]
-  };
+  var TERM_SECONDARY = { 0: [1, 2], 3: [1, 2] };
 
   var META_SECONDARY = {
     0: [1, 3],
     1: [2, 0],
     2: [3, 1],
     3: [2, 0]
+  };
+
+  var COMP_SECONDARY = {
+    0: [1, 3],
+    1: [2, 0],
+    2: [3, 1],
+    3: [0, 2]
   };
 
   /* ================================================================
@@ -1003,9 +1112,7 @@
     fields[i].source    = value ? source : "empty";
     fields[i].lastValue = value || fields[i].lastValue;
     termInputs[i].value = fields[i].value;
-    if (source !== "pending") {
-      pendingCandidates[i] = [];
-    }
+    if (source !== "pending") pendingCandidates[i] = [];
   }
 
   function setPending(i, candidates) {
@@ -1027,6 +1134,13 @@
     metaFields[i].source    = value ? source : "empty";
     metaFields[i].lastValue = value || metaFields[i].lastValue;
     metaInputs[i].value     = metaFields[i].value;
+  }
+
+  function setCompField(i, value, source) {
+    compFields[i].value     = value || "";
+    compFields[i].source    = value ? source : "empty";
+    compFields[i].lastValue = value || compFields[i].lastValue;
+    compInputs[i].value     = compFields[i].value;
   }
 
   /* ================================================================
@@ -1181,6 +1295,25 @@
       if (k === 3) return { tag: slotM, text: slotM + " is: " + s1v + " + " + ns1v };
     }
 
+    if (activeKind === "comp") {
+      var c = activeIndex;
+      var slotC = COMP_LABELS_UI[c];
+
+      /* Complementarity: situated between two adjacent metaterms.
+         C1 between M1 & M2, C2 between M2 & M3,
+         C3 between M3 & M4, C4 between M4 & M1. */
+      var metaVals = metaFields.map(function (f) { return (f.value || "").trim(); });
+      var m1v = slotValue(metaVals, 0, "M\u2081");
+      var m2v = slotValue(metaVals, 1, "M\u2082");
+      var m3v = slotValue(metaVals, 2, "M\u2083");
+      var m4v = slotValue(metaVals, 3, "M\u2084");
+
+      if (c === 0) return { tag: slotC, text: slotC + " is between: " + m1v + " and " + m2v };
+      if (c === 1) return { tag: slotC, text: slotC + " is between: " + m2v + " and " + m3v };
+      if (c === 2) return { tag: slotC, text: slotC + " is between: " + m3v + " and " + m4v };
+      if (c === 3) return { tag: slotC, text: slotC + " is between: " + m4v + " and " + m1v };
+    }
+
     return null;
   }
 
@@ -1207,9 +1340,8 @@
     }
 
     var body = result.text;
-    var tagLen = result.tag.length;
     if (body.indexOf(result.tag) === 0) {
-      body = body.slice(tagLen);
+      body = body.slice(result.tag.length);
     }
 
     readoutText.innerHTML =
@@ -1317,6 +1449,8 @@
       termBoxes[i].classList.remove("is-box-active", "is-box-secondary");
       metaWrappers[i].classList.remove("is-active", "is-secondary");
       metaBoxes[i].classList.remove("is-box-active", "is-box-secondary");
+      compWrappers[i].classList.remove("is-active", "is-secondary");
+      compBoxes[i].classList.remove("is-box-active", "is-box-secondary");
     });
   }
 
@@ -1344,6 +1478,16 @@
       metaSec.forEach(function (j) {
         restartAnimation(metaWrappers[j], "is-secondary");
         restartAnimation(metaBoxes[j],    "is-box-secondary");
+      });
+    } else if (activeKind === "comp") {
+      var c = activeIndex;
+      restartAnimation(compWrappers[c], "is-active");
+      restartAnimation(compBoxes[c],    "is-box-active");
+
+      var compSec = COMP_SECONDARY[c] || [];
+      compSec.forEach(function (j) {
+        restartAnimation(compWrappers[j], "is-secondary");
+        restartAnimation(compBoxes[j],    "is-box-secondary");
       });
     }
   }
@@ -1429,9 +1573,19 @@
     }
   }
 
+  function renderComps(animate) {
+    for (var i = 0; i < 4; i++) {
+      setMain(compMains[i], compFields[i].value);
+      compInputs[i].value = compFields[i].value;
+      compInputs[i].classList.toggle("is-empty", compFields[i].source === "empty");
+      if (animate) pulse(compBoxes[i]);
+    }
+  }
+
   function renderAll(animate) {
     renderTerms(animate);
     renderMetaterms(animate);
+    renderComps(animate);
   }
 
   /* ================================================================
@@ -1598,19 +1752,93 @@
   });
 
   /* ================================================================
-   *  Semantic union
+   *  Input handling — the four complementarity fields
    *
-   *  Loads conceptnet_filtered.json, builds an in-memory graph, and
-   *  finds a shared endpoint (a "semantic union") for two input
-   *  terms when the user clicks Find third term.
+   *  Same interaction model as the metaterms: focus empties, typing
+   *  commits, blur without typing restores, Enter commits and blurs.
+   * ================================================================ */
+
+  [0,1,2,3].forEach(function (i) {
+    var input = compInputs[i];
+
+    input.addEventListener("focus", function () {
+      activeKind  = "comp";
+      activeIndex = i;
+
+      if (initialLoad) {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = compFields[i].source;
+        updateHighlights();
+        renderReadout();
+        return;
+      }
+
+      if (input.value) {
+        input.dataset.priorValue  = compFields[i].value;
+        input.dataset.priorSource = compFields[i].source;
+        input.value = "";
+      } else {
+        input.dataset.priorValue  = "";
+        input.dataset.priorSource = compFields[i].source;
+      }
+
+      updateHighlights();
+      renderReadout();
+    });
+
+    input.addEventListener("input", function () {
+      var v = input.value;
+      compFields[i].value  = v;
+      compFields[i].source = v ? "set" : "empty";
+      compInputs[i].classList.toggle("is-empty", !v);
+    });
+
+    input.addEventListener("blur", function () {
+      var priorValue  = input.dataset.priorValue;
+      var priorSource = input.dataset.priorSource;
+
+      if (!input.value && priorValue) {
+        compFields[i].value     = priorValue;
+        compFields[i].source    = priorSource || "set";
+        compFields[i].lastValue = priorValue;
+        input.value = priorValue;
+      } else if (!input.value) {
+        compFields[i].value  = "";
+        compFields[i].source = "empty";
+      }
+
+      delete input.dataset.priorValue;
+      delete input.dataset.priorSource;
+
+      renderComps(false);
+
+      setTimeout(function () {
+        if (document.activeElement !== input) {
+          activeKind  = null;
+          activeIndex = null;
+          updateHighlights();
+          renderReadout();
+        }
+      }, 0);
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      }
+    });
+  });
+
+  /* ================================================================
+   *  Semantic union
    * ================================================================ */
 
   var UNION_DATA_URL = "conceptnet_filtered.json";
 
-  var unionOutgoing = new Map();   /* word -> [{end, rel, weight}] */
-  var unionDegree   = new Map();   /* word -> integer */
+  var unionOutgoing = new Map();
+  var unionDegree   = new Map();
   var unionReady    = false;
-  var unionEdgeCount = 0;
 
   var UNION_REL_PRIORITY = {
     "IsA": 4,
@@ -1640,8 +1868,7 @@
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
       })
-      .then(function (raw) {
-        var edges = raw;
+      .then(function (edges) {
         for (var i = 0; i < edges.length; i++) {
           var e = edges[i];
           var s = e.start, t = e.end;
@@ -1657,7 +1884,6 @@
           unionDegree.set(t, (unionDegree.get(t) || 0) + 1);
         }
 
-        unionEdgeCount = edges.length;
         unionReady = true;
         unionBtn.disabled = false;
         unionMeta.textContent =
@@ -1690,7 +1916,6 @@
       return { word: null, reason: "\"" + b + "\" not found in dataset" };
     }
 
-    /* Build best-evidence map from A's neighbourhood. */
     var fromA = new Map();
     for (var i = 0; i < edgesA.length; i++) {
       var e = edgesA[i];
@@ -1702,7 +1927,6 @@
       }
     }
 
-    /* Collect shared candidates with combined scores. */
     var candidates = [];
     for (var j = 0; j < edgesB.length; j++) {
       var eb = edgesB[j];
@@ -1833,6 +2057,10 @@
     var m2  = val(metaFields[1], "M\u2082");
     var m3  = val(metaFields[2], "M\u2083");
     var m4  = val(metaFields[3], "M\u2084");
+    var c1  = val(compFields[0], "C\u2081");
+    var c2  = val(compFields[1], "C\u2082");
+    var c3  = val(compFields[2], "C\u2083");
+    var c4  = val(compFields[3], "C\u2084");
 
     var canvas = document.createElement("canvas");
     canvas.width  = OUT;
@@ -1856,10 +2084,26 @@
     var ns1Pos = { x: X(31), y: Y(69) };
     var ns2Pos = { x: X(69), y: Y(69) };
 
+    var c1Pos = { x: X(79), y: Y(21) };
+    var c2Pos = { x: X(79), y: Y(79) };
+    var c3Pos = { x: X(21), y: Y(79) };
+    var c4Pos = { x: X(21), y: Y(21) };
+
+    /* Outer complementarity ring */
     ctx.strokeStyle = themeLine;
     ctx.lineWidth   = 1.5;
-    ctx.setLineDash([2, 6]);
+    ctx.setLineDash([1, 6]);
     ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(X(79), Y(21));
+    ctx.lineTo(X(79), Y(79));
+    ctx.lineTo(X(21), Y(79));
+    ctx.lineTo(X(21), Y(21));
+    ctx.closePath();
+    ctx.stroke();
+
+    /* Metaterm diamond */
+    ctx.setLineDash([2, 6]);
     ctx.beginPath();
     ctx.moveTo(m1Pos.x, m1Pos.y);
     ctx.lineTo(m2Pos.x, m2Pos.y);
@@ -1868,6 +2112,7 @@
     ctx.closePath();
     ctx.stroke();
 
+    /* Inner square */
     ctx.setLineDash([]);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1878,6 +2123,7 @@
     ctx.closePath();
     ctx.stroke();
 
+    /* Diagonals */
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -1954,6 +2200,11 @@
     drawLabelBox(m2, "M\u2082", m2Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m3, "M\u2083", m3Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m4, "M\u2084", m4Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
+
+    drawLabelBox(c1, "C\u2081", c1Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
+    drawLabelBox(c2, "C\u2082", c2Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
+    drawLabelBox(c3, "C\u2083", c3Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
+    drawLabelBox(c4, "C\u2084", c4Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
 
     function triggerDownload(href) {
       var a = document.createElement("a");
@@ -2033,6 +2284,7 @@
   byId("gs-reset").addEventListener("click", function () {
     for (var k = 0; k < 4; k++) {
       setMetaField(k, SAMPLE_METAS[k], "set");
+      setCompField(k, SAMPLE_COMPS[k], "set");
     }
     for (var i = 0; i < 4; i++) {
       setField(i, SAMPLE_TERMS[i], "set");
@@ -2052,6 +2304,11 @@
       metaFields[k].lastValue = "";
       metaInputs[k].value     = "";
       metaInputs[k].classList.remove("is-composed");
+
+      compFields[k].value     = "";
+      compFields[k].source    = "empty";
+      compFields[k].lastValue = "";
+      compInputs[k].value     = "";
     }
     updateFieldStyles();
     renderSuggestions();
@@ -2069,6 +2326,7 @@
     }
     for (var k = 0; k < 4; k++) {
       setMetaField(k, SAMPLE_METAS[k], "set");
+      setCompField(k, SAMPLE_COMPS[k], "set");
     }
 
     deriveAll();
@@ -2077,7 +2335,6 @@
     renderReadout();
     renderAll(false);
 
-    /* Kick off the union dataset load in the background. */
     loadUnionData();
   }
 
