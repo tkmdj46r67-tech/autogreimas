@@ -461,7 +461,6 @@
     font-style: italic;
   }
 
-  /* Readout box: dynamic statement about the active field */
   .gs-readout {
     margin-top: 12px;
     padding: 12px 14px;
@@ -487,18 +486,101 @@
     text-shadow: 0 0 5px rgba(255, 179, 71, 0.5);
   }
 
-  .gs-readout-text .gs-readout-slot {
-    font-weight: 600;
-    color: var(--gs-accent);
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: rgba(255, 179, 71, 0.08);
-  }
-
   .gs-readout-text.is-placeholder {
     color: var(--gs-muted);
     font-style: italic;
     font-size: .82rem;
+  }
+
+  /* ================================================================
+   *  Semantic union row
+   * ================================================================ */
+  .gs-union-row {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .gs-union-inputs {
+    display: flex;
+    gap: 10px;
+    flex: 1 1 320px;
+    min-width: 0;
+  }
+
+  .gs-union-inputs input {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: .9rem;
+    color: var(--gs-text);
+    background: var(--gs-panel);
+    border: 1px solid var(--gs-border);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .gs-union-inputs input:focus {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
+  }
+
+  .gs-union-btn {
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 9px 18px;
+    border-radius: 4px;
+    border: 1px solid var(--gs-accent);
+    background: transparent;
+    color: var(--gs-accent);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter .15s ease, transform .06s ease,
+                background-color .15s ease, color .15s ease,
+                box-shadow .15s ease, opacity .15s ease;
+  }
+  .gs-union-btn:hover:not(:disabled) {
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    box-shadow: 0 0 14px rgba(255, 179, 71, 0.6);
+  }
+  .gs-union-btn:active:not(:disabled) { transform: translateY(1px); }
+  .gs-union-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    border-color: var(--gs-border);
+    color: var(--gs-muted);
+  }
+
+  .gs-union-result {
+    flex: 0 0 auto;
+    min-width: 120px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gs-accent);
+    text-shadow: 0 0 8px rgba(255, 179, 71, 0.45);
+    letter-spacing: .02em;
+    transition: opacity .2s ease;
+  }
+  .gs-union-result.is-empty {
+    color: var(--gs-muted);
+    font-style: italic;
+    font-weight: 400;
+    font-size: .82rem;
+    text-shadow: none;
+  }
+
+  .gs-union-meta {
+    flex: 1 1 100%;
+    font-size: .72rem;
+    color: var(--gs-muted);
+    line-height: 1.4;
   }
 
   .gs-actions {
@@ -579,6 +661,8 @@
     .gs-actions button { padding: 8px 16px; font-size: .78rem; }
     .gs-chip { font-size: .78rem; padding: 5px 11px; }
     .gs-readout-text { font-size: .82rem; }
+    .gs-union-row { flex-direction: column; align-items: stretch; }
+    .gs-union-result { min-width: 0; }
   }
 </style>
 </head>
@@ -675,7 +759,6 @@
       <div class="gs-suggest-chips" id="gs-suggest-chips"></div>
     </div>
 
-    <!-- Readout: dynamic statement about the active field -->
     <div class="gs-readout" id="gs-readout">
       <div class="gs-readout-text is-placeholder" id="gs-readout-text">
         Click any field to see its relational statement.
@@ -706,6 +789,21 @@
         <label for="in-12"><span class="gs-tag">M₄</span> left vertex</label>
         <input id="in-12" type="text" autocomplete="off" spellcheck="false" />
       </div>
+    </div>
+
+    <!-- ===== Semantic union ===== -->
+    <div class="gs-section-title" style="margin-top: 22px;">Semantic union</div>
+    <p class="gs-section-note">
+      Two terms in — find a third term that encompasses both.
+    </p>
+    <div class="gs-union-row">
+      <div class="gs-union-inputs">
+        <input id="gs-union-a" type="text" placeholder="first term" autocomplete="off" spellcheck="false" />
+        <input id="gs-union-b" type="text" placeholder="second term" autocomplete="off" spellcheck="false" />
+      </div>
+      <button type="button" id="gs-union-btn" class="gs-union-btn" disabled>Find third term</button>
+      <div class="gs-union-result is-empty" id="gs-union-result">—</div>
+      <div class="gs-union-meta" id="gs-union-meta">Loading dataset…</div>
     </div>
   </div>
 
@@ -846,6 +944,13 @@
   var sugChips  = byId("gs-suggest-chips");
   var copyStatus = byId("gs-copy-status");
   var readoutText = byId("gs-readout-text");
+
+  /* Semantic union DOM */
+  var unionA      = byId("gs-union-a");
+  var unionB      = byId("gs-union-b");
+  var unionBtn    = byId("gs-union-btn");
+  var unionResult = byId("gs-union-result");
+  var unionMeta   = byId("gs-union-meta");
 
   /* ================================================================
    *  State
@@ -1034,21 +1139,6 @@
 
   /* ================================================================
    *  Readout construction
-   *
-   *  For each field, describes that slot in terms of its two
-   *  relational partners.
-   *
-   *  Term slots:
-   *    S1  -> anti-S2, non-~S1
-   *    S2  -> anti-S1, non-~S2
-   *    ~S1 -> anti-~S2, non-S1
-   *    ~S2 -> anti-~S1, non-S2
-   *
-   *  Metaterm slots:
-   *    M1  -> S1 + S2
-   *    M2  -> S2 + ~S2
-   *    M3  -> ~S1 + ~S2
-   *    M4  -> S1 + ~S1
    * ================================================================ */
 
   function slotValue(list, idx, fallbackLabel) {
@@ -1070,30 +1160,10 @@
       var ns1 = slotValue(termValues, 2, "~S\u2081");
       var ns2 = slotValue(termValues, 3, "~S\u2082");
 
-      if (i === 0) {
-        return {
-          tag: slot,
-          text: slot + " is: anti-" + s2 + ", and non-" + ns1
-        };
-      }
-      if (i === 1) {
-        return {
-          tag: slot,
-          text: slot + " is: anti-" + s1 + ", and non-" + ns2
-        };
-      }
-      if (i === 2) {
-        return {
-          tag: slot,
-          text: slot + " is: anti-" + ns2 + ", and non-" + s1
-        };
-      }
-      if (i === 3) {
-        return {
-          tag: slot,
-          text: slot + " is: anti-" + ns1 + ", and non-" + s2
-        };
-      }
+      if (i === 0) return { tag: slot, text: slot + " is: anti-" + s2 + ", and non-" + ns1 };
+      if (i === 1) return { tag: slot, text: slot + " is: anti-" + s1 + ", and non-" + ns2 };
+      if (i === 2) return { tag: slot, text: slot + " is: anti-" + ns2 + ", and non-" + s1 };
+      if (i === 3) return { tag: slot, text: slot + " is: anti-" + ns1 + ", and non-" + s2 };
     }
 
     if (activeKind === "meta") {
@@ -1105,21 +1175,22 @@
       var ns1v = slotValue(termValues, 2, "~S\u2081");
       var ns2v = slotValue(termValues, 3, "~S\u2082");
 
-      if (k === 0) {
-        return { tag: slotM, text: slotM + " is: " + s1v + " + " + s2v };
-      }
-      if (k === 1) {
-        return { tag: slotM, text: slotM + " is: " + s2v + " + " + ns2v };
-      }
-      if (k === 2) {
-        return { tag: slotM, text: slotM + " is: " + ns1v + " + " + ns2v };
-      }
-      if (k === 3) {
-        return { tag: slotM, text: slotM + " is: " + s1v + " + " + ns1v };
-      }
+      if (k === 0) return { tag: slotM, text: slotM + " is: " + s1v + " + " + s2v };
+      if (k === 1) return { tag: slotM, text: slotM + " is: " + s2v + " + " + ns2v };
+      if (k === 2) return { tag: slotM, text: slotM + " is: " + ns1v + " + " + ns2v };
+      if (k === 3) return { tag: slotM, text: slotM + " is: " + s1v + " + " + ns1v };
     }
 
     return null;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function renderReadout() {
@@ -1135,55 +1206,15 @@
       return;
     }
 
-    /* Render the statement, wrapping slot values in a highlighted span
-       so the substituted terms stand out. */
-    var parts = result.text.split(/(S\u2081|S\u2082|~S\u2081|~S\u2082|anti-[^,]+|non-[^,]+|(?:\+))/g);
-
-    /* Simpler approach: rebuild the text with highlighted slot values.
-       The structure of every statement is known, so we mark each
-       inserted value with a span. */
-    var html = "";
-    var tagHtml = '<span class="gs-readout-tag">' + escapeHtml(result.tag) + "</span>";
-
-    /* The text begins with "<slot> is: ...". Split off the leading
-       slot name and highlight it. */
-    var idx = result.text.indexOf(result.tag);
-    if (idx === 0) {
-      html += tagHtml + escapeHtml(result.text.slice(result.tag.length));
-    } else {
-      html += escapeHtml(result.text);
+    var body = result.text;
+    var tagLen = result.tag.length;
+    if (body.indexOf(result.tag) === 0) {
+      body = body.slice(tagLen);
     }
 
-    /* Highlight the substituted terms. Approach: walk the parts of
-       the statement that came from slot values and wrap them. */
-    var highlighted = highlightSlotValues(result.text, result.tag);
-    readoutText.innerHTML = highlighted;
-  }
-
-  /* Given the raw statement and the leading tag, produce HTML with
-     the tag and the substituted values wrapped in spans. */
-  function highlightSlotValues(rawText, tag) {
-    var html = "";
-
-    /* Split off the tag from the statement body. */
-    var body = rawText;
-    if (rawText.indexOf(tag) === 0) {
-      body = rawText.slice(tag.length);
-    }
-
-    html += '<span class="gs-readout-tag">' + escapeHtml(tag) + "</span>";
-    html += escapeHtml(body);
-
-    return html;
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    readoutText.innerHTML =
+      '<span class="gs-readout-tag">' + escapeHtml(result.tag) + "</span>" +
+      escapeHtml(body);
   }
 
   /* ================================================================
@@ -1567,6 +1598,213 @@
   });
 
   /* ================================================================
+   *  Semantic union
+   *
+   *  Loads conceptnet_filtered.json, builds an in-memory graph, and
+   *  finds a shared endpoint (a "semantic union") for two input
+   *  terms when the user clicks Find third term.
+   * ================================================================ */
+
+  var UNION_DATA_URL = "conceptnet_filtered.json";
+
+  var unionOutgoing = new Map();   /* word -> [{end, rel, weight}] */
+  var unionDegree   = new Map();   /* word -> integer */
+  var unionReady    = false;
+  var unionEdgeCount = 0;
+
+  var UNION_REL_PRIORITY = {
+    "IsA": 4,
+    "UsedFor": 3,
+    "AtLocation": 2,
+    "HasContext": 2,
+    "RelatedTo": 1
+  };
+
+  var UNION_STOPWORDS = new Set([
+    "the","a","an","is","are","be","of","to","in","on","and","or",
+    "it","that","this","as","at","by","for","with","from","not",
+    "no","yes","do","does","did"
+  ]);
+
+  function unionNormalize(word) {
+    return (word || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w\s'-]/g, "")
+      .replace(/\s+/g, " ");
+  }
+
+  function loadUnionData() {
+    fetch(UNION_DATA_URL)
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (raw) {
+        var edges = raw;
+        for (var i = 0; i < edges.length; i++) {
+          var e = edges[i];
+          var s = e.start, t = e.end;
+          var w = e.weight || 1.0;
+
+          if (!unionOutgoing.has(s)) unionOutgoing.set(s, []);
+          unionOutgoing.get(s).push({ end: t, rel: e.rel, weight: w });
+
+          if (!unionOutgoing.has(t)) unionOutgoing.set(t, []);
+          unionOutgoing.get(t).push({ end: s, rel: e.rel, weight: w });
+
+          unionDegree.set(s, (unionDegree.get(s) || 0) + 1);
+          unionDegree.set(t, (unionDegree.get(t) || 0) + 1);
+        }
+
+        unionEdgeCount = edges.length;
+        unionReady = true;
+        unionBtn.disabled = false;
+        unionMeta.textContent =
+          "Loaded " + edges.length.toLocaleString() + " edges across " +
+          unionOutgoing.size.toLocaleString() + " concepts.";
+      })
+      .catch(function (err) {
+        unionMeta.textContent = "Failed to load dataset: " + err.message;
+        console.error("Union dataset error:", err);
+      });
+  }
+
+  function findUnion(wordA, wordB) {
+    var a = unionNormalize(wordA);
+    var b = unionNormalize(wordB);
+
+    if (!a || !b) return null;
+    if (a === b) return { word: a, reason: "identical inputs" };
+
+    var edgesA = unionOutgoing.get(a) || [];
+    var edgesB = unionOutgoing.get(b) || [];
+
+    if (edgesA.length === 0 && edgesB.length === 0) {
+      return { word: null, reason: "neither \"" + a + "\" nor \"" + b + "\" found in dataset" };
+    }
+    if (edgesA.length === 0) {
+      return { word: null, reason: "\"" + a + "\" not found in dataset" };
+    }
+    if (edgesB.length === 0) {
+      return { word: null, reason: "\"" + b + "\" not found in dataset" };
+    }
+
+    /* Build best-evidence map from A's neighbourhood. */
+    var fromA = new Map();
+    for (var i = 0; i < edgesA.length; i++) {
+      var e = edgesA[i];
+      if (e.end === a || e.end === b) continue;
+      var score = (UNION_REL_PRIORITY[e.rel] || 0) * 10 + e.weight;
+      var prev = fromA.get(e.end);
+      if (!prev || score > prev.score) {
+        fromA.set(e.end, { rel: e.rel, weight: e.weight, score: score });
+      }
+    }
+
+    /* Collect shared candidates with combined scores. */
+    var candidates = [];
+    for (var j = 0; j < edgesB.length; j++) {
+      var eb = edgesB[j];
+      if (eb.end === a || eb.end === b) continue;
+      var aEntry = fromA.get(eb.end);
+      if (!aEntry) continue;
+
+      var bScore = (UNION_REL_PRIORITY[eb.rel] || 0) * 10 + eb.weight;
+      var combined = aEntry.score + bScore;
+      var deg = unionDegree.get(eb.end) || 0;
+      var hubBonus = Math.log(1 + deg);
+
+      candidates.push({
+        word: eb.end,
+        score: combined + hubBonus,
+        relA: aEntry.rel,
+        relB: eb.rel,
+        degree: deg
+      });
+    }
+
+    if (candidates.length === 0) {
+      return {
+        word: null,
+        reason: "no shared endpoint found for \"" + a + "\" and \"" + b + "\""
+      };
+    }
+
+    candidates.sort(function (x, y) {
+      if (y.score !== x.score) return y.score - x.score;
+      return y.degree - x.degree;
+    });
+
+    var filtered = candidates.filter(function (c) {
+      return !UNION_STOPWORDS.has(c.word) && c.word.length >= 3;
+    });
+
+    var pick = filtered[0] || candidates[0];
+
+    return {
+      word: pick.word,
+      relA: pick.relA,
+      relB: pick.relB,
+      degree: pick.degree,
+      alternatives: filtered.slice(1, 6).map(function (c) { return c.word; }),
+      reason: null
+    };
+  }
+
+  function renderUnionResult(result, a, b) {
+    unionResult.classList.remove("is-empty");
+
+    if (!result || !result.word) {
+      unionResult.classList.add("is-empty");
+      unionResult.textContent = "\u2014";
+      unionMeta.textContent = result && result.reason
+        ? result.reason
+        : "No result.";
+      return;
+    }
+
+    unionResult.textContent = result.word;
+
+    var relText = "connects \"" + a + "\" (" + (result.relA || "\u2014") +
+                  ") and \"" + b + "\" (" + (result.relB || "\u2014") + ")" +
+                  " \u00B7 " + result.degree + " connections in graph";
+
+    var altText = (result.alternatives && result.alternatives.length)
+      ? "Also considered: " + result.alternatives.join(", ")
+      : "";
+
+    unionMeta.textContent = altText ? relText + " \u2014 " + altText : relText;
+  }
+
+  function runUnion() {
+    if (!unionReady) return;
+
+    var a = unionA.value;
+    var b = unionB.value;
+
+    if (!a.trim() || !b.trim()) {
+      unionResult.classList.add("is-empty");
+      unionResult.textContent = "\u2014";
+      unionMeta.textContent = "Enter two terms.";
+      return;
+    }
+
+    var result = findUnion(a, b);
+    renderUnionResult(result, unionNormalize(a), unionNormalize(b));
+  }
+
+  unionBtn.addEventListener("click", runUnion);
+  [unionA, unionB].forEach(function (el) {
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        runUnion();
+      }
+    });
+  });
+
+  /* ================================================================
    *  PNG export
    * ================================================================ */
 
@@ -1838,6 +2076,9 @@
     renderSuggestions();
     renderReadout();
     renderAll(false);
+
+    /* Kick off the union dataset load in the background. */
+    loadUnionData();
   }
 
   init();
