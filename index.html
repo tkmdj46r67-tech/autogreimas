@@ -616,6 +616,138 @@
     box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
   }
 
+  /* ================================================================
+   *  JSON square loader
+   * ================================================================ */
+
+  .gs-loader {
+    margin-top: 24px;
+    border: 1px dashed var(--gs-border);
+    border-radius: 6px;
+    background: var(--gs-panel);
+    overflow: hidden;
+  }
+
+  .gs-loader > summary {
+    padding: 12px 14px;
+    cursor: pointer;
+    list-style: none;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--gs-muted);
+    user-select: none;
+    transition: color .15s ease;
+  }
+  .gs-loader > summary::-webkit-details-marker { display: none; }
+  .gs-loader > summary::before {
+    content: "\25B8";
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--gs-accent);
+    transition: transform .15s ease;
+  }
+  .gs-loader[open] > summary::before { content: "\25BE"; }
+  .gs-loader > summary:hover { color: var(--gs-text); }
+
+  .gs-loader-body {
+    padding: 0 14px 14px;
+    border-top: 1px dashed var(--gs-border);
+  }
+
+  .gs-loader-note {
+    margin: 12px 0 10px;
+    font-size: .72rem;
+    color: var(--gs-muted);
+    line-height: 1.4;
+  }
+  .gs-loader-note code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .7rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(255, 179, 71, 0.08);
+    color: var(--gs-text);
+  }
+
+  .gs-loader textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .82rem;
+    line-height: 1.55;
+    color: var(--gs-text);
+    background: var(--gs-bg);
+    border: 1px solid var(--gs-border);
+    border-radius: 4px;
+    outline: none;
+    resize: vertical;
+    min-height: 200px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .gs-loader textarea:focus {
+    border-color: var(--gs-accent);
+    box-shadow: 0 0 0 3px rgba(255, 179, 71, 0.18);
+  }
+  .gs-loader textarea::placeholder {
+    color: var(--gs-text);
+    opacity: .35;
+  }
+
+  .gs-loader-actions {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .gs-loader-actions button {
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease,
+                border-color .15s ease, box-shadow .15s ease,
+                transform .06s ease;
+  }
+  .gs-loader-actions button:active { transform: translateY(1px); }
+
+  .gs-loader-actions button.primary {
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    border: 1px solid transparent;
+  }
+  .gs-loader-actions button.primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 0 12px rgba(255, 179, 71, 0.5);
+  }
+
+  .gs-loader-actions button.secondary {
+    background: transparent;
+    color: var(--gs-accent);
+    border: 1px solid var(--gs-accent);
+  }
+  .gs-loader-actions button.secondary:hover {
+    background: var(--gs-accent);
+    color: var(--gs-accent-fg);
+    box-shadow: 0 0 12px rgba(255, 179, 71, 0.5);
+  }
+
+  .gs-loader-status {
+    margin-top: 10px;
+    font-size: .75rem;
+    line-height: 1.4;
+    min-height: 1.1em;
+    color: var(--gs-muted);
+  }
+  .gs-loader-status.is-success { color: var(--gs-accent); }
+  .gs-loader-status.is-error   { color: #e08c6a; }
+
   /* Semantic overlap explorer */
   .gs-union-row {
     margin-top: 12px;
@@ -880,6 +1012,42 @@
       <div class="gs-comp-label">C₄</div>
     </div>
   </div>
+
+  <!-- JSON square loader -->
+  <details class="gs-loader" id="gs-loader">
+    <summary>Load square from JSON</summary>
+    <div class="gs-loader-body">
+      <p class="gs-loader-note">
+        Paste a JSON object with any of these keys:
+        <code>S1</code> <code>S2</code> <code>~S1</code> <code>~S2</code>,
+        <code>M1</code>&ndash;<code>M4</code>, <code>C1</code>&ndash;<code>C4</code>.
+        Subscript forms (<code>S&#8321;</code>, <code>~S&#8321;</code>) work too.
+        Only the keys present are updated; anything you leave out stays as-is.
+        Press <code>Cmd/Ctrl</code>+<code>Enter</code> to load.
+      </p>
+      <textarea id="gs-loader-input" spellcheck="false"
+        placeholder='{
+  "S1": "Authenticity",
+  "S2": "Artifice",
+  "~S1": "Unreality",
+  "~S2": "Illusion",
+  "M1": "Factuality",
+  "M2": "Deception",
+  "M3": "Falsity",
+  "M4": "Secrecy",
+  "C1": "Paradox",
+  "C2": "Deception",
+  "C3": "Subterfuge",
+  "C4": "Disclosure"
+}'></textarea>
+      <div class="gs-loader-actions">
+        <button type="button" class="primary" id="gs-loader-apply">Load square</button>
+        <button type="button" class="secondary" id="gs-loader-copy">Copy current square</button>
+        <button type="button" class="secondary" id="gs-loader-clear">Clear text</button>
+      </div>
+      <div class="gs-loader-status" id="gs-loader-status"></div>
+    </div>
+  </details>
 
   <!-- 1. Terms -->
   <div class="gs-section">
@@ -1148,9 +1316,6 @@
 
   /* ================================================================
    *  Stem-based near-wordform matching
-   *
-   *  Reduces a word to a rough root by stripping common suffixes
-   *  and prefixes, then finds dictionary keys sharing that root.
    * ================================================================ */
 
   var STEM_SUFFIXES = [
@@ -1171,8 +1336,6 @@
     var s = (word || "").toLowerCase().replace(/[-'\u2019]/g, "");
     if (!s) return "";
 
-    /* Strip suffixes iteratively; stop when the root is short
-       enough that further stripping would be destructive. */
     var changed = true;
     var guard = 0;
     while (changed && s.length > 4 && guard++ < 4) {
@@ -1188,7 +1351,6 @@
       }
     }
 
-    /* Strip one prefix. */
     for (var j = 0; j < STEM_PREFIXES.length; j++) {
       var pre = STEM_PREFIXES[j];
       if (s.length - pre.length >= 3 &&
@@ -1275,6 +1437,12 @@
   var unionBtn    = byId("gs-union-btn");
   var unionResult = byId("gs-union-result");
   var unionMeta   = byId("gs-union-meta");
+
+  var loaderInput  = byId("gs-loader-input");
+  var loaderApply  = byId("gs-loader-apply");
+  var loaderCopy   = byId("gs-loader-copy");
+  var loaderClear  = byId("gs-loader-clear");
+  var loaderStatus = byId("gs-loader-status");
 
   /* ================================================================
    *  State
@@ -2129,6 +2297,193 @@
 
   scratchInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") e.preventDefault();
+  });
+
+  /* ================================================================
+   *  JSON square loader
+   * ================================================================ */
+
+  var LOADER_KEY_MAP = {
+    "S1":  { kind: "term", index: 0 },
+    "S2":  { kind: "term", index: 1 },
+    "~S1": { kind: "term", index: 2 },
+    "~S2": { kind: "term", index: 3 },
+    "NS1": { kind: "term", index: 2 },
+    "NS2": { kind: "term", index: 3 },
+    "M1":  { kind: "meta", index: 0 },
+    "M2":  { kind: "meta", index: 1 },
+    "M3":  { kind: "meta", index: 2 },
+    "M4":  { kind: "meta", index: 3 },
+    "C1":  { kind: "comp", index: 0 },
+    "C2":  { kind: "comp", index: 1 },
+    "C3":  { kind: "comp", index: 2 },
+    "C4":  { kind: "comp", index: 3 }
+  };
+
+  var LOADER_COPY_ORDER = [
+    { jsonKey: "S1",  kind: "term", index: 0 },
+    { jsonKey: "S2",  kind: "term", index: 1 },
+    { jsonKey: "~S1", kind: "term", index: 2 },
+    { jsonKey: "~S2", kind: "term", index: 3 },
+    { jsonKey: "M1",  kind: "meta", index: 0 },
+    { jsonKey: "M2",  kind: "meta", index: 1 },
+    { jsonKey: "M3",  kind: "meta", index: 2 },
+    { jsonKey: "M4",  kind: "meta", index: 3 },
+    { jsonKey: "C1",  kind: "comp", index: 0 },
+    { jsonKey: "C2",  kind: "comp", index: 1 },
+    { jsonKey: "C3",  kind: "comp", index: 2 },
+    { jsonKey: "C4",  kind: "comp", index: 3 }
+  ];
+
+  function loaderNormalizeDigits(s) {
+    return String(s)
+      .replace(/\u2080/g, "0")
+      .replace(/\u2081/g, "1")
+      .replace(/\u2082/g, "2")
+      .replace(/\u2083/g, "3")
+      .replace(/\u2084/g, "4")
+      .replace(/\u2085/g, "5")
+      .replace(/\u2086/g, "6")
+      .replace(/\u2087/g, "7")
+      .replace(/\u2088/g, "8")
+      .replace(/\u2089/g, "9");
+  }
+
+  function loaderNormalizeKey(raw) {
+    var s = String(raw == null ? "" : raw).trim();
+    s = loaderNormalizeDigits(s);
+    s = s.replace(/[\u02DC\u223C\u301C\uFF5E]/g, "~");
+    s = s.replace(/\u00AC/g, "~");
+    s = s.replace(/\s+/g, "");
+    s = s.toUpperCase();
+    s = s.replace(/^NO([SMC])(\d)$/, "~$1$2");
+    s = s.replace(/^NOT([SMC])(\d)$/, "~$1$2");
+    s = s.replace(/^N([SMC])(\d)$/, "~$1$2");
+    s = s.replace(/^([SMC])(\d)~$/, "~$1$2");
+    return s;
+  }
+
+  function loaderParseJson(text) {
+    var t = String(text || "").trim();
+    if (!t) throw new Error("input is empty.");
+
+    t = t.replace(/^```(?:json|JSON)?\s*/, "");
+    t = t.replace(/\s*```\s*$/, "");
+
+    if (t.charAt(0) !== "{") t = "{" + t;
+    if (t.charAt(t.length - 1) !== "}") t = t + "}";
+
+    try { return JSON.parse(t); } catch (e1) {}
+
+    var t2 = t.replace(/,(\s*[}\]])/g, "$1");
+    try { return JSON.parse(t2); } catch (e2) {}
+
+    var t3 = t2.replace(/'((?:[^'\\]|\\.)*)'/g, function (_, inner) {
+      return '"' + inner.replace(/"/g, '\\"') + '"';
+    });
+    try { return JSON.parse(t3); } catch (e3) {
+      throw new Error(e1.message);
+    }
+  }
+
+  function loaderSetStatus(msg, kind) {
+    loaderStatus.classList.remove("is-error", "is-success");
+    if (kind) loaderStatus.classList.add(kind);
+    loaderStatus.textContent = msg || "";
+  }
+
+  function loaderApplyJson() {
+    var obj;
+    try {
+      obj = loaderParseJson(loaderInput.value);
+    } catch (e) {
+      loaderSetStatus("Could not parse: " + e.message, "is-error");
+      return;
+    }
+
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+      loaderSetStatus("Expected a JSON object with named keys.", "is-error");
+      return;
+    }
+
+    var applied = 0;
+    var unknown = [];
+
+    Object.keys(obj).forEach(function (rawKey) {
+      var key = loaderNormalizeKey(rawKey);
+      var target = LOADER_KEY_MAP[key];
+
+      if (!target) { unknown.push(rawKey); return; }
+
+      var value = obj[rawKey];
+      if (value == null) return;
+      var str = String(value).trim();
+      if (!str) return;
+
+      if (target.kind === "term")       setField(target.index, str, "set");
+      else if (target.kind === "meta")  setMetaField(target.index, str, "set");
+      else                              setCompField(target.index, str, "set");
+
+      applied++;
+    });
+
+    if (applied === 0) {
+      var hint = unknown.length
+        ? "No recognized keys. Saw: " + unknown.join(", ") + "."
+        : "No recognized keys found.";
+      loaderSetStatus(hint, "is-error");
+      return;
+    }
+
+    deriveAll();
+    updateFieldStyles();
+    renderAll(true);
+    renderScratchpad();
+    renderReadout();
+
+    var msg = "Loaded " + applied + " value" + (applied === 1 ? "" : "s") + ".";
+    if (unknown.length) msg += " Ignored: " + unknown.join(", ") + ".";
+    loaderSetStatus(msg, "is-success");
+  }
+
+  function loaderCopyCurrent() {
+    var obj = {};
+    LOADER_COPY_ORDER.forEach(function (entry) {
+      var v = "";
+      if (entry.kind === "term")      v = fields[entry.index].value;
+      else if (entry.kind === "meta") v = metaFields[entry.index].value;
+      else                            v = compFields[entry.index].value;
+      obj[entry.jsonKey] = (v || "").trim();
+    });
+
+    var text = JSON.stringify(obj, null, 2);
+    loaderInput.value = text;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        loaderSetStatus("Current square copied to clipboard.", "is-success");
+      }).catch(function () {
+        loaderSetStatus("Square written to the text area.", "is-success");
+      });
+    } else {
+      loaderSetStatus("Square written to the text area.", "is-success");
+    }
+  }
+
+  function loaderClearText() {
+    loaderInput.value = "";
+    loaderSetStatus("");
+  }
+
+  loaderApply.addEventListener("click", loaderApplyJson);
+  loaderCopy.addEventListener("click", loaderCopyCurrent);
+  loaderClear.addEventListener("click", loaderClearText);
+
+  loaderInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      loaderApplyJson();
+    }
   });
 
   /* ================================================================
