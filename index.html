@@ -398,7 +398,6 @@
 
   .gs-field input.is-empty { background: transparent; }
 
-  /* Readout */
   .gs-readout {
     margin-top: 0;
     padding: 12px 14px;
@@ -429,10 +428,6 @@
     font-style: italic;
     font-size: .82rem;
   }
-
-  /* ================================================================
-   *  Suggestion scratchpad
-   * ================================================================ */
 
   .gs-scratch {
     margin-top: 0;
@@ -530,6 +525,16 @@
     margin-bottom: 8px;
     opacity: .85;
   }
+  .gs-scratch-column-rule {
+    font-size: .55rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    text-transform: none;
+    color: var(--gs-muted);
+    margin-bottom: 8px;
+    margin-top: -4px;
+    font-style: italic;
+  }
 
   .gs-scratch-chips {
     display: flex;
@@ -586,7 +591,6 @@
     font-weight: 600;
   }
 
-  /* Similar wordforms row */
   .gs-scratch-similar {
     margin-top: 16px;
     padding-top: 12px;
@@ -615,10 +619,6 @@
     color: var(--gs-accent-fg);
     box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
   }
-
-  /* ================================================================
-   *  JSON square loader
-   * ================================================================ */
 
   .gs-loader {
     margin-top: 24px;
@@ -748,7 +748,6 @@
   .gs-loader-status.is-success { color: var(--gs-accent); }
   .gs-loader-status.is-error   { color: #e08c6a; }
 
-  /* Semantic overlap explorer */
   .gs-union-row {
     margin-top: 12px;
     display: flex;
@@ -934,7 +933,6 @@
     <p>Enter terms, explore alternatives in the scratchpad, then update the square.</p>
   </header>
 
-  <!-- Diagram -->
   <div class="gs-stage">
     <svg class="gs-lines" viewBox="0 0 100 100" preserveAspectRatio="none"
          aria-hidden="true" focusable="false">
@@ -965,18 +963,18 @@
       <div class="gs-term-label">S₂</div>
     </div>
     <div class="gs-term gs-bl" id="term-3">
-      <div class="gs-term-main" id="term-3-main">Non-being</div>
-      <div class="gs-term-label">~S₁</div>
+      <div class="gs-term-main" id="term-3-main">Non-seeming</div>
+      <div class="gs-term-label">~S₂</div>
     </div>
     <div class="gs-term gs-br" id="term-4">
-      <div class="gs-term-main" id="term-4-main">Non-seeming</div>
-      <div class="gs-term-label">~S₂</div>
+      <div class="gs-term-main" id="term-4-main">Non-being</div>
+      <div class="gs-term-label">~S₁</div>
     </div>
 
     <div class="gs-rel gs-rel-top"    id="rel-1">Contrary</div>
-    <div class="gs-rel gs-rel-bottom" id="rel-2">Subcontrary</div>
-    <div class="gs-rel gs-rel-left"   id="rel-3">Contradiction</div>
-    <div class="gs-rel gs-rel-right"  id="rel-4">Contradiction</div>
+    <div class="gs-rel gs-rel-bottom" id="rel-2">Contrary</div>
+    <div class="gs-rel gs-rel-left"   id="rel-3">Negation</div>
+    <div class="gs-rel gs-rel-right"  id="rel-4">Negation</div>
 
     <div class="gs-meta gs-m1" id="meta-1">
       <div class="gs-meta-main is-derived" id="meta-1-main">Truth</div>
@@ -1013,7 +1011,6 @@
     </div>
   </div>
 
-  <!-- JSON square loader -->
   <details class="gs-loader" id="gs-loader">
     <summary>Load square from JSON</summary>
     <div class="gs-loader-body">
@@ -1049,7 +1046,6 @@
     </div>
   </details>
 
-  <!-- 1. Terms -->
   <div class="gs-section">
     <h2 class="gs-section-title">Terms</h2>
     <p class="gs-section-note">
@@ -1057,30 +1053,29 @@
     </p>
     <div class="gs-controls">
       <div class="gs-field" id="field-1">
-        <label for="in-1"><span class="gs-tag">S₁</span> top left</label>
+        <label for="in-1"><span class="gs-tag">S₁</span> top left &middot; P1</label>
         <input id="in-1" type="text" autocomplete="off" spellcheck="false" />
       </div>
       <div class="gs-field" id="field-2">
-        <label for="in-2"><span class="gs-tag">S₂</span> top right</label>
+        <label for="in-2"><span class="gs-tag">S₂</span> top right &middot; P2</label>
         <input id="in-2" type="text" autocomplete="off" spellcheck="false" />
       </div>
       <div class="gs-field" id="field-3">
-        <label for="in-3"><span class="gs-tag">~S₁</span> bottom left</label>
+        <label for="in-3"><span class="gs-tag">~S₂</span> bottom left &middot; P3</label>
         <input id="in-3" type="text" autocomplete="off" spellcheck="false" />
       </div>
       <div class="gs-field" id="field-4">
-        <label for="in-4"><span class="gs-tag">~S₂</span> bottom right</label>
+        <label for="in-4"><span class="gs-tag">~S₁</span> bottom right &middot; P4</label>
         <input id="in-4" type="text" autocomplete="off" spellcheck="false" />
       </div>
     </div>
   </div>
 
-  <!-- 2. Metaterms -->
   <div class="gs-section">
     <h2 class="gs-section-title">Metaterms</h2>
     <p class="gs-section-note">
       Auto-composed from the terms. Click any field to write your own value.
-      M₁ = S₁ · S₂ &nbsp;|&nbsp; M₂ = S₂ · ~S₂ &nbsp;|&nbsp; M₃ = ~S₁ · ~S₂ &nbsp;|&nbsp; M₄ = S₁ · ~S₁
+      M₁ = S₁ · S₂ &nbsp;|&nbsp; M₂ = S₂ · ~S₁ &nbsp;|&nbsp; M₃ = ~S₂ · ~S₁ &nbsp;|&nbsp; M₄ = S₁ · ~S₂
     </p>
     <div class="gs-controls">
       <div class="gs-field" id="field-9">
@@ -1102,7 +1097,6 @@
     </div>
   </div>
 
-  <!-- 3. Complementarities -->
   <div class="gs-section">
     <h2 class="gs-section-title">Complementarities</h2>
     <p class="gs-section-note">
@@ -1129,11 +1123,10 @@
     </div>
   </div>
 
-  <!-- 4. Suggestion scratchpad -->
   <div class="gs-section">
     <h2 class="gs-section-title">Suggestion scratchpad</h2>
     <p class="gs-section-note">
-      Pick a slot, enter a term, and see the three derivations. Clicking a chip places it in the square. Nothing here changes the square until you click.
+      Pick a slot, enter a term, and see the chain derivations. Clicking a chip places it in the square.
     </p>
 
     <div class="gs-scratch">
@@ -1149,7 +1142,6 @@
     </div>
   </div>
 
-  <!-- 5. Relational statement -->
   <div class="gs-section">
     <h2 class="gs-section-title">Relational statement</h2>
     <p class="gs-section-note">
@@ -1162,7 +1154,6 @@
     </div>
   </div>
 
-  <!-- 6. Semantic overlap explorer -->
   <div class="gs-section">
     <h2 class="gs-section-title">Semantic overlap explorer</h2>
     <p class="gs-section-note">
@@ -1206,10 +1197,6 @@
     console.warn("meta_labels.js did not load; META_LABELS is empty.");
   }
 
-  /* ================================================================
-   *  Table lookups
-   * ================================================================ */
-
   function lookupContraries(term) {
     var key = (term || "").trim().toLowerCase();
     if (!key) return [];
@@ -1238,18 +1225,20 @@
     return META_LABELS[ka + " \u00B7 " + kb] || null;
   }
 
-  /* ================================================================
-   *  Text helpers
-   * ================================================================ */
-
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
 
+  /* Defaults — position indices match P1..P4:
+   *   0 = S₁ (top left)
+   *   1 = S₂ (top right)
+   *   2 = ~S₂ (bottom left)
+   *   3 = ~S₁ (bottom right)
+   */
   var SAMPLE_TERMS = {
     0: "Being",
     1: "Seeming",
-    2: "Non-being",
-    3: "Non-seeming"
+    2: "Non-seeming",
+    3: "Non-being"
   };
 
   var SAMPLE_METAS = {
@@ -1266,8 +1255,8 @@
     3: "Revelation"
   };
 
-  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
-  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2081", "~S\u2082"];
+  var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2082", "~S\u2081"];
+  var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2082", "~S\u2081"];
   var META_LABELS_UI    = ["M\u2081", "M\u2082", "M\u2083", "M\u2084"];
   var COMP_LABELS_UI    = ["C\u2081", "C\u2082", "C\u2083", "C\u2084"];
 
@@ -1312,6 +1301,111 @@
       out.push(trimmed);
     });
     return out;
+  }
+
+  /* ================================================================
+   *  Chain derivation
+   *
+   *  The four positions form a linear chain:
+   *
+   *      P1 --[contrary]--> P2 --[negation]--> P3 --[contrary]--> P4
+   *
+   *  P2 is the contrary of P1; P3 is the negation of P2; P4 is the
+   *  contrary of P3. Each rule can be applied forward or backward
+   *  to produce suggestions for any target position, given a value
+   *  at any anchor position.
+   * ================================================================ */
+
+  var CHAIN_RULES = [
+    { from: 0, to: 1, type: "contrary" },
+    { from: 1, to: 2, type: "negate" },
+    { from: 2, to: 3, type: "contrary" }
+  ];
+
+  function chainApplyForward(type, value) {
+    if (!value) return [];
+    if (type === "contrary") {
+      return lookupContraries(value).map(titleCase);
+    }
+    if (type === "negate") {
+      var out = [];
+      var n = negate(value);
+      if (n) out.push(n);
+      lookupInvestments(value).forEach(function (inv) {
+        var t = titleCase(inv);
+        if (t) out.push(t);
+      });
+      return dedupe(out);
+    }
+    return [];
+  }
+
+  function chainApplyBackward(type, value) {
+    if (!value) return [];
+    if (type === "contrary") {
+      /* Contrary is roughly its own inverse. */
+      return lookupContraries(value).map(titleCase);
+    }
+    if (type === "negate") {
+      /* Negation is its own inverse. */
+      var n = negate(value);
+      return n ? [n] : [];
+    }
+    return [];
+  }
+
+  function deriveChainSuggestions(anchorIdx, anchorValue, targetIdx) {
+    if (anchorIdx === targetIdx) return [];
+    if (!anchorValue) return [];
+
+    var values = [anchorValue];
+
+    if (anchorIdx < targetIdx) {
+      for (var i = anchorIdx; i < targetIdx; i++) {
+        var next = [];
+        for (var a = 0; a < values.length; a++) {
+          var step = chainApplyForward(CHAIN_RULES[i].type, values[a]);
+          for (var b = 0; b < step.length; b++) next.push(step[b]);
+        }
+        values = dedupe(next);
+        if (values.length === 0) break;
+      }
+    } else {
+      for (var j = anchorIdx - 1; j >= targetIdx; j--) {
+        var next2 = [];
+        for (var c = 0; c < values.length; c++) {
+          var step2 = chainApplyBackward(CHAIN_RULES[j].type, values[c]);
+          for (var d = 0; d < step2.length; d++) next2.push(step2[d]);
+        }
+        values = dedupe(next2);
+        if (values.length === 0) break;
+      }
+    }
+
+    var anchorLower = anchorValue.trim().toLowerCase();
+    values = values.filter(function (v) {
+      return v.trim().toLowerCase() !== anchorLower;
+    });
+
+    return values.slice(0, 8);
+  }
+
+  function chainRuleLabel(anchorIdx, targetIdx) {
+    if (anchorIdx === targetIdx) return "";
+    var parts = [];
+    if (anchorIdx < targetIdx) {
+      for (var i = anchorIdx; i < targetIdx; i++) {
+        parts.push(CHAIN_RULES[i].type === "contrary" ? "contrary" : "negation");
+      }
+    } else {
+      for (var j = anchorIdx - 1; j >= targetIdx; j--) {
+        parts.push(CHAIN_RULES[j].type === "contrary" ? "contrary" : "negation");
+      }
+      if (parts.length) {
+        parts[parts.length - 1] = parts[parts.length - 1] + " (reversed)";
+      }
+    }
+    return parts.join(" \u2192 ");
   }
 
   /* ================================================================
@@ -1472,11 +1566,7 @@
   var activeKind  = null;
   var activeIndex = null;
 
-  /* ================================================================
-   *  Highlight rules
-   * ================================================================ */
-
-  var TERM_SECONDARY = { 0: [1, 2], 3: [1, 2] };
+  var TERM_SECONDARY = { 0: [1, 2], 3: [2, 1] };
 
   var META_SECONDARY = {
     0: [1, 3],
@@ -1491,10 +1581,6 @@
     2: [3, 1],
     3: [0, 2]
   };
-
-  /* ================================================================
-   *  State mutators
-   * ================================================================ */
 
   function setField(i, value, source) {
     fields[i].value     = value || "";
@@ -1521,48 +1607,79 @@
   }
 
   /* ================================================================
-   *  Derivation (auto-fill of the square)
+   *  Derivation along the chain:
+   *
+   *    P2 = contrary(P1)
+   *    P3 = negate(P2)
+   *    P4 = contrary(P3)
    * ================================================================ */
 
-  function deriveS2FromS1() {
+  function deriveP2FromP1() {
     if (fields[1].source === "set") return;
 
-    var s1 = (fields[0].value || "").trim();
-    if (!s1) {
+    var v = (fields[0].value || "").trim();
+    if (!v) {
       if (fields[1].source !== "empty") clearField(1);
       return;
     }
 
-    var candidates = lookupContraries(s1).map(titleCase);
-
-    if (candidates.length === 0) {
+    var candidates = lookupContraries(v).map(titleCase);
+    if (!candidates.length) {
       if (fields[1].source !== "empty") clearField(1);
       return;
     }
     setField(1, candidates[0], "provisional");
   }
 
-  function deriveContradiction(sourceField, targetField) {
-    if (fields[targetField].source === "set") return;
+  function deriveP3FromP2() {
+    if (fields[2].source === "set") return;
 
-    var src = (fields[sourceField].value || "").trim();
-    if (!src) {
-      if (fields[targetField].source !== "empty") clearField(targetField);
+    var v = (fields[1].value || "").trim();
+    if (!v) {
+      if (fields[2].source !== "empty") clearField(2);
       return;
     }
 
-    var investments = lookupInvestments(src).map(titleCase);
+    /* Prefer an investment (positive-form negation) if one exists;
+     * otherwise fall back to mechanical negation. */
+    var investments = lookupInvestments(v).map(titleCase);
     if (investments.length) {
-      setField(targetField, investments[0], "provisional");
+      setField(2, investments[0], "provisional");
       return;
     }
-    setField(targetField, negate(src), "provisional");
+    setField(2, negate(v), "provisional");
+  }
+
+  function deriveP4FromP3() {
+    if (fields[3].source === "set") return;
+
+    var v = (fields[2].value || "").trim();
+    if (!v) {
+      if (fields[3].source !== "empty") clearField(3);
+      return;
+    }
+
+    var candidates = lookupContraries(v).map(titleCase);
+    if (!candidates.length) {
+      /* Fall back: try the un-negated form's contrary. */
+      var inner = negate(v);
+      if (inner) {
+        var innerContraries = lookupContraries(inner).map(titleCase);
+        if (innerContraries.length) {
+          setField(3, innerContraries[0], "provisional");
+          return;
+        }
+      }
+      if (fields[3].source !== "empty") clearField(3);
+      return;
+    }
+    setField(3, candidates[0], "provisional");
   }
 
   function deriveAll() {
-    deriveS2FromS1();
-    deriveContradiction(0, 2);
-    deriveContradiction(1, 3);
+    deriveP2FromP1();
+    deriveP3FromP2();
+    deriveP4FromP3();
   }
 
   /* ================================================================
@@ -1572,8 +1689,8 @@
   var SCRATCH_SLOTS = [
     { id: "S\u2081",  kind: "term", index: 0 },
     { id: "S\u2082",  kind: "term", index: 1 },
-    { id: "~S\u2081", kind: "term", index: 2 },
-    { id: "~S\u2082", kind: "term", index: 3 },
+    { id: "~S\u2082", kind: "term", index: 2 },
+    { id: "~S\u2081", kind: "term", index: 3 },
     { id: "M\u2081",  kind: "meta", index: 0 },
     { id: "M\u2082",  kind: "meta", index: 1 },
     { id: "M\u2083",  kind: "meta", index: 2 },
@@ -1604,10 +1721,11 @@
   }
 
   function buildReadoutForSlot(slot) {
+    /* term indices: 0=S1, 1=S2, 2=~S2, 3=~S1 */
     var s1  = slotValueOrLabel(SCRATCH_SLOTS[0]);
     var s2  = slotValueOrLabel(SCRATCH_SLOTS[1]);
-    var ns1 = slotValueOrLabel(SCRATCH_SLOTS[2]);
-    var ns2 = slotValueOrLabel(SCRATCH_SLOTS[3]);
+    var ns2 = slotValueOrLabel(SCRATCH_SLOTS[2]);
+    var ns1 = slotValueOrLabel(SCRATCH_SLOTS[3]);
     var m1  = slotValueOrLabel(SCRATCH_SLOTS[4]);
     var m2  = slotValueOrLabel(SCRATCH_SLOTS[5]);
     var m3  = slotValueOrLabel(SCRATCH_SLOTS[6]);
@@ -1617,24 +1735,29 @@
     var text;
 
     if (slot.kind === "term") {
+      /*  Chain relations:
+       *    S2  = contrary(S1)
+       *    ~S2 = negation(S2)
+       *    ~S1 = contrary(~S2)
+       */
       if (slot.index === 0) {
-        text = tag + " is: anti-" + s2 + ", and non-" + ns1;
+        text = tag + " is: anti-" + s2;
       } else if (slot.index === 1) {
         text = tag + " is: anti-" + s1 + ", and non-" + ns2;
       } else if (slot.index === 2) {
-        text = tag + " is: anti-" + ns2 + ", and non-" + s1;
+        text = tag + " is: non-" + s2 + ", and anti-" + ns1;
       } else {
-        text = tag + " is: anti-" + ns1 + ", and non-" + s2;
+        text = tag + " is: anti-" + ns2;
       }
     } else if (slot.kind === "meta") {
       if (slot.index === 0) {
         text = tag + " is: " + s1 + " + " + s2;
       } else if (slot.index === 1) {
-        text = tag + " is: " + s2 + " + " + ns2;
+        text = tag + " is: " + s2 + " + " + ns1;
       } else if (slot.index === 2) {
-        text = tag + " is: " + ns1 + " + " + ns2;
+        text = tag + " is: " + ns2 + " + " + ns1;
       } else {
-        text = tag + " is: " + s1 + " + " + ns1;
+        text = tag + " is: " + s1 + " + " + ns2;
       }
     } else {
       if (slot.index === 0) {
@@ -1677,10 +1800,6 @@
       escapeHtml(body);
   }
 
-  /* ================================================================
-   *  Field styling
-   * ================================================================ */
-
   function updateFieldStyles() {
     for (var i = 0; i < 4; i++) {
       var inp = termInputs[i];
@@ -1688,10 +1807,6 @@
       inp.classList.toggle("is-empty",       fields[i].source === "empty");
     }
   }
-
-  /* ================================================================
-   *  Highlight application
-   * ================================================================ */
 
   function restartAnimation(el, className) {
     el.classList.remove(className);
@@ -1747,10 +1862,6 @@
       });
     }
   }
-
-  /* ================================================================
-   *  Render diagram
-   * ================================================================ */
 
   function pulse(el) {
     el.classList.remove("gs-pulse");
@@ -1843,10 +1954,6 @@
     renderComps(animate);
   }
 
-  /* ================================================================
-   *  Scratchpad slot switching
-   * ================================================================ */
-
   function setScratchSlot(idx) {
     if (idx < 0 || idx >= SCRATCH_SLOTS.length) return;
     scratchSlotIndex = idx;
@@ -1864,10 +1971,6 @@
     renderScratchpad();
     renderReadout();
   }
-
-  /* ================================================================
-   *  Square input handling — select-all on focus
-   * ================================================================ */
 
   [0,1,2,3].forEach(function (i) {
     var input = termInputs[i];
@@ -1915,7 +2018,6 @@
     });
   });
 
-  /* Metaterm field handling */
   [0,1,2,3].forEach(function (i) {
     var input = metaInputs[i];
 
@@ -1958,7 +2060,6 @@
     });
   });
 
-  /* Complementarity field handling */
   [0,1,2,3].forEach(function (i) {
     var input = compInputs[i];
 
@@ -2001,10 +2102,6 @@
     });
   });
 
-  /* ================================================================
-   *  Scratchpad render
-   * ================================================================ */
-
   function applyScratchValue(slot, value) {
     if (slot.kind === "term") {
       setField(slot.index, value, "set");
@@ -2020,45 +2117,6 @@
     }
     renderScratchpad();
     renderReadout();
-  }
-
-  function termTargets(termIndex) {
-    switch (termIndex) {
-      case 0: return { contrary: 1, contradiction: 2, double: 3 };
-      case 1: return { contrary: 0, contradiction: 3, double: 2 };
-      case 2: return { contrary: 3, contradiction: 0, double: 1 };
-      case 3: return { contrary: 2, contradiction: 1, double: 0 };
-    }
-    return null;
-  }
-
-  function deriveScratchTermSuggestions(anchorValue) {
-    var v = (anchorValue || "").trim();
-    if (!v) return { contrary: [], contradiction: [], double: [] };
-
-    var contraries = dedupe(lookupContraries(v).map(titleCase));
-
-    var contradiction = [];
-    contradiction.push(negate(v));
-    lookupInvestments(v).forEach(function (inv) {
-      contradiction.push(titleCase(inv));
-    });
-    contradiction = dedupe(contradiction);
-
-    var doubles = [];
-    contraries.forEach(function (c) {
-      doubles.push(negate(c));
-      lookupInvestments(c).forEach(function (inv) {
-        doubles.push(titleCase(inv));
-      });
-    });
-    doubles = dedupe(doubles);
-
-    return {
-      contrary: contraries,
-      contradiction: contradiction,
-      double: doubles
-    };
   }
 
   function composingTerms(slot) {
@@ -2100,42 +2158,54 @@
     });
   }
 
-  function renderScratchColumns(anchorValue, targets) {
+  function renderScratchColumns(anchorIdx, anchorValue) {
     scratchBody.innerHTML = "";
-    var derived = deriveScratchTermSuggestions(anchorValue);
+
+    var targets = [];
+    for (var t = 0; t < 4; t++) {
+      if (t !== anchorIdx) targets.push(t);
+    }
+    /* Order targets by chain distance from anchor. */
+    targets.sort(function (a, b) {
+      return Math.abs(a - anchorIdx) - Math.abs(b - anchorIdx);
+    });
 
     var grid = document.createElement("div");
     grid.className = "gs-scratch-columns";
 
-    function makeColumn(title, targetIdx, chips) {
+    targets.forEach(function (targetIdx) {
+      var suggestions = deriveChainSuggestions(anchorIdx, anchorValue, targetIdx);
+      var targetSlot  = SCRATCH_SLOTS[targetIdx];
+      var targetValue = currentSlotValue(targetSlot);
+
       var col = document.createElement("div");
       col.className = "gs-scratch-column";
 
-      var t = document.createElement("div");
-      t.className = "gs-scratch-column-title";
-      t.textContent = title;
-      col.appendChild(t);
+      var title = document.createElement("div");
+      title.className = "gs-scratch-column-title";
+      title.textContent = "Derive";
+      col.appendChild(title);
 
       var tgt = document.createElement("div");
       tgt.className = "gs-scratch-column-target";
-      tgt.textContent = "\u2192 " + SCRATCH_SLOTS[targetIdx].id;
+      tgt.textContent = "\u2192 " + targetSlot.id;
       col.appendChild(tgt);
+
+      var rule = document.createElement("div");
+      rule.className = "gs-scratch-column-rule";
+      rule.textContent = chainRuleLabel(anchorIdx, targetIdx);
+      col.appendChild(rule);
 
       var chipRow = document.createElement("div");
       chipRow.className = "gs-scratch-chips";
 
-      var targetSlot = SCRATCH_SLOTS[targetIdx];
-      var targetValue = currentSlotValue(targetSlot);
-
-      if (chips.length === 0) {
+      if (suggestions.length === 0) {
         var empty = document.createElement("div");
         empty.className = "gs-scratch-empty";
-        empty.textContent = anchorValue.trim()
-          ? "no entries"
-          : "type a term above";
+        empty.textContent = anchorValue.trim() ? "no entries" : "type a term above";
         chipRow.appendChild(empty);
       } else {
-        chips.forEach(function (value) {
+        suggestions.forEach(function (value) {
           var applied = sameValue(value, targetValue);
           var chip = makeChip(value, applied, function () {
             applyScratchValue(targetSlot, value);
@@ -2145,12 +2215,8 @@
       }
 
       col.appendChild(chipRow);
-      return col;
-    }
-
-    grid.appendChild(makeColumn("Contrary", targets.contrary, derived.contrary));
-    grid.appendChild(makeColumn("Contradiction", targets.contradiction, derived.contradiction));
-    grid.appendChild(makeColumn("Double contrary", targets.double, derived.double));
+      grid.appendChild(col);
+    });
 
     scratchBody.appendChild(grid);
 
@@ -2178,8 +2244,7 @@
           chip.textContent = term;
           chip.addEventListener("click", function () {
             scratchInput.value = term;
-            var slot = SCRATCH_SLOTS[scratchSlotIndex];
-            renderScratchColumns(term, termTargets(slot.index));
+            renderScratchColumns(anchorIdx, term);
             renderReadout();
           });
           simChips.appendChild(chip);
@@ -2281,7 +2346,7 @@
 
     if (slot.kind === "term") {
       scratchAnchorRow.hidden = false;
-      renderScratchColumns(scratchInput.value, termTargets(slot.index));
+      renderScratchColumns(slot.index, scratchInput.value);
     } else {
       scratchAnchorRow.hidden = true;
       renderScratchCompose(slot);
@@ -2291,7 +2356,7 @@
   scratchInput.addEventListener("input", function () {
     var slot = SCRATCH_SLOTS[scratchSlotIndex];
     if (slot.kind === "term") {
-      renderScratchColumns(scratchInput.value, termTargets(slot.index));
+      renderScratchColumns(slot.index, scratchInput.value);
     }
   });
 
@@ -2301,15 +2366,17 @@
 
   /* ================================================================
    *  JSON square loader
+   *
+   *  ~S1 maps to P4 (index 3), ~S2 maps to P3 (index 2).
    * ================================================================ */
 
   var LOADER_KEY_MAP = {
     "S1":  { kind: "term", index: 0 },
     "S2":  { kind: "term", index: 1 },
-    "~S1": { kind: "term", index: 2 },
-    "~S2": { kind: "term", index: 3 },
-    "NS1": { kind: "term", index: 2 },
-    "NS2": { kind: "term", index: 3 },
+    "~S1": { kind: "term", index: 3 },
+    "~S2": { kind: "term", index: 2 },
+    "NS1": { kind: "term", index: 3 },
+    "NS2": { kind: "term", index: 2 },
     "M1":  { kind: "meta", index: 0 },
     "M2":  { kind: "meta", index: 1 },
     "M3":  { kind: "meta", index: 2 },
@@ -2323,8 +2390,8 @@
   var LOADER_COPY_ORDER = [
     { jsonKey: "S1",  kind: "term", index: 0 },
     { jsonKey: "S2",  kind: "term", index: 1 },
-    { jsonKey: "~S1", kind: "term", index: 2 },
-    { jsonKey: "~S2", kind: "term", index: 3 },
+    { jsonKey: "~S1", kind: "term", index: 3 },
+    { jsonKey: "~S2", kind: "term", index: 2 },
     { jsonKey: "M1",  kind: "meta", index: 0 },
     { jsonKey: "M2",  kind: "meta", index: 1 },
     { jsonKey: "M3",  kind: "meta", index: 2 },
@@ -2337,16 +2404,11 @@
 
   function loaderNormalizeDigits(s) {
     return String(s)
-      .replace(/\u2080/g, "0")
-      .replace(/\u2081/g, "1")
-      .replace(/\u2082/g, "2")
-      .replace(/\u2083/g, "3")
-      .replace(/\u2084/g, "4")
-      .replace(/\u2085/g, "5")
-      .replace(/\u2086/g, "6")
-      .replace(/\u2087/g, "7")
-      .replace(/\u2088/g, "8")
-      .replace(/\u2089/g, "9");
+      .replace(/\u2080/g, "0").replace(/\u2081/g, "1")
+      .replace(/\u2082/g, "2").replace(/\u2083/g, "3")
+      .replace(/\u2084/g, "4").replace(/\u2085/g, "5")
+      .replace(/\u2086/g, "6").replace(/\u2087/g, "7")
+      .replace(/\u2088/g, "8").replace(/\u2089/g, "9");
   }
 
   function loaderNormalizeKey(raw) {
@@ -2497,11 +2559,8 @@
   var unionReady    = false;
 
   var UNION_REL_PRIORITY = {
-    "IsA": 4,
-    "UsedFor": 3,
-    "AtLocation": 2,
-    "HasContext": 2,
-    "RelatedTo": 1
+    "IsA": 4, "UsedFor": 3, "AtLocation": 2,
+    "HasContext": 2, "RelatedTo": 1
   };
 
   var UNION_STOPWORDS = new Set([
@@ -2511,11 +2570,8 @@
   ]);
 
   function unionNormalize(word) {
-    return (word || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^\w\s'-]/g, "")
-      .replace(/\s+/g, " ");
+    return (word || "").trim().toLowerCase()
+      .replace(/[^\w\s'-]/g, "").replace(/\s+/g, " ");
   }
 
   function loadUnionData() {
@@ -2527,25 +2583,19 @@
       .then(function (edges) {
         for (var i = 0; i < edges.length; i++) {
           var e = edges[i];
-          var s = e.start, t = e.end;
-          var w = e.weight || 1.0;
-
+          var s = e.start, t = e.end, w = e.weight || 1.0;
           if (!unionOutgoing.has(s)) unionOutgoing.set(s, []);
           unionOutgoing.get(s).push({ end: t, rel: e.rel, weight: w });
-
           if (!unionOutgoing.has(t)) unionOutgoing.set(t, []);
           unionOutgoing.get(t).push({ end: s, rel: e.rel, weight: w });
-
           unionDegree.set(s, (unionDegree.get(s) || 0) + 1);
           unionDegree.set(t, (unionDegree.get(t) || 0) + 1);
         }
-
         unionReady = true;
         unionBtn.disabled = false;
         unionMeta.textContent =
           "Loaded " + edges.length.toLocaleString() + " edges across " +
           unionOutgoing.size.toLocaleString() + " concepts.";
-
         renderScratchpad();
       })
       .catch(function (err) {
@@ -2557,22 +2607,18 @@
   function findUnion(wordA, wordB) {
     var a = unionNormalize(wordA);
     var b = unionNormalize(wordB);
-
     if (!a || !b) return null;
     if (a === b) return { word: a, reason: "identical inputs" };
 
     var edgesA = unionOutgoing.get(a) || [];
     var edgesB = unionOutgoing.get(b) || [];
 
-    if (edgesA.length === 0 && edgesB.length === 0) {
+    if (edgesA.length === 0 && edgesB.length === 0)
       return { word: null, reason: "neither \"" + a + "\" nor \"" + b + "\" found in dataset" };
-    }
-    if (edgesA.length === 0) {
+    if (edgesA.length === 0)
       return { word: null, reason: "\"" + a + "\" not found in dataset" };
-    }
-    if (edgesB.length === 0) {
+    if (edgesB.length === 0)
       return { word: null, reason: "\"" + b + "\" not found in dataset" };
-    }
 
     var fromA = new Map();
     for (var i = 0; i < edgesA.length; i++) {
@@ -2580,9 +2626,8 @@
       if (e.end === a || e.end === b) continue;
       var score = (UNION_REL_PRIORITY[e.rel] || 0) * 10 + e.weight;
       var prev = fromA.get(e.end);
-      if (!prev || score > prev.score) {
+      if (!prev || score > prev.score)
         fromA.set(e.end, { rel: e.rel, weight: e.weight, score: score });
-      }
     }
 
     var candidates = [];
@@ -2591,27 +2636,17 @@
       if (eb.end === a || eb.end === b) continue;
       var aEntry = fromA.get(eb.end);
       if (!aEntry) continue;
-
       var bScore = (UNION_REL_PRIORITY[eb.rel] || 0) * 10 + eb.weight;
       var combined = aEntry.score + bScore;
       var deg = unionDegree.get(eb.end) || 0;
-      var hubBonus = Math.log(1 + deg);
-
       candidates.push({
-        word: eb.end,
-        score: combined + hubBonus,
-        relA: aEntry.rel,
-        relB: eb.rel,
-        degree: deg
+        word: eb.end, score: combined + Math.log(1 + deg),
+        relA: aEntry.rel, relB: eb.rel, degree: deg
       });
     }
 
-    if (candidates.length === 0) {
-      return {
-        word: null,
-        reason: "no shared endpoint found for \"" + a + "\" and \"" + b + "\""
-      };
-    }
+    if (candidates.length === 0)
+      return { word: null, reason: "no shared endpoint found for \"" + a + "\" and \"" + b + "\"" };
 
     candidates.sort(function (x, y) {
       if (y.score !== x.score) return y.score - x.score;
@@ -2625,10 +2660,7 @@
     var pick = filtered[0] || candidates[0];
 
     return {
-      word: pick.word,
-      relA: pick.relA,
-      relB: pick.relB,
-      degree: pick.degree,
+      word: pick.word, relA: pick.relA, relB: pick.relB, degree: pick.degree,
       alternatives: filtered.slice(1, 6).map(function (c) { return c.word; }),
       reason: null
     };
@@ -2636,42 +2668,30 @@
 
   function renderUnionResult(result, a, b) {
     unionResult.classList.remove("is-empty");
-
     if (!result || !result.word) {
       unionResult.classList.add("is-empty");
       unionResult.textContent = "\u2014";
-      unionMeta.textContent = result && result.reason
-        ? result.reason
-        : "No result.";
+      unionMeta.textContent = result && result.reason ? result.reason : "No result.";
       return;
     }
-
     unionResult.textContent = result.word;
-
     var relText = "connects \"" + a + "\" (" + (result.relA || "\u2014") +
                   ") and \"" + b + "\" (" + (result.relB || "\u2014") + ")" +
                   " \u00B7 " + result.degree + " connections in graph";
-
     var altText = (result.alternatives && result.alternatives.length)
-      ? "Also considered: " + result.alternatives.join(", ")
-      : "";
-
+      ? "Also considered: " + result.alternatives.join(", ") : "";
     unionMeta.textContent = altText ? relText + " \u2014 " + altText : relText;
   }
 
   function runUnion() {
     if (!unionReady) return;
-
-    var a = unionA.value;
-    var b = unionB.value;
-
+    var a = unionA.value, b = unionB.value;
     if (!a.trim() || !b.trim()) {
       unionResult.classList.add("is-empty");
       unionResult.textContent = "\u2014";
       unionMeta.textContent = "Enter two terms.";
       return;
     }
-
     var result = findUnion(a, b);
     renderUnionResult(result, unionNormalize(a), unionNormalize(b));
   }
@@ -2679,10 +2699,7 @@
   unionBtn.addEventListener("click", runUnion);
   [unionA, unionB].forEach(function (el) {
     el.addEventListener("keydown", function (ev) {
-      if (ev.key === "Enter") {
-        ev.preventDefault();
-        runUnion();
-      }
+      if (ev.key === "Enter") { ev.preventDefault(); runUnion(); }
     });
   });
 
@@ -2691,15 +2708,9 @@
    * ================================================================ */
 
   function exportDiagramAsPng() {
-    var SIZE  = 500;
-    var SCALE = 2;
-    var OUT   = SIZE * SCALE;
-
-    var themeBg   = "#1a1208";
-    var themeText = "#ffb347";
-    var themeMut  = "#a87537";
-    var themeLine = "#8a5e2a";
-
+    var SIZE = 500, SCALE = 2, OUT = SIZE * SCALE;
+    var themeBg = "#1a1208", themeText = "#ffb347";
+    var themeMut = "#a87537", themeLine = "#8a5e2a";
     var ctx;
 
     function val(f, fallback) {
@@ -2709,8 +2720,8 @@
 
     var s1  = val(fields[0], "S\u2081");
     var s2  = val(fields[1], "S\u2082");
-    var ns1 = val(fields[2], "~S\u2081");
-    var ns2 = val(fields[3], "~S\u2082");
+    var ns2 = val(fields[2], "~S\u2082");
+    var ns1 = val(fields[3], "~S\u2081");
     var m1  = val(metaFields[0], "M\u2081");
     var m2  = val(metaFields[1], "M\u2082");
     var m3  = val(metaFields[2], "M\u2083");
@@ -2721,12 +2732,9 @@
     var c4  = val(compFields[3], "C\u2084");
 
     var canvas = document.createElement("canvas");
-    canvas.width  = OUT;
-    canvas.height = OUT;
+    canvas.width = OUT; canvas.height = OUT;
     ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = themeBg;
-    ctx.fillRect(0, 0, OUT, OUT);
+    ctx.fillStyle = themeBg; ctx.fillRect(0, 0, OUT, OUT);
     ctx.scale(SCALE, SCALE);
 
     function X(pct) { return (pct / 100) * SIZE; }
@@ -2736,138 +2744,88 @@
     var m2Pos = { x: X(92), y: Y(50) };
     var m3Pos = { x: X(50), y: Y(90) };
     var m4Pos = { x: X(8),  y: Y(50) };
-
     var s1Pos  = { x: X(31), y: Y(31) };
     var s2Pos  = { x: X(69), y: Y(31) };
-    var ns1Pos = { x: X(31), y: Y(69) };
-    var ns2Pos = { x: X(69), y: Y(69) };
-
+    var ns2Pos = { x: X(31), y: Y(69) };   /* P3 bottom-left = ~S2 */
+    var ns1Pos = { x: X(69), y: Y(69) };   /* P4 bottom-right = ~S1 */
     var c1Pos = { x: X(79), y: Y(21) };
     var c2Pos = { x: X(79), y: Y(79) };
     var c3Pos = { x: X(21), y: Y(79) };
     var c4Pos = { x: X(21), y: Y(21) };
 
-    /* Metaterm diamond */
     ctx.strokeStyle = themeLine;
-    ctx.lineWidth   = 1.5;
-    ctx.setLineDash([2, 6]);
-    ctx.lineCap = "round";
+    ctx.lineWidth = 1.5; ctx.setLineDash([2, 6]); ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(m1Pos.x, m1Pos.y);
-    ctx.lineTo(m2Pos.x, m2Pos.y);
-    ctx.lineTo(m3Pos.x, m3Pos.y);
-    ctx.lineTo(m4Pos.x, m4Pos.y);
-    ctx.closePath();
-    ctx.stroke();
+    ctx.moveTo(m1Pos.x, m1Pos.y); ctx.lineTo(m2Pos.x, m2Pos.y);
+    ctx.lineTo(m3Pos.x, m3Pos.y); ctx.lineTo(m4Pos.x, m4Pos.y);
+    ctx.closePath(); ctx.stroke();
 
-    /* Complementarity connectors */
-    ctx.setLineDash([1, 5]);
-    ctx.lineWidth = 1.2;
-    ctx.globalAlpha = 0.55;
-
-    var compConnectors = [
-      [c1Pos, m1Pos], [c1Pos, m2Pos],
-      [c2Pos, m2Pos], [c2Pos, m3Pos],
-      [c3Pos, m3Pos], [c3Pos, m4Pos],
-      [c4Pos, m4Pos], [c4Pos, m1Pos]
-    ];
-    compConnectors.forEach(function (pair) {
-      ctx.beginPath();
-      ctx.moveTo(pair[0].x, pair[0].y);
-      ctx.lineTo(pair[1].x, pair[1].y);
-      ctx.stroke();
-    });
+    ctx.setLineDash([1, 5]); ctx.lineWidth = 1.2; ctx.globalAlpha = 0.55;
+    [[c1Pos, m1Pos], [c1Pos, m2Pos], [c2Pos, m2Pos], [c2Pos, m3Pos],
+     [c3Pos, m3Pos], [c3Pos, m4Pos], [c4Pos, m4Pos], [c4Pos, m1Pos]]
+      .forEach(function (pair) {
+        ctx.beginPath();
+        ctx.moveTo(pair[0].x, pair[0].y);
+        ctx.lineTo(pair[1].x, pair[1].y);
+        ctx.stroke();
+      });
     ctx.globalAlpha = 1;
 
-    /* Inner square */
-    ctx.setLineDash([]);
-    ctx.lineWidth = 2;
+    ctx.setLineDash([]); ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(s1Pos.x,  s1Pos.y);
-    ctx.lineTo(s2Pos.x,  s2Pos.y);
-    ctx.lineTo(ns2Pos.x, ns2Pos.y);
-    ctx.lineTo(ns1Pos.x, ns1Pos.y);
-    ctx.closePath();
-    ctx.stroke();
+    ctx.moveTo(s1Pos.x, s1Pos.y); ctx.lineTo(s2Pos.x, s2Pos.y);
+    ctx.lineTo(ns1Pos.x, ns1Pos.y); ctx.lineTo(ns2Pos.x, ns2Pos.y);
+    ctx.closePath(); ctx.stroke();
 
-    /* Diagonals */
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(s1Pos.x, s1Pos.y);
-    ctx.lineTo(ns2Pos.x, ns2Pos.y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(s2Pos.x, s2Pos.y);
-    ctx.lineTo(ns1Pos.x, ns1Pos.y);
-    ctx.stroke();
-
+    ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(s1Pos.x, s1Pos.y); ctx.lineTo(ns1Pos.x, ns1Pos.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s2Pos.x, s2Pos.y); ctx.lineTo(ns2Pos.x, ns2Pos.y); ctx.stroke();
     ctx.setLineDash([]);
 
     var sansStack = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
     function drawLabelBox(value, label, pos, opts) {
       opts = opts || {};
-      var boxW  = opts.boxW || (SIZE * 0.22);
-      var padX  = 8;
-      var padY  = 6;
-
-      var mainSize  = opts.mainSize  || 15;
+      var boxW = opts.boxW || (SIZE * 0.22);
+      var padX = 8, padY = 6;
+      var mainSize = opts.mainSize || 15;
       var labelSize = opts.labelSize || 10;
-
-      var mainFont  = "600 " + mainSize  + "px " + sansStack;
+      var mainFont = "600 " + mainSize + "px " + sansStack;
       var labelFont = "600 " + labelSize + "px " + sansStack;
-
       ctx.font = mainFont;
-
       var maxTextW = boxW - padX * 2;
       var words = String(value).split(/\s+/);
-      var lines = [];
-      var current = "";
+      var lines = []; var current = "";
       words.forEach(function (w) {
         var att = current ? current + " " + w : w;
-        if (ctx.measureText(att).width <= maxTextW || !current) {
-          current = att;
-        } else {
-          lines.push(current);
-          current = w;
-        }
+        if (ctx.measureText(att).width <= maxTextW || !current) current = att;
+        else { lines.push(current); current = w; }
       });
       if (current) lines.push(current);
-
-      var lineH  = mainSize * 1.2;
-      var textH  = lines.length * lineH;
+      var lineH = mainSize * 1.2;
+      var textH = lines.length * lineH;
       var labelH = labelSize * 1.4;
-      var boxH   = textH + labelH + padY * 2;
-
+      var boxH = textH + labelH + padY * 2;
       ctx.fillStyle = themeBg;
       ctx.fillRect(pos.x - boxW / 2, pos.y - boxH / 2, boxW, boxH);
-
       ctx.fillStyle = themeText;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = mainFont;
-
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = mainFont;
       var textTop = pos.y - boxH / 2 + padY + lineH / 2;
       lines.forEach(function (line, idx) {
         ctx.fillText(line, pos.x, textTop + idx * lineH);
       });
-
-      ctx.fillStyle = themeMut;
-      ctx.font = labelFont;
+      ctx.fillStyle = themeMut; ctx.font = labelFont;
       ctx.fillText(label, pos.x, pos.y + boxH / 2 - padY - labelH / 2 + 2);
     }
 
     drawLabelBox(s1,  "S\u2081",  s1Pos,  { boxW: SIZE * 0.20 });
     drawLabelBox(s2,  "S\u2082",  s2Pos,  { boxW: SIZE * 0.20 });
-    drawLabelBox(ns1, "~S\u2081", ns1Pos, { boxW: SIZE * 0.20 });
     drawLabelBox(ns2, "~S\u2082", ns2Pos, { boxW: SIZE * 0.20 });
-
+    drawLabelBox(ns1, "~S\u2081", ns1Pos, { boxW: SIZE * 0.20 });
     drawLabelBox(m1, "M\u2081", m1Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m2, "M\u2082", m2Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m3, "M\u2083", m3Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
     drawLabelBox(m4, "M\u2084", m4Pos, { boxW: SIZE * 0.22, mainSize: 13, labelSize: 9 });
-
     drawLabelBox(c1, "C\u2081", c1Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
     drawLabelBox(c2, "C\u2082", c2Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
     drawLabelBox(c3, "C\u2083", c3Pos, { boxW: SIZE * 0.16, mainSize: 12, labelSize: 8 });
@@ -2875,11 +2833,8 @@
 
     function triggerDownload(href) {
       var a = document.createElement("a");
-      a.href = href;
-      a.download = "greimas-square.png";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      a.href = href; a.download = "greimas-square.png";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
     if (canvas.toBlob) {
@@ -2888,10 +2843,7 @@
           try {
             triggerDownload(canvas.toDataURL("image/png"));
             showCopyStatus("PNG downloaded.");
-          } catch (e) {
-            console.error("Data URL fallback failed:", e);
-            showCopyStatus("PNG export failed.");
-          }
+          } catch (e) { showCopyStatus("PNG export failed."); }
           return;
         }
         var url = URL.createObjectURL(blob);
@@ -2903,16 +2855,9 @@
       try {
         triggerDownload(canvas.toDataURL("image/png"));
         showCopyStatus("PNG downloaded.");
-      } catch (e) {
-        console.error("Data URL export failed:", e);
-        showCopyStatus("PNG export failed.");
-      }
+      } catch (e) { showCopyStatus("PNG export failed."); }
     }
   }
-
-  /* ================================================================
-   *  Status message
-   * ================================================================ */
 
   function showCopyStatus(msg) {
     copyStatus.textContent = msg;
@@ -2981,7 +2926,6 @@
       metaFields[i].source = "empty";
       metaInputs[i].value  = "";
       metaInputs[i].classList.remove("is-composed", "is-empty");
-
       compFields[i].value  = "";
       compFields[i].source = "empty";
       compInputs[i].value  = "";
@@ -2993,23 +2937,16 @@
     renderAll(true);
   });
 
-  /* ================================================================
-   *  Init
-   * ================================================================ */
-
   function init() {
     for (var i = 0; i < 4; i++) {
       setField(i, SAMPLE_TERMS[i], "set");
       setMetaField(i, SAMPLE_METAS[i], "set");
       setCompField(i, SAMPLE_COMPS[i], "set");
     }
-
     deriveAll();
     updateFieldStyles();
     renderAll(false);
-
     setScratchSlot(0);
-
     buildStemIndex();
     loadUnionData();
   }
