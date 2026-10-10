@@ -955,19 +955,19 @@
     </svg>
 
     <div class="gs-term gs-tl" id="term-1">
-      <div class="gs-term-main" id="term-1-main">Being</div>
+      <div class="gs-term-main is-empty" id="term-1-main">—</div>
       <div class="gs-term-label">S₁</div>
     </div>
     <div class="gs-term gs-tr" id="term-2">
-      <div class="gs-term-main" id="term-2-main">Seeming</div>
+      <div class="gs-term-main is-empty" id="term-2-main">—</div>
       <div class="gs-term-label">S₂</div>
     </div>
     <div class="gs-term gs-bl" id="term-3">
-      <div class="gs-term-main" id="term-3-main">Non-seeming</div>
+      <div class="gs-term-main is-empty" id="term-3-main">—</div>
       <div class="gs-term-label">~S₂</div>
     </div>
     <div class="gs-term gs-br" id="term-4">
-      <div class="gs-term-main" id="term-4-main">Non-being</div>
+      <div class="gs-term-main is-empty" id="term-4-main">—</div>
       <div class="gs-term-label">~S₁</div>
     </div>
 
@@ -977,36 +977,36 @@
     <div class="gs-rel gs-rel-right"  id="rel-4">Negation</div>
 
     <div class="gs-meta gs-m1" id="meta-1">
-      <div class="gs-meta-main is-derived" id="meta-1-main">Truth</div>
+      <div class="gs-meta-main is-empty" id="meta-1-main">—</div>
       <div class="gs-meta-label">M₁</div>
     </div>
     <div class="gs-meta gs-m2" id="meta-2">
-      <div class="gs-meta-main is-derived" id="meta-2-main">Lie</div>
+      <div class="gs-meta-main is-empty" id="meta-2-main">—</div>
       <div class="gs-meta-label">M₂</div>
     </div>
     <div class="gs-meta gs-m3" id="meta-3">
-      <div class="gs-meta-main is-derived" id="meta-3-main">Falsehood</div>
+      <div class="gs-meta-main is-empty" id="meta-3-main">—</div>
       <div class="gs-meta-label">M₃</div>
     </div>
     <div class="gs-meta gs-m4" id="meta-4">
-      <div class="gs-meta-main is-derived" id="meta-4-main">Secret</div>
+      <div class="gs-meta-main is-empty" id="meta-4-main">—</div>
       <div class="gs-meta-label">M₄</div>
     </div>
 
     <div class="gs-comp gs-c1" id="comp-1">
-      <div class="gs-comp-main" id="comp-1-main">Paradox</div>
+      <div class="gs-comp-main is-empty" id="comp-1-main">—</div>
       <div class="gs-comp-label">C₁</div>
     </div>
     <div class="gs-comp gs-c2" id="comp-2">
-      <div class="gs-comp-main" id="comp-2-main">Deception</div>
+      <div class="gs-comp-main is-empty" id="comp-2-main">—</div>
       <div class="gs-comp-label">C₂</div>
     </div>
     <div class="gs-comp gs-c3" id="comp-3">
-      <div class="gs-comp-main" id="comp-3-main">Subterfuge</div>
+      <div class="gs-comp-main is-empty" id="comp-3-main">—</div>
       <div class="gs-comp-label">C₃</div>
     </div>
     <div class="gs-comp gs-c4" id="comp-4">
-      <div class="gs-comp-main" id="comp-4-main">Revelation</div>
+      <div class="gs-comp-main is-empty" id="comp-4-main">—</div>
       <div class="gs-comp-label">C₄</div>
     </div>
   </div>
@@ -1228,33 +1228,6 @@
   var NEG_PREFIX = "non-";
   var SEP = " \u00B7 ";
 
-  /* Defaults — position indices match P1..P4:
-   *   0 = S₁ (top left)
-   *   1 = S₂ (top right)
-   *   2 = ~S₂ (bottom left)
-   *   3 = ~S₁ (bottom right)
-   */
-  var SAMPLE_TERMS = {
-    0: "Being",
-    1: "Seeming",
-    2: "Non-seeming",
-    3: "Non-being"
-  };
-
-  var SAMPLE_METAS = {
-    0: "Truth",
-    1: "Lie",
-    2: "Falsehood",
-    3: "Secret"
-  };
-
-  var SAMPLE_COMPS = {
-    0: "Paradox",
-    1: "Deception",
-    2: "Subterfuge",
-    3: "Revelation"
-  };
-
   var TERM_PLACEHOLDERS = ["S\u2081", "S\u2082", "~S\u2082", "~S\u2081"];
   var TERM_LABELS       = ["S\u2081", "S\u2082", "~S\u2082", "~S\u2081"];
   var META_LABELS_UI    = ["M\u2081", "M\u2082", "M\u2083", "M\u2084"];
@@ -1303,19 +1276,6 @@
     return out;
   }
 
-  /* ================================================================
-   *  Chain derivation
-   *
-   *  The four positions form a linear chain:
-   *
-   *      P1 --[contrary]--> P2 --[negation]--> P3 --[contrary]--> P4
-   *
-   *  P2 is the contrary of P1; P3 is the negation of P2; P4 is the
-   *  contrary of P3. Each rule can be applied forward or backward
-   *  to produce suggestions for any target position, given a value
-   *  at any anchor position.
-   * ================================================================ */
-
   var CHAIN_RULES = [
     { from: 0, to: 1, type: "contrary" },
     { from: 1, to: 2, type: "negate" },
@@ -1343,11 +1303,9 @@
   function chainApplyBackward(type, value) {
     if (!value) return [];
     if (type === "contrary") {
-      /* Contrary is roughly its own inverse. */
       return lookupContraries(value).map(titleCase);
     }
     if (type === "negate") {
-      /* Negation is its own inverse. */
       var n = negate(value);
       return n ? [n] : [];
     }
@@ -1407,10 +1365,6 @@
     }
     return parts.join(" \u2192 ");
   }
-
-  /* ================================================================
-   *  Stem-based near-wordform matching
-   * ================================================================ */
 
   var STEM_SUFFIXES = [
     "lessness", "fulness", "ization", "isation", "ification",
@@ -1497,10 +1451,6 @@
     return out;
   }
 
-  /* ================================================================
-   *  DOM
-   * ================================================================ */
-
   function byId(id) { return document.getElementById(id); }
 
   var termInputs    = [1,2,3,4].map(function (n) { return byId("in-" + n); });
@@ -1538,10 +1488,6 @@
   var loaderClear  = byId("gs-loader-clear");
   var loaderStatus = byId("gs-loader-status");
 
-  /* ================================================================
-   *  State
-   * ================================================================ */
-
   var fields = [
     { value: "", source: "empty" },
     { value: "", source: "empty" },
@@ -1565,6 +1511,9 @@
 
   var activeKind  = null;
   var activeIndex = null;
+
+  /* Populated from default_chain.json if the file is present. */
+  var loadedDefault = null;
 
   var TERM_SECONDARY = { 0: [1, 2], 3: [2, 1] };
 
@@ -1606,14 +1555,6 @@
     compInputs[i].value  = compFields[i].value;
   }
 
-  /* ================================================================
-   *  Derivation along the chain:
-   *
-   *    P2 = contrary(P1)
-   *    P3 = negate(P2)
-   *    P4 = contrary(P3)
-   * ================================================================ */
-
   function deriveP2FromP1() {
     if (fields[1].source === "set") return;
 
@@ -1640,8 +1581,6 @@
       return;
     }
 
-    /* Prefer an investment (positive-form negation) if one exists;
-     * otherwise fall back to mechanical negation. */
     var investments = lookupInvestments(v).map(titleCase);
     if (investments.length) {
       setField(2, investments[0], "provisional");
@@ -1661,7 +1600,6 @@
 
     var candidates = lookupContraries(v).map(titleCase);
     if (!candidates.length) {
-      /* Fall back: try the un-negated form's contrary. */
       var inner = negate(v);
       if (inner) {
         var innerContraries = lookupContraries(inner).map(titleCase);
@@ -1681,10 +1619,6 @@
     deriveP3FromP2();
     deriveP4FromP3();
   }
-
-  /* ================================================================
-   *  Readout — keyed to scratchpad slot
-   * ================================================================ */
 
   var SCRATCH_SLOTS = [
     { id: "S\u2081",  kind: "term", index: 0 },
@@ -1721,7 +1655,6 @@
   }
 
   function buildReadoutForSlot(slot) {
-    /* term indices: 0=S1, 1=S2, 2=~S2, 3=~S1 */
     var s1  = slotValueOrLabel(SCRATCH_SLOTS[0]);
     var s2  = slotValueOrLabel(SCRATCH_SLOTS[1]);
     var ns2 = slotValueOrLabel(SCRATCH_SLOTS[2]);
@@ -1735,11 +1668,6 @@
     var text;
 
     if (slot.kind === "term") {
-      /*  Chain relations:
-       *    S2  = contrary(S1)
-       *    ~S2 = negation(S2)
-       *    ~S1 = contrary(~S2)
-       */
       if (slot.index === 0) {
         text = tag + " is: anti-" + s2;
       } else if (slot.index === 1) {
@@ -2165,7 +2093,6 @@
     for (var t = 0; t < 4; t++) {
       if (t !== anchorIdx) targets.push(t);
     }
-    /* Order targets by chain distance from anchor. */
     targets.sort(function (a, b) {
       return Math.abs(a - anchorIdx) - Math.abs(b - anchorIdx);
     });
@@ -2220,7 +2147,6 @@
 
     scratchBody.appendChild(grid);
 
-    /* Related wordforms row */
     var trimmed = (anchorValue || "").trim();
     if (trimmed.length >= 3) {
       var similar = findSimilarTerms(trimmed);
@@ -2365,9 +2291,104 @@
   });
 
   /* ================================================================
-   *  JSON square loader
+   *  Default chain loader
    *
-   *  ~S1 maps to P4 (index 3), ~S2 maps to P3 (index 2).
+   *  Fetches default_chain.json from the same directory as this page.
+   *  Reads L1.D1 and applies it as the square's initial state. If the
+   *  file is missing or malformed, the square starts blank.
+   * ================================================================ */
+
+  function loadDefaultChain() {
+    return fetch("default_chain.json", { cache: "no-cache" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var d1 = data && data.L1 && data.L1.D1;
+        if (!d1 || typeof d1 !== "object") {
+          console.info("default_chain.json: no L1.D1 found; starting blank.");
+          return null;
+        }
+        return d1;
+      })
+      .catch(function (err) {
+        console.info(
+          "default_chain.json not available (" + err.message +
+          "); starting blank."
+        );
+        return null;
+      });
+  }
+
+  /* Accept several possible key spellings for each slot. */
+  function pickKey(obj, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = obj[keys[i]];
+      if (v != null && String(v).trim() !== "") {
+        return String(v).trim();
+      }
+    }
+    return null;
+  }
+
+  function applyChainDiagram(d1) {
+    var s1  = pickKey(d1, ["S1", "s1"]);
+    var s2  = pickKey(d1, ["S2", "s2"]);
+    var ns2 = pickKey(d1, ["~S2", "~s2", "NS2", "ns2", "nonS2"]);
+    var ns1 = pickKey(d1, ["~S1", "~s1", "NS1", "ns1", "nonS1"]);
+    var m1  = pickKey(d1, ["M1", "m1"]);
+    var m2  = pickKey(d1, ["M2", "m2"]);
+    var m3  = pickKey(d1, ["M3", "m3"]);
+    var m4  = pickKey(d1, ["M4", "m4"]);
+    var c1  = pickKey(d1, ["C1", "c1"]);
+    var c2  = pickKey(d1, ["C2", "c2"]);
+    var c3  = pickKey(d1, ["C3", "c3"]);
+    var c4  = pickKey(d1, ["C4", "c4"]);
+
+    if (s1)  setField(0, s1,  "set");
+    if (s2)  setField(1, s2,  "set");
+    if (ns2) setField(2, ns2, "set");
+    if (ns1) setField(3, ns1, "set");
+
+    if (m1) setMetaField(0, m1, "set");
+    if (m2) setMetaField(1, m2, "set");
+    if (m3) setMetaField(2, m3, "set");
+    if (m4) setMetaField(3, m4, "set");
+
+    if (c1) setCompField(0, c1, "set");
+    if (c2) setCompField(1, c2, "set");
+    if (c3) setCompField(2, c3, "set");
+    if (c4) setCompField(3, c4, "set");
+
+    deriveAll();
+    updateFieldStyles();
+    renderAll(true);
+    renderScratchpad();
+    renderReadout();
+  }
+
+  /* Blank-state reset: clears all twelve fields. */
+  function clearAllFields() {
+    for (var i = 0; i < 4; i++) {
+      clearField(i);
+      metaFields[i].value  = "";
+      metaFields[i].source = "empty";
+      metaInputs[i].value  = "";
+      metaInputs[i].classList.remove("is-composed", "is-empty");
+      compFields[i].value  = "";
+      compFields[i].source = "empty";
+      compInputs[i].value  = "";
+      compInputs[i].classList.add("is-empty");
+    }
+    updateFieldStyles();
+    renderScratchpad();
+    renderReadout();
+    renderAll(true);
+  }
+
+  /* ================================================================
+   *  JSON square loader
    * ================================================================ */
 
   var LOADER_KEY_MAP = {
@@ -2746,8 +2767,8 @@
     var m4Pos = { x: X(8),  y: Y(50) };
     var s1Pos  = { x: X(31), y: Y(31) };
     var s2Pos  = { x: X(69), y: Y(31) };
-    var ns2Pos = { x: X(31), y: Y(69) };   /* P3 bottom-left = ~S2 */
-    var ns1Pos = { x: X(69), y: Y(69) };   /* P4 bottom-right = ~S1 */
+    var ns2Pos = { x: X(31), y: Y(69) };
+    var ns1Pos = { x: X(69), y: Y(69) };
     var c1Pos = { x: X(79), y: Y(21) };
     var c2Pos = { x: X(79), y: Y(79) };
     var c3Pos = { x: X(21), y: Y(79) };
@@ -2907,19 +2928,28 @@
   });
 
   byId("gs-reset").addEventListener("click", function () {
-    for (var i = 0; i < 4; i++) {
-      setField(i, SAMPLE_TERMS[i], "set");
-      setMetaField(i, SAMPLE_METAS[i], "set");
-      setCompField(i, SAMPLE_COMPS[i], "set");
+    if (loadedDefault) {
+      applyChainDiagram(loadedDefault);
+    } else {
+      clearAllFields();
     }
-    deriveAll();
-    updateFieldStyles();
-    renderScratchpad();
-    renderReadout();
-    renderAll(true);
   });
 
   byId("gs-clear").addEventListener("click", function () {
+    clearAllFields();
+  });
+
+  /* ================================================================
+   *  Init
+   *
+   *  The page starts blank and fetches default_chain.json
+   *  asynchronously. If L1.D1 is found, the square is populated from
+   *  it. If the file is missing or malformed, the square remains
+   *  blank.
+   * ================================================================ */
+
+  function init() {
+    /* Start with all fields empty. */
     for (var i = 0; i < 4; i++) {
       clearField(i);
       metaFields[i].value  = "";
@@ -2931,24 +2961,20 @@
       compInputs[i].value  = "";
       compInputs[i].classList.add("is-empty");
     }
-    updateFieldStyles();
-    renderScratchpad();
-    renderReadout();
-    renderAll(true);
-  });
 
-  function init() {
-    for (var i = 0; i < 4; i++) {
-      setField(i, SAMPLE_TERMS[i], "set");
-      setMetaField(i, SAMPLE_METAS[i], "set");
-      setCompField(i, SAMPLE_COMPS[i], "set");
-    }
-    deriveAll();
     updateFieldStyles();
     renderAll(false);
     setScratchSlot(0);
     buildStemIndex();
     loadUnionData();
+
+    /* Then try to populate from default_chain.json. */
+    loadDefaultChain().then(function (d1) {
+      if (d1) {
+        loadedDefault = d1;
+        applyChainDiagram(d1);
+      }
+    });
   }
 
   init();
