@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Concept Lattice Explorer</title>
+<title>Semantic Square Visualizer</title>
 
 <script src="contraries.js"></script>
 <script src="investments.js"></script>
@@ -929,8 +929,8 @@
 
 <div class="gs-app">
   <header>
-    <h1>Concept Lattice</h1>
-    <p>Enter terms, explore alternatives in the scratchpad, then update the lattice.</p>
+    <h1>Semantic Square Visualizer</h1>
+    <p>Enter terms, explore alternatives in the scratchpad, then update the semantic square.</p>
   </header>
 
   <div class="gs-stage">
@@ -1012,7 +1012,7 @@
   </div>
 
   <details class="gs-loader" id="gs-loader">
-    <summary>Load square from JSON</summary>
+    <summary>Load semantic square from JSON</summary>
     <div class="gs-loader-body">
       <p class="gs-loader-note">
         Paste a JSON object with any of these keys:
@@ -1038,8 +1038,8 @@
   "C4": "Disclosure"
 }'></textarea>
       <div class="gs-loader-actions">
-        <button type="button" class="primary" id="gs-loader-apply">Load square</button>
-        <button type="button" class="secondary" id="gs-loader-copy">Copy current square</button>
+        <button type="button" class="primary" id="gs-loader-apply">Load semantic square</button>
+        <button type="button" class="secondary" id="gs-loader-copy">Copy current semantic square</button>
         <button type="button" class="secondary" id="gs-loader-clear">Clear text</button>
       </div>
       <div class="gs-loader-status" id="gs-loader-status"></div>
@@ -1126,7 +1126,7 @@
   <div class="gs-section">
     <h2 class="gs-section-title">Suggestion scratchpad</h2>
     <p class="gs-section-note">
-      Pick a slot, enter a term, and see the chain derivations. Clicking a chip places it in the square.
+      Pick a slot, enter a term, and see the chain derivations. Clicking a chip places it in the semantic square.
     </p>
 
     <div class="gs-scratch">
@@ -1171,7 +1171,7 @@
   </div>
 
   <div class="gs-actions">
-    <button type="button" id="gs-update">Update square</button>
+    <button type="button" id="gs-update">Update semantic square</button>
     <button type="button" id="gs-png" class="gs-tertiary">Download PNG</button>
     <button type="button" id="gs-rotate" class="gs-tertiary">Rotate clockwise &#8635;</button>
     <button type="button" id="gs-reset" class="gs-secondary">Reset</button>
@@ -1512,7 +1512,6 @@
   var activeKind  = null;
   var activeIndex = null;
 
-  /* Populated from default_chain.json if the file is present. */
   var loadedDefault = null;
 
   var TERM_SECONDARY = { 0: [1, 2], 3: [2, 1] };
@@ -2218,7 +2217,7 @@
     if (!a || !b) {
       var empty = document.createElement("div");
       empty.className = "gs-scratch-empty";
-      empty.textContent = "Fill the composing terms in the square first.";
+      empty.textContent = "Fill the composing terms in the semantic square first.";
       chipRow.appendChild(empty);
       scratchBody.appendChild(chipRow);
       return;
@@ -2294,8 +2293,9 @@
    *  Default chain loader
    *
    *  Fetches default_chain.json from the same directory as this page.
-   *  Reads L1.D1 and applies it as the square's initial state. If the
-   *  file is missing or malformed, the square starts blank.
+   *  Reads L1.D1 and applies it as the semantic square's initial
+   *  state. If the file is missing or malformed, the square starts
+   *  blank.
    * ================================================================ */
 
   function loadDefaultChain() {
@@ -2321,7 +2321,6 @@
       });
   }
 
-  /* Accept several possible key spellings for each slot. */
   function pickKey(obj, keys) {
     for (var i = 0; i < keys.length; i++) {
       var v = obj[keys[i]];
@@ -2368,7 +2367,6 @@
     renderReadout();
   }
 
-  /* Blank-state reset: clears all twelve fields. */
   function clearAllFields() {
     for (var i = 0; i < 4; i++) {
       clearField(i);
@@ -2388,7 +2386,7 @@
   }
 
   /* ================================================================
-   *  JSON square loader
+   *  JSON semantic-square loader
    * ================================================================ */
 
   var LOADER_KEY_MAP = {
@@ -2544,12 +2542,12 @@
 
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(function () {
-        loaderSetStatus("Current square copied to clipboard.", "is-success");
+        loaderSetStatus("Current semantic square copied to clipboard.", "is-success");
       }).catch(function () {
-        loaderSetStatus("Square written to the text area.", "is-success");
+        loaderSetStatus("Semantic square written to the text area.", "is-success");
       });
     } else {
-      loaderSetStatus("Square written to the text area.", "is-success");
+      loaderSetStatus("Semantic square written to the text area.", "is-success");
     }
   }
 
@@ -2854,7 +2852,7 @@
 
     function triggerDownload(href) {
       var a = document.createElement("a");
-      a.href = href; a.download = "greimas-square.png";
+      a.href = href; a.download = "semantic-square.png";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 
@@ -2943,13 +2941,12 @@
    *  Init
    *
    *  The page starts blank and fetches default_chain.json
-   *  asynchronously. If L1.D1 is found, the square is populated from
-   *  it. If the file is missing or malformed, the square remains
-   *  blank.
+   *  asynchronously. If L1.D1 is found, the semantic square is
+   *  populated from it. If the file is missing or malformed, the
+   *  square remains blank.
    * ================================================================ */
 
   function init() {
-    /* Start with all fields empty. */
     for (var i = 0; i < 4; i++) {
       clearField(i);
       metaFields[i].value  = "";
@@ -2968,7 +2965,6 @@
     buildStemIndex();
     loadUnionData();
 
-    /* Then try to populate from default_chain.json. */
     loadDefaultChain().then(function (d1) {
       if (d1) {
         loadedDefault = d1;
